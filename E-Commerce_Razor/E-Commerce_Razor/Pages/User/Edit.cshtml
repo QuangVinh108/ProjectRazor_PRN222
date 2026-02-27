@@ -1,0 +1,79 @@
+﻿@page "{id:int}"
+@model E_Commerce_Razor.Pages.User.EditModel
+@{
+    ViewData["Title"] = "Cập nhật người dùng";
+    Layout = "_AdminLayout";
+}
+
+<div class="container mt-4">
+    <div class="card shadow-sm">
+        <div class="card-header bg-warning text-dark">
+            <h4 class="mb-0"><i class="bi bi-pencil-square"></i> Cập nhật thông tin</h4>
+        </div>
+        <div class="card-body">
+            <form method="post">
+                <input type="hidden" asp-for="Input.UserId" />
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Tên đăng nhập</label>
+                            <input asp-for="Input.UserName" class="form-control" readonly style="background-color: #e9ecef;" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Họ và tên *</label>
+                            <input asp-for="Input.FullName" class="form-control" />
+                            <span asp-validation-for="Input.FullName" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Email *</label>
+                            <input asp-for="Input.Email" class="form-control" />
+                            <span asp-validation-for="Input.Email" class="text-danger"></span>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Số điện thoại</label>
+                            <input asp-for="Input.Phone" class="form-control" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Vai trò *</label>
+                            <select asp-for="Input.RoleId" class="form-select" asp-items="Model.Roles"></select>
+                        </div>
+
+                        <div class="mb-3">
+                            <div class="form-check form-switch mt-4">
+                                <input class="form-check-input" type="checkbox" asp-for="Input.IsActive">
+                                <label class="form-check-label fw-bold" asp-for="Input.IsActive">Đang hoạt động</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Địa chỉ</label>
+                    <textarea asp-for="Input.Address" class="form-control" rows="2"></textarea>
+                </div>
+
+                <hr />
+
+                <div class="d-flex justify-content-end gap-2">
+                    <a asp-page="./Index" class="btn btn-secondary">
+                        <i class="bi bi-arrow-left"></i> Hủy bỏ
+                    </a>
+                    <button type="submit" class="btn btn-warning">
+                        <i class="bi bi-save"></i> Lưu thay đổi
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

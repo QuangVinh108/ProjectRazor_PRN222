@@ -1,4 +1,5 @@
-﻿using System;
+﻿using DAL.Entities;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -6,7 +7,8 @@ using System.Threading.Tasks;
 
 namespace DAL.IRepository
 {
-    internal interface IRoleRepository
+    public interface IRoleRepository
     {
+        IEnumerable<Role> GetAllRoles();
     }
 }

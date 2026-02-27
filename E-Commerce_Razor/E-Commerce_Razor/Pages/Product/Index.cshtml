@@ -1,0 +1,190 @@
+﻿@page
+@model E_Commerce_Razor.Pages.Product.IndexModel
+@{
+    ViewData["Title"] = "Quản lý sản phẩm";
+    Layout = "_AdminLayout";
+
+    var parentCats = Model.AllCategories.Where(c => c.ParentId == null).ToList();
+}
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="text-primary fw-bold mb-2"><i class="bi bi-box-seam-fill"></i> Quản lý sản phẩm</h2>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-0">
+                    <li class="breadcrumb-item">
+                        <a asp-page="./Index" class="text-decoration-none fw-bold">
+                            <i class="bi bi-house-door"></i> Tổng quan
+                        </a>
+                    </li>
+                    @if (Model.CurrentParentId.HasValue)
+                    {
+                        var parentName = parentCats.FirstOrDefault(c => c.CategoryId == Model.CurrentParentId)?.CategoryName;
+                        <li class="breadcrumb-item active" aria-current="page">@parentName</li>
+                    }
+                </ol>
+            </nav>
+        </div>
+    </div>  
+
+    @if (!Model.CurrentParentId.HasValue)
+    {
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="text-muted fw-bold mb-0">Chọn danh mục để quản lý:</h5>
+            <a asp-page="/Admin/Category/Create" class="btn btn-outline-primary shadow-sm">
+                <i class="bi bi-folder-plus"></i> Thêm danh mục
+            </a>
+        </div>
+
+        <div class="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-4">
+            @foreach (var cat in parentCats)
+            {
+                <div class="col">
+                    <a asp-page="./Index" asp-route-CurrentParentId="@cat.CategoryId" class="text-decoration-none">
+                        <div class="card h-100 border-0 shadow-sm category-card text-center py-4">
+                            <div class="card-body">
+                                <div class="icon-box bg-primary bg-opacity-10 text-primary rounded-circle mx-auto mb-3 d-flex align-items-center justify-content-center" style="width: 70px; height: 70px;">
+                                    @if (cat.CategoryName.Contains("Điện thoại"))
+                                    {
+                                        <i class="bi bi-phone fs-2"></i>
+                                    }
+                                    else if (cat.CategoryName.Contains("Laptop"))
+                                    {
+
+                                        <i class="bi bi-laptop fs-2"></i>
+                                    }
+                                    else if (cat.CategoryName.Contains("Linh kiện"))
+                                    {
+
+                                        <i class="bi bi-cpu fs-2"></i>
+                                    }
+                                    else
+                                    {
+
+                                        <i class="bi bi-headphones fs-2"></i>
+                                    }
+                                </div>
+                                <h5 class="fw-bold text-dark">@cat.CategoryName</h5>
+                                <span class="badge bg-light text-secondary border mt-2">Quản lý ngay &rarr;</span>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+            }
+        </div>
+    }
+
+    @if (Model.CurrentParentId.HasValue)
+    {
+        var childCats = Model.AllCategories.Where(c => c.ParentId == Model.CurrentParentId).ToList();
+
+        <div class="card shadow-sm border-0">
+            <div class="card-header bg-white pt-3 pb-0 border-bottom d-flex justify-content-between align-items-end">
+                <ul class="nav nav-tabs card-header-tabs border-bottom-0">
+                    <li class="nav-item">
+                        <a class="nav-link @(Model.CurrentCategoryId == null ? "active fw-bold" : "text-secondary")"
+                           asp-page="./Index" asp-route-CurrentParentId="@Model.CurrentParentId">
+                            Tất cả
+                        </a>
+                    </li>
+                    @foreach (var sub in childCats)
+                    {
+                        <li class="nav-item">
+                            <a class="nav-link @(Model.CurrentCategoryId == sub.CategoryId ? "active fw-bold" : "text-secondary")"
+                               asp-page="./Index" asp-route-CurrentParentId="@Model.CurrentParentId" asp-route-CurrentCategoryId="@sub.CategoryId">
+                                @sub.CategoryName
+                            </a>
+                        </li>
+                    }
+                    <li class="nav-item ms-1">
+                        <a class="nav-link border-0 text-success bg-transparent"
+                           asp-page="/Admin/Category/Create" asp-route-parentId="@Model.CurrentParentId"
+                           title="Thêm danh mục con cho nhóm này">
+                            <i class="bi bi-plus-square-dotted fs-5"></i>
+                        </a>
+                    </li>
+                </ul>
+
+                <div class="mb-2">
+                    <a asp-page="./Create" asp-route-returnParentId="@Model.CurrentParentId" class="btn btn-success btn-sm shadow-sm">
+                        <i class="bi bi-plus-lg"></i> Thêm sản phẩm
+                    </a>
+                </div>
+            </div>
+
+            <div class="card-body p-0">
+                @if (Model.Products != null && Model.Products.Any())
+                {
+                    <div class="table-responsive">
+                        <table class="table table-hover table-striped align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th class="text-center">Ảnh</th>
+                                    <th>Tên sản phẩm</th>
+                                    <th>SKU</th>
+                                    <th>Danh mục</th>
+                                    <th class="text-end">Giá bán</th>
+                                    <th class="text-center">Trạng thái</th>
+                                    <th class="text-center">Thao tác</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var item in Model.Products)
+                                {
+                                    <tr>
+                                        <td class="text-center">
+                                            <img src="@(string.IsNullOrEmpty(item.Image) ? "https://placehold.co/50" : item.Image)" class="rounded border" style="width: 40px; height: 40px; object-fit: cover;">
+                                        </td>
+                                        <td><span class="fw-bold text-dark">@item.ProductName</span></td>
+                                        <td><small class="font-monospace text-muted">@item.Sku</small></td>
+                                        <td><span class="badge bg-info text-dark bg-opacity-25">@item.CategoryName</span></td>
+                                        <td class="text-end fw-bold text-success">@item.Price.ToString("N0") ₫</td>
+                                        <td class="text-center">
+                                            <span class="badge @(item.Status == 1 ? "bg-success" : "bg-secondary")">
+                                                @(item.Status == 1 ? "Hiển thị" : "Ẩn")
+                                            </span>
+                                        </td>
+                                        <td class="text-center">
+                                            <a asp-page="./Edit" asp-route-id="@item.ProductId" asp-route-returnParentId="@Model.CurrentParentId" class="btn btn-sm btn-outline-primary">
+                                                <i class="bi bi-pencil"></i>
+                                            </a>
+                                            <form asp-page-handler="Delete" asp-route-id="@item.ProductId" asp-route-parentId="@Model.CurrentParentId" method="post" class="d-inline" onsubmit="return confirm('Bạn có chắc chắn muốn xóa sản phẩm này?')">
+                                                <button type="submit" class="btn btn-sm btn-outline-danger">
+                                                    <i class="bi bi-trash"></i>
+                                                </button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+                else
+                {
+                    <div class="text-center py-5">
+                        <i class="bi bi-inbox display-4 text-muted opacity-25"></i>
+                        <p class="mt-2 text-muted">Chưa có sản phẩm nào trong danh mục này.</p>
+                        <a asp-page="./Create" asp-route-returnParentId="@Model.CurrentParentId" class="btn btn-primary btn-sm mt-2">
+                            <i class="bi bi-plus-lg"></i> Thêm sản phẩm ngay
+                        </a>
+                    </div>
+                }
+            </div>
+        </div>
+    }
+</div>
+
+<style>
+    .category-card {
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        cursor: pointer;
+    }
+
+        .category-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1) !important;
+            border-color: var(--bs-primary) !important;
+        }
+</style>

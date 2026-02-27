@@ -1,10 +1,204 @@
 ﻿@page
 @model IndexModel
 @{
-    ViewData["Title"] = "Home page";
+    ViewData["Title"] = "E-Commerce - Mua sắm online";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
-</div>
+<section class="hero-modern">
+    <div class="hero-gradient"></div>
+    <div class="container-fluid">
+        <div class="row align-items-center min-vh-80">
+            <div class="col-lg-6 hero-content px-5">
+                <span class="badge-pill mb-4 fade-in-up">
+                    <i class="bi bi-stars"></i> Uy tín #1 Việt Nam
+                </span>
+                <h1 class="hero-title fade-in-up" style="animation-delay: 0.1s">
+                    Trải nghiệm mua sắm<br>
+                    <span class="gradient-text">công nghệ</span> hàng đầu
+                </h1>
+                <p class="hero-subtitle fade-in-up" style="animation-delay: 0.2s">
+                    Hàng ngàn sản phẩm điện tử chính hãng, giá tốt nhất thị trường,<br>
+                    giao nhanh 2h, bảo hành toàn diện.
+                </p>
+                <div class="hero-buttons fade-in-up" style="animation-delay: 0.3s">
+                    <a asp-page="/Shop/Index" class="btn-modern btn-primary">
+                        Khám phá ngay
+                        <i class="bi bi-arrow-right ms-2"></i>
+                    </a>
+                    <a asp-page="/Shop/Index" class="btn-modern btn-outline">
+                        <i class="bi bi-bag-check me-2"></i>
+                        Xem sản phẩm
+                    </a>
+                </div>
+
+                <div class="trust-badges fade-in-up" style="animation-delay: 0.4s">
+                    <div class="trust-item">
+                        <i class="bi bi-shield-fill-check"></i>
+                        <span>Bảo hành<br><strong>12 tháng</strong></span>
+                    </div>
+                    <div class="trust-item">
+                        <i class="bi bi-truck"></i>
+                        <span>Giao hàng<br><strong>2-4h</strong></span>
+                    </div>
+                    <div class="trust-item">
+                        <i class="bi bi-arrow-repeat"></i>
+                        <span>Đổi trả<br><strong>30 ngày</strong></span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-6 hero-image fade-in-right px-5">
+                <div class="floating-card">
+                    @* ✅ FIX: BỎ wwwroot/ - CHỈ CẦN ~/images/ *@
+                    <img src="~/images/products/hero.png"
+                         alt="Tech Shopping - Công nghệ hàng đầu"
+                         class="hero-img"
+                         loading="eager"
+                         onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1498049794561-7780e7231661?w=700&h=700&fit=crop';">
+
+                    <div class="floating-badge badge-1">
+                        <i class="bi bi-lightning-charge-fill"></i>
+                        <span>Flash Sale<br><strong>-50%</strong></span>
+                    </div>
+                    <div class="floating-badge badge-2">
+                        <i class="bi bi-star-fill"></i>
+                        <span>4.9★<br><strong>25k+ Reviews</strong></span>
+                    </div>
+                    <div class="floating-badge badge-3">
+                        <i class="bi bi-truck-front-fill"></i>
+                        <span>Freeship<br><strong>Toàn quốc</strong></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="section-categories">
+    <div class="container-fluid px-4 px-lg-5">
+        <div class="section-header text-center mb-5">
+            <span class="section-label">DANH MỤC</span>
+            <h2 class="section-title">Mua sắm theo nhu cầu</h2>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-lg-3 col-md-6">
+                <a asp-page="/Product/Index" asp-route-category="Điện thoại" class="category-card">
+                    <div class="category-icon icon-phone">
+                        <i class="bi bi-phone-fill"></i>
+                    </div>
+                    <h4>Điện thoại</h4>
+                    <p>iPhone, Samsung, Xiaomi...</p>
+                    <i class="bi bi-arrow-right category-arrow"></i>
+                </a>
+            </div>
+
+            <div class="col-lg-3 col-md-6">
+                <a asp-page="/Product/Index" asp-route-category="Laptop" class="category-card">
+                    <div class="category-icon icon-laptop">
+                        <i class="bi bi-laptop-fill"></i>
+                    </div>
+                    <h4>Laptop</h4>
+                    <p>MacBook, Dell, Asus, HP...</p>
+                    <i class="bi bi-arrow-right category-arrow"></i>
+                </a>
+            </div>
+
+            <div class="col-lg-3 col-md-6">
+                <a asp-page="/Product/Index" asp-route-category="Linh kiện" class="category-card">
+                    <div class="category-icon icon-components">
+                        <i class="bi bi-cpu-fill"></i>
+                    </div>
+                    <h4>Linh kiện</h4>
+                    <p>CPU, RAM, VGA, SSD...</p>
+                    <i class="bi bi-arrow-right category-arrow"></i>
+                </a>
+            </div>
+
+            <div class="col-lg-3 col-md-6">
+                <a asp-page="/Product/Index" asp-route-category="Phụ kiện" class="category-card">
+                    <div class="category-icon icon-accessories">
+                        <i class="bi bi-headphones"></i>
+                    </div>
+                    <h4>Phụ kiện</h4>
+                    <p>Tai nghe, chuột, bàn phím...</p>
+                    <i class="bi bi-arrow-right category-arrow"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+
+
+<section class="section-stats">
+    <div class="container-fluid px-4 px-lg-5">
+        <div class="row g-4 text-center">
+            <div class="col-lg-3 col-md-6">
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="bi bi-people-fill"></i>
+                    </div>
+                    <h3 class="stat-number" data-target="50000">0</h3>
+                    <p class="stat-label">Khách hàng</p>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6">
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="bi bi-box-seam-fill"></i>
+                    </div>
+                    <h3 class="stat-number" data-target="10000">0</h3>
+                    <p class="stat-label">Sản phẩm</p>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6">
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="bi bi-star-fill"></i>
+                    </div>
+                    <h3 class="stat-number" data-target="4.9">0</h3>
+                    <p class="stat-label">Đánh giá</p>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6">
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="bi bi-trophy-fill"></i>
+                    </div>
+                    <h3 class="stat-number" data-target="15">0</h3>
+                    <p class="stat-label">Giải thưởng</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="section-cta">
+    <div class="container-fluid px-4 px-lg-5">
+        <div class="cta-card">
+            <div class="row align-items-center">
+                <div class="col-lg-8">
+                    <span class="cta-badge">🎉 Ưu đãi đặc biệt</span>
+                    <h2 class="cta-title">Nhiều ưu đãi cho đơn hàng đầu tiên</h2>
+                    <p class="cta-subtitle">
+                        Đăng ký thành viên ngay hôm nay để nhận ưu đãi độc quyền
+                    </p>
+                </div>
+                <div class="col-lg-4 text-lg-end">
+                    <a asp-page="/Shop/Index" class="btn-modern btn-white">
+                        Mua sắm ngay
+                        <i class="bi bi-arrow-right ms-2"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/homepage.css" asp-append-version="true" />
+}
+
+@section Scripts {
+    <script src="~/js/homepage.js" asp-append-version="true"></script>
+}

@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace DAL.IRepository
 {
-    internal interface IShippingRepository
+    public interface IShippingRepository
     {
     }
 }
