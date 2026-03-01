@@ -3,7 +3,6 @@
 @{
     ViewData["Title"] = "Cửa hàng";
 
-    // HÀM HELPER: Giữ bộ lọc khi sort trong Razor Pages
     string GetSortUrl(string sortOrder)
     {
         return Url.Page("./Index", new
@@ -20,180 +19,508 @@
     var parentCats = allCats?.Where(c => c.ParentId == null).ToList();
 }
 
+@* CSRF Token (GIỮ NGUYÊN) *@
 <form id="csrf-token-form" class="d-none">
     @Html.AntiForgeryToken()
 </form>
 
-<div class="container-fluid bg-primary bg-gradient text-white py-5 mb-5" style="--bs-bg-opacity: .9;">
-    <div class="container text-center">
-        <h1 class="display-5 fw-bold">Cửa Hàng Trực Tuyến</h1>
-        <p class="lead mb-0 opacity-75">Sản phẩm công nghệ & thời trang chính hãng - Giá tốt nhất</p>
-    </div>
+<!-- ═══════════════════════════════════════════
+     FULL-SCREEN AURORA BACKGROUND LAYER
+═══════════════════════════════════════════ -->
+<div class="sh-aurora" aria-hidden="true">
+    <!-- Aurora blobs -->
+    <div class="sh-aurora-blob sh-ab1"></div>
+    <div class="sh-aurora-blob sh-ab2"></div>
+    <div class="sh-aurora-blob sh-ab3"></div>
+    <div class="sh-aurora-blob sh-ab4"></div>
+    <div class="sh-aurora-blob sh-ab5"></div>
+
+    <!-- ══ LARGE PHONE SILHOUETTE — right edge ══ -->
+    <svg class="sh-tech-sil sh-sil-phone" viewBox="0 0 100 210" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect x="4" y="4" width="92" height="202" rx="20" stroke="currentColor" stroke-width="3.5" fill="rgba(255,255,255,.05)" />
+        <rect x="12" y="20" width="76" height="156" rx="6" stroke="currentColor" stroke-width="1.5" fill="rgba(255,255,255,.04)" />
+        <!-- Dynamic island -->
+        <rect x="34" y="11" width="32" height="11" rx="5.5" fill="currentColor" opacity=".45" />
+        <!-- Side power button -->
+        <rect x="96" y="65" width="5" height="28" rx="2.5" fill="currentColor" opacity=".4" />
+        <!-- Vol buttons -->
+        <rect x="-1" y="62" width="5" height="18" rx="2.5" fill="currentColor" opacity=".4" />
+        <rect x="-1" y="86" width="5" height="18" rx="2.5" fill="currentColor" opacity=".4" />
+        <!-- Gesture bar -->
+        <rect x="34" y="184" width="32" height="5" rx="2.5" fill="currentColor" opacity=".45" />
+        <!-- Camera cluster -->
+        <circle cx="35" cy="55" r="10" stroke="currentColor" stroke-width="1.5" fill="rgba(255,255,255,.04)" />
+        <circle cx="35" cy="55" r="5.5" fill="currentColor" opacity=".12" />
+        <circle cx="55" cy="55" r="10" stroke="currentColor" stroke-width="1.5" fill="rgba(255,255,255,.04)" />
+        <circle cx="55" cy="55" r="5.5" fill="currentColor" opacity=".12" />
+        <circle cx="45" cy="72" r="7" stroke="currentColor" stroke-width="1.5" fill="rgba(255,255,255,.04)" />
+        <circle cx="45" cy="72" r="4" fill="currentColor" opacity=".12" />
+        <!-- Flash -->
+        <circle cx="65" cy="48" r="4" fill="currentColor" opacity=".3" />
+        <!-- Screen UI bars -->
+        <rect x="22" y="100" width="56" height="7" rx="3.5" fill="currentColor" opacity=".11" />
+        <rect x="22" y="114" width="40" height="5" rx="2.5" fill="currentColor" opacity=".08" />
+        <rect x="22" y="130" width="56" height="36" rx="8" fill="currentColor" opacity=".07" />
+        <rect x="22" y="172" width="24" height="6" rx="3" fill="currentColor" opacity=".1" />
+        <rect x="54" y="172" width="24" height="6" rx="3" fill="currentColor" opacity=".1" />
+    </svg>
+
+    <!-- ══ LARGE LAPTOP SILHOUETTE — left edge ══ -->
+    <svg class="sh-tech-sil sh-sil-laptop" viewBox="0 0 280 185" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <!-- Lid / screen -->
+        <rect x="22" y="4" width="236" height="148" rx="11" stroke="currentColor" stroke-width="3.5" fill="rgba(255,255,255,.05)" />
+        <!-- Screen bezel -->
+        <rect x="32" y="13" width="216" height="130" rx="5" stroke="currentColor" stroke-width="1.5" fill="rgba(255,255,255,.04)" />
+        <!-- Webcam -->
+        <circle cx="140" cy="11" r="4" fill="currentColor" opacity=".4" />
+        <circle cx="140" cy="11" r="2" fill="currentColor" opacity=".6" />
+        <!-- Screen content: top bar -->
+        <rect x="42" y="22" width="196" height="9" rx="4" fill="currentColor" opacity=".1" />
+        <!-- Screen content: sidebar -->
+        <rect x="42" y="38" width="54" height="98" rx="5" fill="currentColor" opacity=".07" />
+        <!-- Screen content: main area blocks -->
+        <rect x="104" y="38" width="134" height="44" rx="5" fill="currentColor" opacity=".07" />
+        <rect x="104" y="88" width="62" height="48" rx="5" fill="currentColor" opacity=".06" />
+        <rect x="174" y="88" width="64" height="22" rx="4" fill="currentColor" opacity=".06" />
+        <rect x="174" y="116" width="64" height="20" rx="4" fill="currentColor" opacity=".05" />
+        <!-- Hinge shadow -->
+        <rect x="22" y="150" width="236" height="4" rx="2" fill="currentColor" opacity=".15" />
+        <!-- Base / keyboard chassis -->
+        <rect x="0" y="154" width="280" height="24" rx="10" stroke="currentColor" stroke-width="2.5" fill="rgba(255,255,255,.06)" />
+        <!-- Keyboard rows -->
+        <rect x="28" y="160" width="224" height="5" rx="2.5" fill="currentColor" opacity=".11" />
+        <rect x="36" y="168" width="208" height="4" rx="2" fill="currentColor" opacity=".08" />
+        <!-- Trackpad -->
+        <rect x="104" y="158" width="72" height="12" rx="5" stroke="currentColor" stroke-width="1.5" fill="rgba(255,255,255,.06)" />
+    </svg>
+
+    <!-- ══ SMALL GHOST PHONE — top-right ══ -->
+    <svg class="sh-tech-sil sh-sil-phone2" viewBox="0 0 100 210" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect x="4" y="4" width="92" height="202" rx="20" stroke="currentColor" stroke-width="3.5" fill="rgba(255,255,255,.04)" />
+        <rect x="12" y="20" width="76" height="156" rx="6" stroke="currentColor" stroke-width="1.5" fill="rgba(255,255,255,.03)" />
+        <rect x="34" y="11" width="32" height="11" rx="5.5" fill="currentColor" opacity=".45" />
+        <rect x="34" y="184" width="32" height="5" rx="2.5" fill="currentColor" opacity=".45" />
+        <rect x="22" y="100" width="56" height="7" rx="3.5" fill="currentColor" opacity=".1" />
+        <rect x="22" y="114" width="40" height="5" rx="2.5" fill="currentColor" opacity=".08" />
+    </svg>
+
+    <!-- ══ SHOOTING STARS ══ -->
+    <span class="sh-shoot" style="--t:12%;--l:-160px;--w:150px;--dur:7s;--d:0s;--c:rgba(109,40,217,.85)"></span>
+    <span class="sh-shoot" style="--t:35%;--l:-160px;--w:110px;--dur:9s;--d:-3s;--c:rgba(236,72,153,.8)"></span>
+    <span class="sh-shoot" style="--t:55%;--l:-160px;--w:180px;--dur:11s;--d:-6s;--c:rgba(6,182,212,.8)"></span>
+    <span class="sh-shoot" style="--t:22%;--l:-160px;--w:90px;--dur:8s;--d:-1.5s;--c:rgba(245,158,11,.75)"></span>
+    <span class="sh-shoot" style="--t:70%;--l:-160px;--w:130px;--dur:13s;--d:-8s;--c:rgba(16,185,129,.75)"></span>
+
+    <!-- ══ SPARKLE STARS ══ -->
+    <span class="sh-aur-star" style="top:8%;left:6%;--sz:18px;--d:0s;--c:rgba(124,58,237,.6)">✦</span>
+    <span class="sh-aur-star" style="top:14%;right:22%;--sz:11px;--d:1.2s;--c:rgba(236,72,153,.6)">✧</span>
+    <span class="sh-aur-star" style="top:48%;left:4%;--sz:22px;--d:2.1s;--c:rgba(6,182,212,.55)">✦</span>
+    <span class="sh-aur-star" style="top:68%;right:6%;--sz:14px;--d:.7s;--c:rgba(245,158,11,.55)">✧</span>
+    <span class="sh-aur-star" style="bottom:14%;left:22%;--sz:16px;--d:1.8s;--c:rgba(16,185,129,.55)">✦</span>
+    <span class="sh-aur-star" style="bottom:22%;right:18%;--sz:20px;--d:2.8s;--c:rgba(124,58,237,.5)">✧</span>
+    <span class="sh-aur-star" style="top:30%;left:48%;--sz:13px;--d:3.4s;--c:rgba(236,72,153,.5)">✦</span>
+    <span class="sh-aur-star" style="top:62%;left:38%;--sz:10px;--d:4.1s;--c:rgba(109,40,217,.5)">✧</span>
 </div>
 
-<div class="container mb-5">
-    <div class="row">
-        <div class="col-lg-3 d-none d-lg-block">
-            <div class="card border-0 shadow-sm mb-4 sticky-top" style="top: 20px; z-index: 1;">
-                <div class="card-header bg-white border-bottom-0 pt-4 pb-0">
-                    <h5 class="fw-bold"><i class="bi bi-funnel-fill text-primary"></i> Bộ lọc</h5>
+<!-- ═══════════════════════════════════════════
+     HERO BANNER
+═══════════════════════════════════════════ -->
+<div class="sh-hero">
+    <!-- Animated blobs -->
+    <div class="sh-hero-blob sh-hb1"></div>
+    <div class="sh-hero-blob sh-hb2"></div>
+    <div class="sh-hero-blob sh-hb3"></div>
+    <!-- Dot grid -->
+    <div class="sh-dot-grid"></div>
+
+    <!-- Floating tech icons in hero corners -->
+    <div class="sh-hero-deco sh-hd1">
+        <svg viewBox="0 0 100 140" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect x="8" y="4" width="84" height="132" rx="14" stroke="rgba(79,70,229,.15)" stroke-width="2.5" fill="rgba(79,70,229,.04)" />
+            <rect x="20" y="18" width="60" height="95" rx="4" fill="rgba(79,70,229,.05)" />
+            <circle cx="50" cy="124" r="7" fill="rgba(79,70,229,.14)" />
+            <line x1="38" y1="10" x2="62" y2="10" stroke="rgba(79,70,229,.2)" stroke-width="3" stroke-linecap="round" />
+            <rect x="26" y="26" width="48" height="28" rx="3" fill="rgba(79,70,229,.07)" />
+            <rect x="26" y="62" width="30" height="6" rx="3" fill="rgba(79,70,229,.1)" />
+            <rect x="26" y="74" width="40" height="4" rx="2" fill="rgba(79,70,229,.07)" />
+            <rect x="26" y="83" width="28" height="4" rx="2" fill="rgba(79,70,229,.07)" />
+        </svg>
+    </div>
+    <div class="sh-hero-deco sh-hd2">
+        <svg viewBox="0 0 140 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect x="6" y="4" width="128" height="78" rx="10" stroke="rgba(124,58,237,.14)" stroke-width="2.5" fill="rgba(124,58,237,.04)" />
+            <rect x="18" y="16" width="104" height="56" rx="4" fill="rgba(124,58,237,.05)" />
+            <rect x="0" y="85" width="140" height="12" rx="6" fill="rgba(124,58,237,.09)" />
+            <circle cx="70" cy="91" r="4" fill="rgba(124,58,237,.2)" />
+            <rect x="28" y="26" width="84" height="7" rx="3.5" fill="rgba(124,58,237,.08)" />
+            <rect x="28" y="40" width="60" height="5" rx="2.5" fill="rgba(124,58,237,.06)" />
+            <rect x="28" y="50" width="72" height="5" rx="2.5" fill="rgba(124,58,237,.06)" />
+            <rect x="28" y="60" width="46" height="5" rx="2.5" fill="rgba(124,58,237,.06)" />
+        </svg>
+    </div>
+    <div class="sh-hero-deco sh-hd3">
+        <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect x="28" y="28" width="44" height="44" rx="6" stroke="rgba(16,185,129,.18)" stroke-width="2.5" fill="rgba(16,185,129,.05)" />
+            <rect x="36" y="36" width="28" height="28" rx="3" fill="rgba(16,185,129,.07)" />
+            <line x1="28" y1="36" x2="10" y2="36" stroke="rgba(16,185,129,.2)" stroke-width="2.5" stroke-linecap="round" />
+            <line x1="28" y1="50" x2="6" y2="50" stroke="rgba(16,185,129,.2)" stroke-width="2.5" stroke-linecap="round" />
+            <line x1="28" y1="64" x2="10" y2="64" stroke="rgba(16,185,129,.2)" stroke-width="2.5" stroke-linecap="round" />
+            <line x1="72" y1="36" x2="90" y2="36" stroke="rgba(16,185,129,.2)" stroke-width="2.5" stroke-linecap="round" />
+            <line x1="72" y1="50" x2="94" y2="50" stroke="rgba(16,185,129,.2)" stroke-width="2.5" stroke-linecap="round" />
+            <line x1="72" y1="64" x2="90" y2="64" stroke="rgba(16,185,129,.2)" stroke-width="2.5" stroke-linecap="round" />
+            <line x1="36" y1="28" x2="36" y2="10" stroke="rgba(16,185,129,.2)" stroke-width="2.5" stroke-linecap="round" />
+            <line x1="50" y1="28" x2="50" y2="6" stroke="rgba(16,185,129,.2)" stroke-width="2.5" stroke-linecap="round" />
+            <line x1="64" y1="28" x2="64" y2="10" stroke="rgba(16,185,129,.2)" stroke-width="2.5" stroke-linecap="round" />
+            <line x1="36" y1="72" x2="36" y2="90" stroke="rgba(16,185,129,.2)" stroke-width="2.5" stroke-linecap="round" />
+            <line x1="50" y1="72" x2="50" y2="94" stroke="rgba(16,185,129,.2)" stroke-width="2.5" stroke-linecap="round" />
+            <line x1="64" y1="72" x2="64" y2="90" stroke="rgba(16,185,129,.2)" stroke-width="2.5" stroke-linecap="round" />
+        </svg>
+    </div>
+    <div class="sh-hero-deco sh-hd4">
+        <svg viewBox="0 0 110 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M20 58 Q20 20 55 20 Q90 20 90 58" fill="none" stroke="rgba(245,158,11,.22)" stroke-width="3" />
+            <rect x="6" y="50" width="20" height="26" rx="8" fill="rgba(245,158,11,.09)" stroke="rgba(245,158,11,.22)" stroke-width="2" />
+            <rect x="84" y="50" width="20" height="26" rx="8" fill="rgba(245,158,11,.09)" stroke="rgba(245,158,11,.22)" stroke-width="2" />
+            <circle cx="55" cy="20" r="7" fill="rgba(245,158,11,.14)" />
+        </svg>
+    </div>
+
+    <!-- Sparkle stars -->
+    <span class="sh-sp" style="top:18%;left:28%;--c:rgba(79,70,229,.4);--d:0s;font-size:14px">✦</span>
+    <span class="sh-sp" style="top:70%;right:15%;--c:rgba(236,72,153,.4);--d:.8s;font-size:18px">✦</span>
+    <span class="sh-sp" style="top:35%;right:30%;--c:rgba(245,158,11,.35);--d:1.6s;font-size:11px">✧</span>
+    <span class="sh-sp" style="bottom:20%;left:20%;--c:rgba(16,185,129,.38);--d:2.4s;font-size:16px">✦</span>
+
+    <div class="container-xl px-4 px-lg-5 position-relative" style="z-index:2">
+        <div class="sh-hero-inner">
+            <div>
+                <span class="sh-hero-eyebrow">
+                    <span class="sh-ey-dot"></span>
+                    <i class="bi bi-shop me-1"></i> Cửa hàng chính hãng
+                </span>
+                <h1 class="sh-hero-title">
+                    Khám phá <span class="sh-grad-text">sản phẩm</span><br>công nghệ hàng đầu
+                </h1>
+                <p class="sh-hero-sub">
+                    Hàng ngàn sản phẩm chính hãng · Giá tốt nhất · Giao nhanh toàn quốc
+                </p>
+            </div>
+            <div class="sh-hero-right">
+                <!-- Category quick-links with icons -->
+                <div class="sh-hero-cats">
+                    <div class="sh-hero-cat sh-hc-blue">
+                        <span class="sh-hc-icon"><i class="bi bi-phone-fill"></i></span>
+                        <span>Điện thoại</span>
+                    </div>
+                    <div class="sh-hero-cat sh-hc-violet">
+                        <span class="sh-hc-icon"><i class="bi bi-laptop-fill"></i></span>
+                        <span>Laptop</span>
+                    </div>
+                    <div class="sh-hero-cat sh-hc-em">
+                        <span class="sh-hc-icon"><i class="bi bi-cpu-fill"></i></span>
+                        <span>Linh kiện</span>
+                    </div>
+                    <div class="sh-hero-cat sh-hc-amb">
+                        <span class="sh-hc-icon"><i class="bi bi-headphones"></i></span>
+                        <span>Phụ kiện</span>
+                    </div>
                 </div>
-                <div class="card-body">
-                    <form method="get">
-                        @if (Model.CategoryId.HasValue)
-                        {
-                            <input type="hidden" asp-for="CategoryId" />
-                        }
-                        @if (!string.IsNullOrEmpty(Model.SortOrder))
-                        {
-                            <input type="hidden" asp-for="SortOrder" />
-                        }
-
-                        <div class="mb-4">
-                            <label class="form-label fw-bold small text-muted">TỪ KHÓA</label>
-                            <div class="input-group">
-                                <input type="text" asp-for="SearchTerm" class="form-control" placeholder="Tìm tên sản phẩm...">
-                                <button class="btn btn-primary" type="submit"><i class="bi bi-search"></i></button>
-                            </div>
-                        </div>
-
-                        <div class="mb-3">
-                            <label class="form-label fw-bold small text-muted">KHOẢNG GIÁ (VNĐ)</label>
-                            <div class="d-flex align-items-center gap-2 mb-2">
-                                <input type="number" asp-for="MinPrice" class="form-control form-control-sm" placeholder="Thấp nhất">
-                                <span>-</span>
-                                <input type="number" asp-for="MaxPrice" class="form-control form-control-sm" placeholder="Cao nhất">
-                            </div>
-                            <button class="btn btn-outline-primary btn-sm w-100" type="submit">Áp dụng</button>
-                        </div>
-                    </form>
-
-                    <div class="mb-4 mt-4">
-                        <label class="form-label fw-bold small text-muted">DANH MỤC</label>
-                        <div class="list-group list-group-flush mb-2">
-                            <a href="@Url.Page("./Index", new { searchTerm = Model.SearchTerm, minPrice = Model.MinPrice, maxPrice = Model.MaxPrice, sortOrder = Model.SortOrder })"
-                               class="list-group-item list-group-item-action border-0 px-0 py-2 fw-bold @(Model.CategoryId == null ? "text-primary" : "text-dark")">
-                                <i class="bi bi-grid-fill me-2"></i> Tất cả sản phẩm
-                            </a>
-                        </div>
-
-                        @if (allCats != null)
-                        {
-                            <div class="accordion accordion-flush" id="categoryAccordion">
-                                @foreach (var parent in parentCats)
-                                {
-                                    var childCats = allCats.Where(c => c.ParentId == parent.CategoryId).ToList();
-                                    bool isActiveParent = (Model.CategoryId == parent.CategoryId);
-                                    bool isActiveChild = childCats.Any(c => c.CategoryId == Model.CategoryId);
-                                    bool expand = isActiveParent || isActiveChild;
-
-                                    <div class="accordion-item border-0">
-                                        <h2 class="accordion-header">
-                                            <button class="accordion-button shadow-none px-0 py-2 @(expand ? "" : "collapsed") @(isActiveParent ? "text-primary fw-bold" : "text-dark bg-white")"
-                                                    type="button" data-bs-toggle="collapse" data-bs-target="#cat-@parent.CategoryId" aria-expanded="@(expand ? "true" : "false")">
-                                                <span onclick="window.location.href='@Url.Page("./Index", new { categoryId = parent.CategoryId, searchTerm = Model.SearchTerm, sortOrder = Model.SortOrder })'; event.stopPropagation();">
-                                                    @parent.CategoryName
-                                                </span>
-                                            </button>
-                                        </h2>
-                                        <div id="cat-@parent.CategoryId" class="accordion-collapse collapse @(expand ? "show" : "")" data-bs-parent="#categoryAccordion">
-                                            <div class="accordion-body py-1 ps-3">
-                                                <ul class="list-unstyled mb-0 border-start ps-3">
-                                                    @foreach (var child in childCats)
-                                                    {
-                                                        <li class="mb-1">
-                                                            <a href="@Url.Page("./Index", new { categoryId = child.CategoryId, searchTerm = Model.SearchTerm, minPrice = Model.MinPrice, maxPrice = Model.MaxPrice, sortOrder = Model.SortOrder })"
-                                                               class="text-decoration-none d-block py-1 @(Model.CategoryId == child.CategoryId ? "text-primary fw-bold" : "text-secondary hover-primary")">
-                                                                @child.CategoryName
-                                                            </a>
-                                                        </li>
-                                                    }
-                                                </ul>
-                                            </div>
-                                        </div>
-                                    </div>
-                                }
-                            </div>
-                        }
-                    </div>
-
-                    <div class="text-center mt-3 pt-3 border-top">
-                        <a asp-page="./Index" class="btn btn-sm btn-link text-decoration-none text-danger">
-                            <i class="bi bi-arrow-counterclockwise"></i> Xóa tất cả bộ lọc
-                        </a>
-                    </div>
+                <!-- Mini trust badges -->
+                <div class="sh-hero-pills">
+                    <span class="sh-hero-pill"><i class="bi bi-shield-fill-check"></i> Chính hãng 100%</span>
+                    <span class="sh-hero-pill"><i class="bi bi-truck"></i> Giao nhanh 2h</span>
+                    <span class="sh-hero-pill"><i class="bi bi-arrow-repeat"></i> Đổi trả 30 ngày</span>
+                    <span class="sh-hero-pill"><i class="bi bi-credit-card"></i> Trả góp 0%</span>
                 </div>
             </div>
         </div>
+    </div>
+</div>
 
-        <div class="col-lg-9">
-            <div class="d-flex justify-content-between align-items-center mb-4 bg-white p-3 rounded shadow-sm border">
-                <div>
-                    <span class="fw-bold text-dark">Hiển thị @(Model.Products?.Count() ?? 0) sản phẩm</span>
+<!-- ═══════════════════════════════════════════
+     MAIN CONTENT
+═══════════════════════════════════════════ -->
+<div class="container-xl px-4 px-lg-5 sh-main">
+    <div class="row g-4">
+
+        <!-- ═══════ SIDEBAR ═══════ -->
+        <div class="col-lg-3 d-none d-lg-block">
+            <div class="sh-sidebar sticky-top" style="top:24px;z-index:10">
+
+                <!-- Filter header -->
+                <div class="sh-sidebar-hdr">
+                    <!-- Decorative corner -->
+                    <div class="sh-sbhdr-deco"></div>
+                    <div class="sh-sidebar-hdr-left">
+                        <div class="sh-sidebar-hdr-icon"><i class="bi bi-funnel-fill"></i></div>
+                        <span>Bộ lọc tìm kiếm</span>
+                    </div>
+                    <a asp-page="./Index" class="sh-clear-btn" title="Xóa bộ lọc">
+                        <i class="bi bi-x-circle"></i>
+                    </a>
+                </div>
+
+                <form method="get" class="sh-filter-form">
+                    @if (Model.CategoryId.HasValue)
+                    {
+                        <input type="hidden" asp-for="CategoryId" />
+                    }
+                    @if (!string.IsNullOrEmpty(Model.SortOrder))
+                    {
+                        <input type="hidden" asp-for="SortOrder" />
+                    }
+
+                    <!-- Search -->
+                    <div class="sh-filter-group">
+                        <label class="sh-filter-label"><i class="bi bi-search me-1"></i> Từ khóa</label>
+                        <div class="sh-search-wrap">
+                            <input type="text" asp-for="SearchTerm" class="sh-search-input" placeholder="Tìm tên sản phẩm...">
+                            <button class="sh-search-btn" type="submit"><i class="bi bi-search"></i></button>
+                        </div>
+                    </div>
+
+                    <!-- Price range -->
+                    <div class="sh-filter-group">
+                        <label class="sh-filter-label"><i class="bi bi-currency-dollar me-1"></i> Khoảng giá (VNĐ)</label>
+                        <!-- Quick price chips -->
+                        <div class="sh-price-chips">
+                            <button type="button" class="sh-price-chip" onclick="setPrice(0,2000000)">Dưới 2tr</button>
+                            <button type="button" class="sh-price-chip" onclick="setPrice(2000000,10000000)">2–10tr</button>
+                            <button type="button" class="sh-price-chip" onclick="setPrice(10000000,30000000)">10–30tr</button>
+                            <button type="button" class="sh-price-chip" onclick="setPrice(30000000,999999999)">Trên 30tr</button>
+                        </div>
+                        <div class="sh-price-row">
+                            <input type="number" id="minPriceInp" asp-for="MinPrice" class="sh-price-input" placeholder="Thấp nhất">
+                            <span class="sh-price-sep">—</span>
+                            <input type="number" id="maxPriceInp" asp-for="MaxPrice" class="sh-price-input" placeholder="Cao nhất">
+                        </div>
+                        <button class="sh-apply-btn" type="submit"><i class="bi bi-check2 me-1"></i> Áp dụng</button>
+                    </div>
+                </form>
+
+                <!-- Categories -->
+                <div class="sh-filter-group sh-cats-group">
+                    <label class="sh-filter-label"><i class="bi bi-grid me-1"></i> Danh mục</label>
+                    <a href="@Url.Page("./Index", new { searchTerm = Model.SearchTerm, minPrice = Model.MinPrice, maxPrice = Model.MaxPrice, sortOrder = Model.SortOrder })"
+                       class="sh-cat-all @(Model.CategoryId == null ? "sh-cat-active" : "")">
+                        <i class="bi bi-grid-fill me-2"></i> Tất cả sản phẩm
+                    </a>
+
+                    @if (allCats != null)
+                    {
+                        <div class="accordion accordion-flush sh-accordion" id="categoryAccordion">
+                            @foreach (var parent in parentCats)
+                            {
+                                var childCats = allCats.Where(c => c.ParentId == parent.CategoryId).ToList();
+                                bool isActiveParent = (Model.CategoryId == parent.CategoryId);
+                                bool isActiveChild = childCats.Any(c => c.CategoryId == Model.CategoryId);
+                                bool expand = isActiveParent || isActiveChild;
+
+                                <div class="accordion-item sh-acc-item">
+                                    <h2 class="accordion-header">
+                                        <button class="accordion-button sh-acc-btn @(expand ? "" : "collapsed") @(isActiveParent ? "sh-acc-active" : "")"
+                                                type="button" data-bs-toggle="collapse"
+                                                data-bs-target="#cat-@parent.CategoryId"
+                                                aria-expanded="@(expand ? "true" : "false")">
+                                            <span onclick="window.location.href='@Url.Page("./Index", new { categoryId = parent.CategoryId, searchTerm = Model.SearchTerm, sortOrder = Model.SortOrder })'; event.stopPropagation();">
+                                                @parent.CategoryName
+                                            </span>
+                                        </button>
+                                    </h2>
+                                    <div id="cat-@parent.CategoryId"
+                                         class="accordion-collapse collapse @(expand ? "show" : "")"
+                                         data-bs-parent="#categoryAccordion">
+                                        <div class="accordion-body sh-acc-body">
+                                            <ul class="list-unstyled mb-0">
+                                                @foreach (var child in childCats)
+                                                {
+                                                    <li>
+                                                        <a href="@Url.Page("./Index", new { categoryId = child.CategoryId, searchTerm = Model.SearchTerm, minPrice = Model.MinPrice, maxPrice = Model.MaxPrice, sortOrder = Model.SortOrder })"
+                                                           class="sh-child-link @(Model.CategoryId == child.CategoryId ? "sh-child-active" : "")">
+                                                            <span class="sh-child-dot"></span>
+                                                            @child.CategoryName
+                                                        </a>
+                                                    </li>
+                                                }
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                </div>
+
+                <!-- Sidebar promo banner -->
+                <div class="sh-sidebar-promo">
+                    <div class="sh-sp-deco sh-sp-d1"></div>
+                    <div class="sh-sp-deco sh-sp-d2"></div>
+                    <!-- Floating icons in promo -->
+                    <div class="sh-sp-floats">
+                        <i class="bi bi-lightning-charge-fill sh-sp-icon sh-sp-i1"></i>
+                        <i class="bi bi-gift-fill sh-sp-icon sh-sp-i2"></i>
+                        <i class="bi bi-star-fill sh-sp-icon sh-sp-i3"></i>
+                    </div>
+                    <span class="sh-sp-tag">🎉 Flash Sale</span>
+                    <p class="sh-sp-title">Giảm đến <strong>50%</strong> hôm nay!</p>
+                    <p class="sh-sp-sub">Chỉ còn hôm nay</p>
+                    <a asp-page="./Index" class="sh-sp-btn">Xem ngay <i class="bi bi-arrow-right ms-1"></i></a>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- ═══════ PRODUCT AREA ═══════ -->
+        <div class="col-lg-9 sh-product-col">
+            <!-- ▸ ANIMATED BACKGROUND for the whole product area -->
+            <div class="sh-grid-bg" aria-hidden="true">
+                <div class="sh-gb-blob sh-gb-b1"></div>
+                <div class="sh-gb-blob sh-gb-b2"></div>
+                <div class="sh-gb-blob sh-gb-b3"></div>
+                <div class="sh-gb-dots"></div>
+                <i class="sh-gb-icon sh-gbi-1 bi bi-phone-fill"></i>
+                <i class="sh-gb-icon sh-gbi-2 bi bi-laptop-fill"></i>
+                <i class="sh-gb-icon sh-gbi-3 bi bi-cpu-fill"></i>
+                <i class="sh-gb-icon sh-gbi-4 bi bi-headphones"></i>
+                <i class="sh-gb-icon sh-gbi-5 bi bi-watch"></i>
+                <i class="sh-gb-icon sh-gbi-6 bi bi-camera-fill"></i>
+                <i class="sh-gb-icon sh-gbi-7 bi bi-controller"></i>
+                <i class="sh-gb-icon sh-gbi-8 bi bi-tablet-fill"></i>
+                <svg class="sh-gb-svg" viewBox="0 0 900 700" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M0,120 L180,120 L180,200 L360,200" stroke="rgba(79,70,229,.09)" stroke-width="1.5" fill="none" />
+                    <circle cx="180" cy="120" r="4" fill="rgba(79,70,229,.15)" />
+                    <circle cx="360" cy="200" r="4" fill="rgba(79,70,229,.15)" />
+                    <path d="M900,80 L720,80 L720,170 L540,170" stroke="rgba(236,72,153,.08)" stroke-width="1.5" fill="none" />
+                    <circle cx="720" cy="80" r="4" fill="rgba(236,72,153,.15)" />
+                    <path d="M0,400 L240,400 L240,320 L480,320" stroke="rgba(16,185,129,.07)" stroke-width="1.5" fill="none" />
+                    <path d="M900,500 L660,500 L660,420 L420,420" stroke="rgba(245,158,11,.07)" stroke-width="1.5" fill="none" />
+                    <path d="M200,700 L200,540 L400,540 L400,460" stroke="rgba(59,130,246,.07)" stroke-width="1.5" fill="none" />
+                    <circle cx="200" cy="540" r="3" fill="rgba(59,130,246,.12)" />
+                    <path d="M700,700 L700,580 L500,580 L500,500" stroke="rgba(124,58,237,.07)" stroke-width="1.5" fill="none" />
+                    <circle cx="700" cy="580" r="3" fill="rgba(124,58,237,.12)" />
+                </svg>
+            </div>
+
+            <!-- Sort / Result bar -->
+            <div class="sh-toolbar sh-reveal-up">
+                <div class="sh-toolbar-left">
+                    <div class="sh-result-icon"><i class="bi bi-box-seam-fill"></i></div>
+                    <span class="sh-result-count">
+                        Hiển thị <strong>@(Model.Products?.Count() ?? 0)</strong> sản phẩm
+                    </span>
                     @if (!string.IsNullOrEmpty(Model.SearchTerm))
                     {
-                        <span class="text-muted ms-1 small">(Tìm kiếm: "<strong>@Model.SearchTerm</strong>")</span>
+                        <span class="sh-search-tag">
+                            <i class="bi bi-search me-1"></i> "@Model.SearchTerm"
+                            <a href="@Url.Page("./Index", new { categoryId = Model.CategoryId, minPrice = Model.MinPrice, maxPrice = Model.MaxPrice, sortOrder = Model.SortOrder })" class="sh-tag-remove">
+                                <i class="bi bi-x"></i>
+                            </a>
+                        </span>
                     }
                 </div>
                 <div class="dropdown">
-                    <button class="btn btn-white border dropdown-toggle" type="button" data-bs-toggle="dropdown">
-                        Sắp xếp: <span class="fw-bold text-primary">@(Model.SortOrder == "price_asc" ? "Giá tăng dần" : "Giá giảm dần")</span>
+                    <button class="sh-sort-btn dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                        <i class="bi bi-arrow-down-up me-2"></i>
+                        <span>@(Model.SortOrder == "price_asc" ? "Giá tăng dần" : "Giá giảm dần")</span>
                     </button>
-                    <ul class="dropdown-menu dropdown-menu-end shadow">
-                        <li><a class="dropdown-item" href="@GetSortUrl("price_desc")">Giá giảm dần</a></li>
-                        <li><a class="dropdown-item" href="@GetSortUrl("price_asc")">Giá tăng dần</a></li>
+                    <ul class="dropdown-menu dropdown-menu-end sh-dropdown">
+                        <li>
+                            <a class="dropdown-item sh-drop-item @(Model.SortOrder != "price_asc" ? "active" : "")"
+                               href="@GetSortUrl("price_desc")">
+                                <i class="bi bi-sort-numeric-down-alt me-2"></i> Giá giảm dần
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item sh-drop-item @(Model.SortOrder == "price_asc" ? "active" : "")"
+                               href="@GetSortUrl("price_asc")">
+                                <i class="bi bi-sort-numeric-up me-2"></i> Giá tăng dần
+                            </a>
+                        </li>
                     </ul>
                 </div>
             </div>
 
+            <!-- Product grid -->
             @if (Model.Products != null && Model.Products.Any())
             {
                 <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 g-4">
                     @foreach (var item in Model.Products)
                     {
-                        <div class="col">
-                            <div class="card h-100 border-0 shadow-hover product-card position-relative">
-                                <div class="position-relative overflow-hidden bg-white border-bottom rounded-top product-img-container">
-                                    <span class="badge bg-danger position-absolute top-0 start-0 m-3 z-2 shadow-sm">HOT</span>
+                        <div class="col sh-reveal-up">
+                            <div class="sh-card">
+                                <!-- Top color stripe -->
+                                <div class="sh-card-stripe"></div>
 
-                                    <a asp-page="./Details" asp-route-id="@item.ProductId" class="d-block w-100 h-100">
-                                        <img src="@(string.IsNullOrEmpty(item.Image) ? "https://placehold.co/400x400?text=No+Image" : item.Image)"
-                                             class="card-img-top object-fit-contain w-100 h-100 p-3 product-img"
-                                             alt="@item.ProductName">
-                                    </a>
+                                <!-- Image container -->
+                                <div class="sh-card-img-wrap">
+                                    <!-- HOT badge -->
+                                    <span class="sh-badge-hot">
+                                        <i class="bi bi-lightning-charge-fill me-1"></i>HOT
+                                    </span>
 
-                                    <button class="position-absolute top-0 end-0 m-2 btn btn-link text-white shadow-sm rounded-circle wishlist-toggle z-index-5 p-0"
-                                            data-product-id="@item.ProductId" title="Thêm vào yêu thích"
-                                            style="width: 40px; height: 40px; background: rgba(0,0,0,0.1); backdrop-filter: blur(2px);">
-                                        <i class="bi bi-heart fs-5 wishlist-icon transition-all"></i>
+                                    <!-- Wishlist (GIỮ NGUYÊN) -->
+                                    <button class="sh-wishlist-btn wishlist-toggle"
+                                            data-product-id="@item.ProductId"
+                                            title="Thêm vào yêu thích">
+                                        <i class="bi bi-heart fs-5 wishlist-icon"></i>
                                     </button>
 
-                                    <div class="product-actions position-absolute bottom-0 start-0 w-100 p-3 d-flex justify-content-center gap-2">
-                                        <button class="btn btn-light rounded-circle shadow-sm btn-add-cart"
+                                    <!-- Image -->
+                                    <a asp-page="./Details" asp-route-id="@item.ProductId" class="sh-img-link">
+                                        <img src="@(string.IsNullOrEmpty(item.Image) ? "https://placehold.co/400x400/f8fafc/94a3b8?text=No+Image" : item.Image)"
+                                             class="sh-product-img product-img"
+                                             alt="@item.ProductName"
+                                             loading="lazy">
+                                    </a>
+
+                                    <!-- Hover overlay with pattern -->
+                                    <div class="sh-card-overlay"></div>
+
+                                    <!-- Hover actions (GIỮ NGUYÊN) -->
+                                    <div class="sh-actions product-actions">
+                                        <button class="sh-action-btn btn-add-cart"
                                                 title="Thêm vào giỏ"
                                                 onclick="addToCart(@item.ProductId, this)">
-                                            <i class="bi bi-cart-plus text-primary fs-5"></i>
+                                            <i class="bi bi-cart-plus"></i>
                                         </button>
-                                        <a asp-page="./Details" asp-route-id="@item.ProductId" class="btn btn-light rounded-circle shadow-sm" title="Xem chi tiết">
-                                            <i class="bi bi-eye text-dark fs-5"></i>
+                                        <a asp-page="./Details"
+                                           asp-route-id="@item.ProductId"
+                                           class="sh-action-btn"
+                                           title="Xem chi tiết">
+                                            <i class="bi bi-eye"></i>
                                         </a>
                                     </div>
                                 </div>
 
-                                <div class="card-body d-flex flex-column p-3">
-                                    <div class="small text-muted text-uppercase mb-1 fw-bold" style="font-size: 0.75rem;">@item.CategoryName</div>
-                                    <h6 class="card-title fw-bold text-truncate mb-2">
-                                        <a asp-page="./Details" asp-route-id="@item.ProductId" class="text-decoration-none text-dark hover-primary">
+                                <!-- Card body -->
+                                <div class="sh-card-body">
+                                    <div class="sh-cat-tag">@item.CategoryName</div>
+                                    <h6 class="sh-product-name">
+                                        <a asp-page="./Details" asp-route-id="@item.ProductId" class="sh-product-link">
                                             @item.ProductName
                                         </a>
                                     </h6>
-                                    <div class="mb-2 text-warning small">
-                                        <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-half"></i>
+                                    <div class="sh-stars">
+                                        <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i>
+                                        <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i>
+                                        <i class="bi bi-star-half"></i>
+                                        <span class="sh-star-val">4.5 (128)</span>
                                     </div>
-                                    <div class="mt-auto">
-                                        <span class="fw-bold text-primary fs-5">@item.Price.ToString("N0") ₫</span>
+                                    <div class="sh-card-foot">
+                                        <div>
+                                            <span class="sh-price">@item.Price.ToString("N0") ₫</span>
+                                            <div class="sh-free-ship"><i class="bi bi-truck me-1"></i>Freeship</div>
+                                        </div>
+                                        <button class="sh-cart-quick btn-add-cart"
+                                                onclick="addToCart(@item.ProductId, this)"
+                                                title="Thêm vào giỏ">
+                                            <i class="bi bi-cart-plus"></i>
+                                        </button>
                                     </div>
                                 </div>
+
+                                <!-- Card bottom shine effect -->
+                                <div class="sh-card-shine"></div>
                             </div>
                         </div>
                     }
@@ -201,52 +528,98 @@
             }
             else
             {
-                <div class="text-center py-5 bg-white rounded shadow-sm">
-                    <div class="mb-3 opacity-25"><i class="bi bi-box-seam display-1"></i></div>
-                    <h4 class="fw-bold">Không tìm thấy sản phẩm nào</h4>
-                    <p class="text-muted">Hãy thử thay đổi bộ lọc hoặc từ khóa tìm kiếm.</p>
-                    <a asp-page="./Index" class="btn btn-primary px-4 rounded-pill mt-2">
-                        <i class="bi bi-arrow-repeat"></i> Xóa bộ lọc & Tải lại
+                <!-- Enhanced empty state -->
+                <div class="sh-empty sh-reveal-up">
+                    <!-- Decorative rings -->
+                    <div class="sh-empty-ring sh-er1"></div>
+                    <div class="sh-empty-ring sh-er2"></div>
+                    <div class="sh-empty-ring sh-er3"></div>
+                    <!-- SVG illustration -->
+                    <div class="sh-empty-illus">
+                        <svg viewBox="0 0 200 180" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <!-- Box body -->
+                            <rect x="50" y="80" width="100" height="80" rx="8" fill="rgba(124,58,237,.1)" stroke="rgba(124,58,237,.2)" stroke-width="2" />
+                            <!-- Box lid open -->
+                            <path d="M45 80 L55 55 L145 55 L155 80" fill="rgba(124,58,237,.07)" stroke="rgba(124,58,237,.2)" stroke-width="2" />
+                            <path d="M100 55 L110 30 L170 30 L160 55" fill="rgba(124,58,237,.06)" stroke="rgba(124,58,237,.18)" stroke-width="2" />
+                            <!-- Stars around box -->
+                            <text x="28" y="60" fill="rgba(245,158,11,.5)" font-size="14">✦</text>
+                            <text x="162" y="50" fill="rgba(79,70,229,.4)" font-size="10">✧</text>
+                            <text x="165" y="110" fill="rgba(236,72,153,.4)" font-size="12">✦</text>
+                            <text x="24" y="120" fill="rgba(16,185,129,.4)" font-size="9">✧</text>
+                            <!-- Search magnifier -->
+                            <circle cx="100" cy="118" r="22" fill="rgba(124,58,237,.06)" stroke="rgba(124,58,237,.15)" stroke-width="2" />
+                            <line x1="116" y1="134" x2="126" y2="144" stroke="rgba(124,58,237,.2)" stroke-width="3" stroke-linecap="round" />
+                            <!-- Question mark -->
+                            <text x="93" y="126" fill="rgba(124,58,237,.3)" font-size="20" font-weight="bold">?</text>
+                        </svg>
+                    </div>
+                    <h4 class="sh-empty-title">Không tìm thấy sản phẩm nào</h4>
+                    <p class="sh-empty-sub">Hãy thử thay đổi bộ lọc hoặc từ khóa tìm kiếm.</p>
+                    <a asp-page="./Index" class="sh-empty-btn">
+                        <i class="bi bi-arrow-repeat me-2"></i> Xóa bộ lọc &amp; Tải lại
                     </a>
                 </div>
             }
+
         </div>
     </div>
 </div>
 
-<div class="toast-container position-fixed top-0 end-0 p-3 mt-5" style="z-index: 9999">
-    <div id="cartToast" class="toast align-items-center text-white bg-success border-0 shadow-lg" role="alert" aria-live="assertive" aria-atomic="true">
+<!-- TOASTS (GIỮ NGUYÊN) -->
+<div class="toast-container position-fixed top-0 end-0 p-3 mt-5" style="z-index:9999">
+    <div id="cartToast" class="toast align-items-center text-white bg-success border-0 shadow-lg"
+         role="alert" aria-live="assertive" aria-atomic="true">
         <div class="d-flex">
-            <div class="toast-body fs-6 fw-bold"><i class="bi bi-check-circle-fill me-2"></i> Đã thêm vào giỏ hàng!</div>
-            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+            <div class="toast-body fs-6 fw-bold">
+                <i class="bi bi-check-circle-fill me-2"></i> Đã thêm vào giỏ hàng!
+            </div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto"
+                    data-bs-dismiss="toast" aria-label="Close"></button>
         </div>
     </div>
-    <div id="loginToast" class="toast align-items-center text-bg-warning border-0 shadow-lg" role="alert" aria-live="assertive" aria-atomic="true">
+    <div id="loginToast" class="toast align-items-center text-bg-warning border-0 shadow-lg"
+         role="alert" aria-live="assertive" aria-atomic="true">
         <div class="d-flex">
             <div class="toast-body">
                 Vui lòng đăng nhập để dùng Wishlist.
                 <a class="btn btn-sm btn-dark ms-2" id="loginToastBtn" href="#">Đăng nhập</a>
             </div>
-            <button type="button" class="btn-close me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+            <button type="button" class="btn-close me-2 m-auto"
+                    data-bs-dismiss="toast" aria-label="Close"></button>
         </div>
     </div>
 </div>
 
-<div class="modal fade" id="loginRequiredModal" tabindex="-1" aria-labelledby="loginRequiredModalLabel" aria-hidden="true">
+<!-- MODAL (GIỮ NGUYÊN) -->
+<div class="modal fade" id="loginRequiredModal" tabindex="-1"
+     aria-labelledby="loginRequiredModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content border-0 shadow-lg">
-            <div class="modal-header bg-warning text-white border-0">
-                <h5 class="modal-title fw-bold" id="loginRequiredModalLabel"><i class="bi bi-exclamation-triangle-fill me-2"></i>Yêu cầu đăng nhập</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <div class="modal-header border-0 pb-0" style="background:linear-gradient(135deg,#f59e0b,#ef4444);border-radius:1rem 1rem 0 0">
+                <h5 class="modal-title fw-bold text-white" id="loginRequiredModalLabel">
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i>Yêu cầu đăng nhập
+                </h5>
+                <button type="button" class="btn-close btn-close-white"
+                        data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <div class="modal-body text-center py-4">
-                <div class="mb-3"><i class="bi bi-person-lock fs-1 text-warning"></i></div>
+            <div class="modal-body text-center py-4 px-4">
+                <div class="mb-3">
+                    <div style="width:70px;height:70px;background:#fffbeb;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto;font-size:32px;">
+                        <i class="bi bi-person-lock text-warning"></i>
+                    </div>
+                </div>
                 <h6 class="fw-bold mb-2">Bạn cần đăng nhập để thực hiện chức năng này</h6>
                 <p class="text-muted mb-0">Vui lòng đăng nhập để tiếp tục mua sắm</p>
             </div>
-            <div class="modal-footer border-0 justify-content-center">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Để sau</button>
-                <a href="/Account/Login?returnUrl=@Uri.EscapeDataString(Request.Path)" class="btn btn-primary">
+            <div class="modal-footer border-0 justify-content-center pb-4">
+                <button type="button" class="btn btn-light px-4 rounded-pill"
+                        data-bs-dismiss="modal">
+                    Để sau
+                </button>
+                <a href="/Account/Login?returnUrl=@Uri.EscapeDataString(Request.Path)"
+                   class="btn px-4 rounded-pill text-white"
+                   style="background:linear-gradient(135deg,#4f46e5,#7c3aed)">
                     <i class="bi bi-box-arrow-in-right me-2"></i>Đăng nhập ngay
                 </a>
             </div>
@@ -254,225 +627,2014 @@
     </div>
 </div>
 
+
+@section Styles {
+    <style>
+        /* ══ Đảm bảo layout header / footer / navbar luôn TRÊN aurora (fixed z-index:0) ══
+           Aurora dùng position:fixed nên theo CSS paint order nó đè lên static elements.
+           Thêm z-index:1 cho các thẻ layout để chúng hiển thị đúng. ══ */
+        body > header,
+        body > footer,
+        body > nav,
+        .navbar,
+        nav[class*="navbar"],
+        footer[class],
+        footer {
+            position: relative !important;
+            z-index: 1 !important;
+        }
+
+        :root {
+            --sh-w: #fff;
+            --sh-bg: #f8fafc;
+            --sh-border: #e2e8f0;
+            --sh-dark: #0f172a;
+            --sh-text: #334155;
+            --sh-muted: #64748b;
+            --sh-blue: #3b82f6;
+            --sh-blue-lt: #eff6ff;
+            --sh-violet: #7c3aed;
+            --sh-violet-lt: #f5f3ff;
+            --sh-em: #10b981;
+            --sh-em-lt: #ecfdf5;
+            --sh-amb: #f59e0b;
+            --sh-amb-lt: #fffbeb;
+            --sh-g: linear-gradient(135deg,#4f46e5 0%,#7c3aed 55%,#ec4899 100%);
+            --sh-g-price: linear-gradient(135deg,#4f46e5,#7c3aed);
+            --sh-sh-sm: 0 2px 8px rgba(0,0,0,.07),0 8px 24px rgba(0,0,0,.06);
+            --sh-sh-md: 0 4px 20px rgba(0,0,0,.09),0 16px 48px rgba(0,0,0,.07);
+            --sh-sh-lg: 0 12px 48px rgba(0,0,0,.13),0 4px 14px rgba(0,0,0,.07);
+            --sh-r: 16px;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        /* ══ PAGE SECTIONS — trên aurora, body giữ màu layout gốc ══ */
+        .sh-hero, .sh-main {
+            position: relative;
+            z-index: 1;
+        }
+
+        .sh-main {
+            background: transparent !important;
+            border-radius: 0;
+            margin-top: 0;
+        }
+
+            .sh-main::before, .sh-main::after {
+                display: none;
+            }
+
+        /* ══ AURORA LAYER — covers full viewport with vivid gradient ══ */
+        .sh-aurora {
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            overflow: hidden;
+            pointer-events: none;
+            /* Opaque base — visually replaces layout body white */
+            background: linear-gradient(135deg,#e8e0ff 0%,#f5d9f7 28%,#daeeff 60%,#ffebd9 100%);
+        }
+            /* Dot grid overlay on aurora */
+            .sh-aurora::before {
+                content: '';
+                position: absolute;
+                inset: 0;
+                background-image: radial-gradient(rgba(99,60,180,.085) 1.5px,transparent 1.5px);
+                background-size: 24px 24px;
+                z-index: 0;
+            }
+
+        /* ══ LARGE TECH SILHOUETTES ══ */
+        .sh-tech-sil {
+            position: absolute;
+            pointer-events: none;
+            will-change: transform;
+        }
+
+        .sh-sil-phone {
+            right: -28px;
+            bottom: 6%;
+            width: 170px;
+            color: rgba(109,40,217,.17);
+            animation: sh-sil-float 9s ease-in-out infinite;
+            filter: drop-shadow(0 0 20px rgba(109,40,217,.13));
+        }
+
+        .sh-sil-laptop {
+            left: -55px;
+            top: 22%;
+            width: 300px;
+            color: rgba(236,72,153,.14);
+            animation: sh-sil-float 11s ease-in-out infinite;
+            animation-delay: -4s;
+            filter: drop-shadow(0 0 20px rgba(236,72,153,.11));
+        }
+
+        .sh-sil-phone2 {
+            right: 4%;
+            top: 7%;
+            width: 80px;
+            color: rgba(6,182,212,.13);
+            animation: sh-sil-float 7s ease-in-out infinite;
+            animation-delay: -2s;
+        }
+        @@keyframes sh-sil-float {
+            0%,100%
+
+        {
+            transform: translateY(0) rotate(-2deg);
+        }
+
+        50% {
+            transform: translateY(-22px) rotate(2.5deg);
+        }
+
+        }
+
+        /* ══ SHOOTING STARS ══ */
+        .sh-shoot {
+            position: absolute;
+            height: 2px;
+            width: var(--w,130px);
+            top: var(--t,20%);
+            left: var(--l,-160px);
+            background: linear-gradient(90deg,transparent 0%,var(--c,rgba(109,40,217,.85)) 50%,rgba(255,255,255,.9) 62%,transparent 100%);
+            border-radius: 2px;
+            animation: sh-shoot-go var(--dur,6s) linear infinite;
+            animation-delay: var(--d,0s);
+            opacity: 0;
+        }
+        @@keyframes sh-shoot-go {
+            0%
+
+        {
+            transform: translate(0,0) rotate(-28deg);
+            opacity: 0;
+        }
+
+        6% {
+            opacity: 1;
+        }
+
+        88% {
+            opacity: .9;
+        }
+
+        100% {
+            transform: translate(115vw,calc(115vw*.55)) rotate(-28deg);
+            opacity: 0;
+        }
+
+        }
+
+        .sh-aurora-blob {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(88px);
+            will-change: transform;
+        }
+        /* Violet top-left */
+        .sh-ab1 {
+            width: 650px;
+            height: 650px;
+            top: -180px;
+            left: -180px;
+            background: radial-gradient(circle,rgba(109,40,217,.32) 0%,rgba(124,58,237,.18) 40%,transparent 70%);
+            animation: sh-aur1 18s ease-in-out infinite;
+        }
+        /* Pink top-right */
+        .sh-ab2 {
+            width: 550px;
+            height: 550px;
+            top: -120px;
+            right: -120px;
+            background: radial-gradient(circle,rgba(236,72,153,.28) 0%,rgba(251,113,133,.16) 40%,transparent 70%);
+            animation: sh-aur2 22s ease-in-out infinite;
+            animation-delay: -6s;
+        }
+        /* Cyan bottom-center */
+        .sh-ab3 {
+            width: 700px;
+            height: 700px;
+            bottom: -200px;
+            left: 28%;
+            background: radial-gradient(circle,rgba(6,182,212,.22) 0%,rgba(59,130,246,.14) 40%,transparent 68%);
+            animation: sh-aur3 26s ease-in-out infinite;
+            animation-delay: -12s;
+        }
+        /* Amber bottom-right */
+        .sh-ab4 {
+            width: 480px;
+            height: 480px;
+            bottom: -120px;
+            right: -100px;
+            background: radial-gradient(circle,rgba(245,158,11,.24) 0%,rgba(251,191,36,.14) 40%,transparent 68%);
+            animation: sh-aur1 20s ease-in-out infinite reverse;
+            animation-delay: -4s;
+        }
+        /* Emerald mid-left */
+        .sh-ab5 {
+            width: 400px;
+            height: 400px;
+            top: 40%;
+            left: -80px;
+            background: radial-gradient(circle,rgba(16,185,129,.20) 0%,rgba(52,211,153,.12) 40%,transparent 68%);
+            animation: sh-aur2 24s ease-in-out infinite;
+            animation-delay: -9s;
+        }
+        @@keyframes sh-aur1 {
+            0%,100%
+
+        {
+            transform: translate(0,0) scale(1);
+        }
+
+        33% {
+            transform: translate(90px,-70px) scale(1.18);
+        }
+
+        66% {
+            transform: translate(-60px,90px) scale(0.88);
+        }
+
+        }
+        @@keyframes sh-aur2 {
+            0%,100%
+
+        {
+            transform: translate(0,0) scale(1);
+        }
+
+        40% {
+            transform: translate(-100px,80px) scale(1.12);
+        }
+
+        70% {
+            transform: translate(70px,-60px) scale(0.93);
+        }
+
+        }
+        @@keyframes sh-aur3 {
+            0%,100%
+
+        {
+            transform: translate(0,0) scale(1);
+        }
+
+        25% {
+            transform: translate(80px,-100px) scale(1.22);
+        }
+
+        75% {
+            transform: translate(-90px,70px) scale(0.84);
+        }
+
+        }
+        /* Floating sparkle stars */
+        .sh-aur-star {
+            position: absolute;
+            font-style: normal;
+            font-size: var(--sz,16px);
+            color: var(--c,rgba(124,58,237,.5));
+            animation: sh-aur-twinkle 3.5s ease-in-out infinite;
+            animation-delay: var(--d,0s);
+            pointer-events: none;
+        }
+        @@keyframes sh-aur-twinkle {
+            0%,100%
+
+        {
+            opacity: .25;
+            transform: scale(.8) rotate(0deg);
+        }
+
+        50% {
+            opacity: 1;
+            transform: scale(1.35) rotate(18deg);
+        }
+
+        }
+
+        /* ══ HERO ══ */
+        .sh-hero {
+            position: relative;
+            overflow: hidden;
+            background: #fff;
+            padding: 72px 0 64px;
+            margin-bottom: 48px;
+            border-bottom: 1px solid var(--sh-border);
+        }
+
+        .sh-dot-grid {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            background-image: radial-gradient(rgba(79,70,229,.1) 1.5px,transparent 1.5px);
+            background-size: 28px 28px;
+        }
+
+        .sh-hero-blob {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(80px);
+            pointer-events: none;
+        }
+
+        .sh-hb1 {
+            width: 500px;
+            height: 500px;
+            top: -180px;
+            left: -80px;
+            background: radial-gradient(circle,rgba(79,70,229,.13) 0%,transparent 70%);
+            animation: sh-blob 10s ease-in-out infinite;
+        }
+
+        .sh-hb2 {
+            width: 400px;
+            height: 400px;
+            bottom: -160px;
+            right: -60px;
+            background: radial-gradient(circle,rgba(236,72,153,.1) 0%,transparent 70%);
+            animation: sh-blob 13s ease-in-out infinite reverse;
+            animation-delay: 2s;
+        }
+
+        .sh-hb3 {
+            width: 300px;
+            height: 300px;
+            top: 30%;
+            right: 20%;
+            background: radial-gradient(circle,rgba(59,130,246,.07) 0%,transparent 70%);
+            animation: sh-blob 9s ease-in-out infinite;
+            animation-delay: 1s;
+        }
+        @@keyframes sh-blob {
+            0%,100%
+
+        {
+            transform: translate(0,0) scale(1);
+        }
+
+        50% {
+            transform: translate(20px,-15px) scale(1.1);
+        }
+
+        }
+
+        /* hero deco SVG corners */
+        .sh-hero-deco {
+            position: absolute;
+            pointer-events: none;
+            animation: sh-float-slow 7s ease-in-out infinite;
+        }
+
+        .sh-hd1 {
+            top: 8%;
+            left: 0%;
+            width: 80px;
+            animation-delay: 0s;
+        }
+
+        .sh-hd2 {
+            top: 6%;
+            right: 0%;
+            width: 120px;
+            animation-delay: 1s;
+        }
+
+        .sh-hd3 {
+            bottom: 6%;
+            left: 0%;
+            width: 90px;
+            animation-delay: 2s;
+        }
+
+        .sh-hd4 {
+            bottom: 8%;
+            right: 0%;
+            width: 100px;
+            animation-delay: 1.5s;
+        }
+        @@keyframes sh-float-slow {
+            0%,100%
+
+        {
+            transform: translateY(0);
+        }
+
+        50% {
+            transform: translateY(-12px);
+        }
+
+        }
+
+        /* sparkles */
+        .sh-sp {
+            position: absolute;
+            pointer-events: none;
+            color: var(--c,rgba(79,70,229,.4));
+            animation: sh-sparkle 3s ease-in-out infinite;
+            animation-delay: var(--d,0s);
+        }
+        @@keyframes sh-sparkle {
+            0%,100%
+
+        {
+            opacity: .3;
+            transform: scale(1) rotate(0deg);
+        }
+
+        50% {
+            opacity: 1;
+            transform: scale(1.4) rotate(20deg);
+        }
+
+        }
+
+        .sh-hero-inner {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 40px;
+            flex-wrap: wrap;
+        }
+
+        .sh-hero-eyebrow {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: linear-gradient(135deg,#eff6ff,#f5f3ff);
+            border: 1px solid #ddd6fe;
+            color: var(--sh-violet);
+            padding: 6px 14px;
+            border-radius: 50px;
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 16px;
+        }
+
+        .sh-ey-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: var(--sh-violet);
+            display: inline-block;
+            animation: sh-pulse 2s ease-in-out infinite;
+        }
+        @@keyframes sh-pulse {
+            0%,100%
+
+        {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        50% {
+            opacity: .3;
+            transform: scale(1.6);
+        }
+
+        }
+
+        .sh-hero-title {
+            font-size: clamp(1.9rem,3.6vw,2.9rem);
+            font-weight: 900;
+            line-height: 1.1;
+            color: var(--sh-dark);
+            margin-bottom: 14px;
+            letter-spacing: -1.5px;
+        }
+
+        .sh-grad-text {
+            background: var(--sh-g);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            background-size: 200% auto;
+            animation: sh-grad 4s linear infinite;
+        }
+        @@keyframes sh-grad {
+            0%
+
+        {
+            background-position: 0% 50%;
+        }
+
+        50% {
+            background-position: 100% 50%;
+        }
+
+        100% {
+            background-position: 0% 50%;
+        }
+
+        }
+
+        .sh-hero-sub {
+            font-size: 15px;
+            color: var(--sh-muted);
+            margin: 0 0 24px;
+        }
+
+        .sh-hero-right {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        /* Category quick links */
+        .sh-hero-cats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+        /* Decorative display cards — không phải nút bấm, chỉ đẹp */
+        .sh-hero-cat {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: #fff;
+            border: 1px solid var(--sh-border);
+            border-radius: 12px;
+            padding: 10px 14px;
+            color: var(--sh-dark);
+            font-size: 13px;
+            font-weight: 600;
+            transition: all .3s ease;
+            box-shadow: 0 2px 8px rgba(0,0,0,.05);
+            cursor: default;
+            user-select: none;
+            position: relative;
+            overflow: hidden;
+        }
+            /* shimmer sweep khi hover */
+            .sh-hero-cat::after {
+                content: '';
+                position: absolute;
+                inset: 0;
+                background: linear-gradient(105deg,transparent 40%,rgba(255,255,255,.55) 50%,transparent 60%);
+                transform: translateX(-100%);
+                transition: transform .5s ease;
+                pointer-events: none;
+            }
+
+            .sh-hero-cat:hover::after {
+                transform: translateX(100%);
+            }
+            /* icon nhún nhẹ, card sáng lên theo màu riêng — không translateY kiểu nút */
+            .sh-hero-cat:hover {
+                box-shadow: 0 6px 20px rgba(0,0,0,.09);
+            }
+
+                .sh-hero-cat:hover .sh-hc-icon {
+                    transform: scale(1.13);
+                    transition: transform .3s ease;
+                }
+
+        .sh-hc-icon {
+            width: 34px;
+            height: 34px;
+            border-radius: 9px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 17px;
+            flex-shrink: 0;
+            transition: transform .3s ease;
+        }
+        /* màu border-top + icon theo từng loại */
+        .sh-hc-blue {
+            border-top: 2px solid var(--sh-blue);
+        }
+
+            .sh-hc-blue .sh-hc-icon {
+                background: var(--sh-blue-lt);
+                color: var(--sh-blue);
+            }
+
+            .sh-hc-blue:hover {
+                border-color: var(--sh-blue);
+                box-shadow: 0 6px 20px rgba(59,130,246,.15);
+            }
+
+        .sh-hc-violet {
+            border-top: 2px solid var(--sh-violet);
+        }
+
+            .sh-hc-violet .sh-hc-icon {
+                background: var(--sh-violet-lt);
+                color: var(--sh-violet);
+            }
+
+            .sh-hc-violet:hover {
+                border-color: var(--sh-violet);
+                box-shadow: 0 6px 20px rgba(124,58,237,.15);
+            }
+
+        .sh-hc-em {
+            border-top: 2px solid var(--sh-em);
+        }
+
+            .sh-hc-em .sh-hc-icon {
+                background: var(--sh-em-lt);
+                color: var(--sh-em);
+            }
+
+            .sh-hc-em:hover {
+                border-color: var(--sh-em);
+                box-shadow: 0 6px 20px rgba(16,185,129,.15);
+            }
+
+        .sh-hc-amb {
+            border-top: 2px solid var(--sh-amb);
+        }
+
+            .sh-hc-amb .sh-hc-icon {
+                background: var(--sh-amb-lt);
+                color: var(--sh-amb);
+            }
+
+            .sh-hc-amb:hover {
+                border-color: var(--sh-amb);
+                box-shadow: 0 6px 20px rgba(245,158,11,.15);
+            }
+
+        .sh-hero-pills {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .sh-hero-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: #fff;
+            border: 1px solid var(--sh-border);
+            color: var(--sh-text);
+            padding: 6px 12px;
+            border-radius: 50px;
+            font-size: 12px;
+            font-weight: 600;
+            box-shadow: 0 2px 6px rgba(0,0,0,.05);
+            white-space: nowrap;
+        }
+
+            .sh-hero-pill i {
+                color: var(--sh-violet);
+            }
+
+        /* ══ MAIN — transparent, body đã đảm nhận full background ══ */
+        .sh-main {
+            padding-bottom: 80px;
+            position: relative;
+        }
+
+            .sh-main > .row {
+                position: relative;
+                z-index: 1;
+            }
+
+        /* ══ SIDEBAR ══ */
+        .sh-sidebar {
+            background: var(--sh-w);
+            border: 1px solid var(--sh-border);
+            border-radius: var(--sh-r);
+            overflow: hidden;
+            box-shadow: var(--sh-sh-sm);
+        }
+
+        .sh-sidebar-hdr {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 18px 20px 14px;
+            border-bottom: 1px solid var(--sh-border);
+            background: linear-gradient(135deg,#f5f3ff,#fff);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .sh-sbhdr-deco {
+            position: absolute;
+            top: -20px;
+            right: -20px;
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: rgba(124,58,237,.07);
+            pointer-events: none;
+        }
+
+        .sh-sidebar-hdr-left {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 15px;
+            font-weight: 800;
+            color: var(--sh-dark);
+            position: relative;
+            z-index: 1;
+        }
+
+        .sh-sidebar-hdr-icon {
+            width: 34px;
+            height: 34px;
+            border-radius: 9px;
+            background: var(--sh-g);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-size: 15px;
+        }
+
+        .sh-clear-btn {
+            color: var(--sh-muted);
+            font-size: 18px;
+            text-decoration: none;
+            transition: color .2s;
+            line-height: 1;
+            position: relative;
+            z-index: 1;
+        }
+
+            .sh-clear-btn:hover {
+                color: #ef4444;
+            }
+
+        .sh-filter-form {
+            padding: 4px 0;
+        }
+
+        .sh-filter-group {
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--sh-border);
+        }
+
+            .sh-filter-group:last-child {
+                border-bottom: none;
+            }
+
+        .sh-filter-label {
+            display: block;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            color: var(--sh-muted);
+            margin-bottom: 10px;
+        }
+
+        .sh-search-wrap {
+            display: flex;
+            border-radius: 10px;
+            overflow: hidden;
+            border: 1px solid var(--sh-border);
+        }
+
+        .sh-search-input {
+            flex: 1;
+            border: none;
+            padding: 9px 14px;
+            font-size: 14px;
+            color: var(--sh-dark);
+            background: #fff;
+            outline: none;
+        }
+
+            .sh-search-input:focus {
+                background: #f5f3ff;
+            }
+
+        .sh-search-btn {
+            background: var(--sh-g);
+            color: #fff;
+            border: none;
+            padding: 0 16px;
+            font-size: 15px;
+            cursor: pointer;
+            transition: .2s;
+        }
+
+            .sh-search-btn:hover {
+                opacity: .9;
+            }
+
+        /* price chips */
+        .sh-price-chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-bottom: 10px;
+        }
+
+        .sh-price-chip {
+            background: var(--sh-bg);
+            border: 1px solid var(--sh-border);
+            border-radius: 6px;
+            padding: 4px 10px;
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--sh-muted);
+            cursor: pointer;
+            transition: .2s;
+        }
+
+            .sh-price-chip:hover {
+                background: var(--sh-violet-lt);
+                border-color: #ddd6fe;
+                color: var(--sh-violet);
+            }
+        /* Price inputs — stack vertically so numbers aren't clipped */
+        .sh-price-row {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+
+        .sh-price-sep {
+            display: none;
+        }
+        /* hide "—" separator, no longer needed in column layout */
+        .sh-price-input {
+            width: 100%;
+            min-width: 0;
+            border: 1px solid var(--sh-border);
+            border-radius: 8px;
+            padding: 8px 12px;
+            font-size: 13px;
+            color: var(--sh-dark);
+            outline: none;
+            transition: .2s;
+            /* show up to 9 digits comfortably */
+            appearance: textfield;
+            -moz-appearance: textfield;
+        }
+
+            .sh-price-input::-webkit-inner-spin-button,
+            .sh-price-input::-webkit-outer-spin-button {
+                -webkit-appearance: none;
+                margin: 0;
+            }
+
+            .sh-price-input:focus {
+                border-color: #c4b5fd;
+                box-shadow: 0 0 0 3px rgba(124,58,237,.08);
+            }
+        /* small placeholder labels above each input */
+        .sh-price-row .sh-price-input:first-of-type {
+            order: 1;
+        }
+
+        .sh-price-row .sh-price-input:last-of-type {
+            order: 2;
+        }
+
+        .sh-apply-btn {
+            width: 100%;
+            background: var(--sh-violet-lt);
+            color: var(--sh-violet);
+            border: 1px solid #ddd6fe;
+            border-radius: 8px;
+            padding: 8px;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: .2s;
+        }
+
+            .sh-apply-btn:hover {
+                background: var(--sh-g);
+                color: #fff;
+                border-color: transparent;
+            }
+
+        .sh-cats-group {
+            padding-bottom: 20px;
+        }
+
+        .sh-cat-all {
+            display: flex;
+            align-items: center;
+            padding: 8px 4px;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--sh-text);
+            text-decoration: none;
+            border-radius: 8px;
+            transition: .2s;
+            margin-bottom: 4px;
+        }
+
+            .sh-cat-all:hover, .sh-cat-all.sh-cat-active {
+                color: var(--sh-violet);
+            }
+
+        .sh-accordion {
+            --bs-accordion-bg: transparent;
+            --bs-accordion-border-color: transparent;
+        }
+
+        .sh-acc-item {
+            background: transparent;
+            border: none !important;
+        }
+
+        .sh-acc-btn {
+            background: transparent !important;
+            color: var(--sh-text) !important;
+            font-size: 14px;
+            font-weight: 600;
+            padding: 8px 4px !important;
+            box-shadow: none !important;
+            transition: color .2s;
+        }
+
+            .sh-acc-btn:not(.collapsed), .sh-acc-btn.sh-acc-active {
+                color: var(--sh-violet) !important;
+            }
+
+            .sh-acc-btn::after {
+                filter: none !important;
+            }
+
+        .sh-acc-body {
+            padding: 4px 0 4px 8px !important;
+        }
+
+        .sh-child-link {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 8px;
+            border-radius: 7px;
+            font-size: 13px;
+            color: var(--sh-muted);
+            text-decoration: none;
+            transition: .2s;
+        }
+
+            .sh-child-link:hover, .sh-child-link.sh-child-active {
+                background: var(--sh-violet-lt);
+                color: var(--sh-violet);
+            }
+
+            .sh-child-link.sh-child-active {
+                font-weight: 700;
+            }
+
+        .sh-child-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: currentColor;
+            flex-shrink: 0;
+        }
+
+        /* Sidebar promo banner */
+        .sh-sidebar-promo {
+            margin: 16px 16px 20px;
+            border-radius: 14px;
+            padding: 20px 18px;
+            background: linear-gradient(135deg,#4f46e5 0%,#7c3aed 55%,#ec4899 100%);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .sh-sp-deco {
+            position: absolute;
+            border-radius: 50%;
+            pointer-events: none;
+        }
+
+        .sh-sp-d1 {
+            width: 100px;
+            height: 100px;
+            top: -30px;
+            right: -30px;
+            background: rgba(255,255,255,.1);
+        }
+
+        .sh-sp-d2 {
+            width: 60px;
+            height: 60px;
+            bottom: -20px;
+            left: -10px;
+            background: rgba(255,255,255,.07);
+        }
+
+        .sh-sp-floats {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+        }
+
+        .sh-sp-icon {
+            position: absolute;
+            color: rgba(255,255,255,.15);
+            font-size: 22px;
+            animation: sh-float-slow 4s ease-in-out infinite;
+        }
+
+        .sh-sp-i1 {
+            top: 8%;
+            right: 18%;
+            animation-delay: 0s;
+        }
+
+        .sh-sp-i2 {
+            bottom: 12%;
+            right: 10%;
+            animation-delay: .8s;
+            font-size: 18px;
+        }
+
+        .sh-sp-i3 {
+            top: 40%;
+            right: 6%;
+            animation-delay: 1.6s;
+            font-size: 16px;
+        }
+
+        .sh-sp-tag {
+            display: inline-block;
+            background: rgba(255,255,255,.2);
+            border: 1px solid rgba(255,255,255,.3);
+            color: #fff;
+            padding: 3px 10px;
+            border-radius: 50px;
+            font-size: 11px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .sh-sp-title {
+            color: #fff;
+            font-size: 16px;
+            font-weight: 800;
+            margin: 0 0 4px;
+            position: relative;
+            z-index: 1;
+        }
+
+            .sh-sp-title strong {
+                font-size: 22px;
+            }
+
+        .sh-sp-sub {
+            color: rgba(255,255,255,.7);
+            font-size: 12px;
+            margin: 0 0 12px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .sh-sp-btn {
+            display: inline-flex;
+            align-items: center;
+            background: rgba(255,255,255,.2);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255,255,255,.3);
+            color: #fff;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 700;
+            text-decoration: none;
+            transition: .2s;
+            position: relative;
+            z-index: 1;
+        }
+
+            .sh-sp-btn:hover {
+                background: rgba(255,255,255,.3);
+                color: #fff;
+            }
+
+        /* ══ TOOLBAR ══ */
+        .sh-toolbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: #fff;
+            border: 1px solid var(--sh-border);
+            border-radius: var(--sh-r);
+            padding: 14px 20px;
+            margin-bottom: 24px;
+            box-shadow: var(--sh-sh-sm);
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .sh-toolbar-left {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .sh-result-icon {
+            width: 30px;
+            height: 30px;
+            border-radius: 8px;
+            background: var(--sh-violet-lt);
+            color: var(--sh-violet);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 15px;
+        }
+
+        .sh-result-count {
+            font-size: 14px;
+            color: var(--sh-text);
+        }
+
+            .sh-result-count strong {
+                color: var(--sh-dark);
+            }
+
+        .sh-search-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            background: var(--sh-violet-lt);
+            color: var(--sh-violet);
+            border: 1px solid #ddd6fe;
+            border-radius: 50px;
+            padding: 3px 12px 3px 10px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .sh-tag-remove {
+            color: var(--sh-violet);
+            text-decoration: none;
+            margin-left: 2px;
+        }
+
+            .sh-tag-remove:hover {
+                color: #ef4444;
+            }
+
+        .sh-sort-btn {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: #fff;
+            border: 1px solid var(--sh-border);
+            border-radius: 10px;
+            padding: 9px 16px;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--sh-dark);
+            cursor: pointer;
+            transition: .2s;
+        }
+
+            .sh-sort-btn:hover {
+                border-color: #c4b5fd;
+                color: var(--sh-violet);
+            }
+
+            .sh-sort-btn span {
+                color: var(--sh-violet);
+            }
+
+        .sh-dropdown {
+            border: 1px solid var(--sh-border);
+            border-radius: 12px;
+            box-shadow: var(--sh-sh-md);
+            padding: 6px;
+            min-width: 180px;
+            /* FIX: must appear ABOVE product cards (z-index:1) */
+            z-index: 9999 !important;
+        }
+        /* Also boost the Bootstrap wrapper so the menu escapes card stacking contexts */
+        .sh-toolbar {
+            z-index: 200 !important;
+            position: relative;
+        }
+
+            .sh-toolbar .dropdown {
+                position: relative;
+                z-index: 200;
+            }
+
+            .sh-toolbar .dropdown-menu {
+                z-index: 9999 !important;
+            }
+
+        .sh-drop-item {
+            border-radius: 8px;
+            padding: 9px 14px;
+            font-size: 13px;
+            font-weight: 500;
+            transition: .15s;
+        }
+
+            .sh-drop-item:hover, .sh-drop-item.active {
+                background: var(--sh-violet-lt);
+                color: var(--sh-violet) !important;
+            }
+
+        /* ══ PRODUCT CARD ══ */
+        .sh-card {
+            background: #fff;
+            border: 1px solid var(--sh-border);
+            border-radius: var(--sh-r);
+            overflow: hidden;
+            height: 100%;
+            transition: all .3s cubic-bezier(.34,1.56,.64,1);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+            .sh-card:hover {
+                transform: translateY(-8px);
+                box-shadow: var(--sh-sh-lg);
+                border-color: transparent;
+            }
+
+        /* color stripe */
+        .sh-card-stripe {
+            height: 3px;
+            background: var(--sh-g);
+            width: 100%;
+            transition: height .3s;
+        }
+
+        .sh-card:hover .sh-card-stripe {
+            height: 4px;
+        }
+
+        /* sh-card-img-wrap — defined fully later with gradient background */
+
+        .sh-badge-hot {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            z-index: 3;
+            background: linear-gradient(135deg,#ef4444,#ec4899);
+            color: #fff;
+            font-size: 10px;
+            font-weight: 800;
+            padding: 3px 10px;
+            border-radius: 50px;
+            letter-spacing: .3px;
+            box-shadow: 0 4px 12px rgba(239,68,68,.35);
+        }
+
+        .sh-wishlist-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            z-index: 3;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: rgba(255,255,255,.88);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,.9);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #94a3b8;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(0,0,0,.1);
+            transition: all .25s;
+        }
+
+            .sh-wishlist-btn:hover {
+                background: #fff;
+                color: #ef4444;
+                transform: scale(1.12);
+            }
+
+        .sh-img-link {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+
+        .sh-product-img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            padding: 16px;
+            transition: transform .4s ease;
+        }
+
+        .sh-card:hover .sh-product-img {
+            transform: scale(1.07);
+        }
+
+        /* overlay pattern on hover */
+        .sh-card-overlay {
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(circle at center,rgba(79,70,229,.04),transparent 70%);
+            opacity: 0;
+            transition: opacity .3s;
+            pointer-events: none;
+        }
+
+        .sh-card:hover .sh-card-overlay {
+            opacity: 1;
+        }
+
+        .sh-actions {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            padding: 14px;
+            background: linear-gradient(to top,rgba(248,250,252,.92),transparent);
+            opacity: 0;
+            transform: translateY(16px);
+            transition: all .3s ease;
+        }
+
+        .sh-card:hover .sh-actions {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .sh-action-btn {
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            background: #fff;
+            border: 1px solid var(--sh-border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--sh-text);
+            font-size: 17px;
+            cursor: pointer;
+            text-decoration: none;
+            box-shadow: 0 2px 8px rgba(0,0,0,.1);
+            transition: all .2s;
+        }
+
+            .sh-action-btn:hover {
+                background: var(--sh-g);
+                color: #fff;
+                border-color: transparent;
+                transform: scale(1.12);
+                box-shadow: 0 6px 20px rgba(79,70,229,.35);
+            }
+
+        .sh-card-body {
+            padding: 14px 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            flex: 1;
+        }
+
+        .sh-cat-tag {
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            color: var(--sh-violet);
+        }
+
+        .sh-product-name {
+            margin: 0;
+            font-size: 14px;
+            font-weight: 700;
+            line-height: 1.4;
+        }
+
+        .sh-product-link {
+            color: var(--sh-dark);
+            text-decoration: none;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            transition: color .2s;
+        }
+
+            .sh-product-link:hover {
+                color: var(--sh-violet);
+            }
+
+        .sh-stars {
+            font-size: 11px;
+            color: #f59e0b;
+            display: flex;
+            align-items: center;
+            gap: 2px;
+        }
+
+        .sh-star-val {
+            font-size: 11.5px;
+            color: var(--sh-muted);
+            margin-left: 4px;
+        }
+
+        .sh-card-foot {
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-between;
+            margin-top: auto;
+            padding-top: 10px;
+            border-top: 1px solid var(--sh-border);
+        }
+
+        .sh-price {
+            font-size: 18px;
+            font-weight: 900;
+            background: var(--sh-g-price);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            display: block;
+        }
+
+        .sh-free-ship {
+            font-size: 10.5px;
+            font-weight: 600;
+            color: var(--sh-em);
+            margin-top: 2px;
+        }
+
+            .sh-free-ship i {
+                font-size: 11px;
+            }
+
+        .sh-cart-quick {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: var(--sh-violet-lt);
+            color: var(--sh-violet);
+            border: 1px solid #ddd6fe;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all .2s;
+            flex-shrink: 0;
+        }
+
+            .sh-cart-quick:hover {
+                background: var(--sh-g);
+                color: #fff;
+                border-color: transparent;
+            }
+
+        /* card shine */
+        .sh-card-shine {
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 50%;
+            height: 100%;
+            background: linear-gradient(90deg,transparent,rgba(255,255,255,.06),transparent);
+            transform: skewX(-15deg);
+            transition: left .6s;
+            pointer-events: none;
+        }
+
+        .sh-card:hover .sh-card-shine {
+            left: 150%;
+        }
+
+        /* ══ PRODUCT COLUMN ANIMATED BG ══ */
+        .sh-product-col {
+            position: relative;
+        }
+
+        .sh-grid-bg {
+            position: absolute;
+            inset: 0;
+            border-radius: 20px;
+            overflow: hidden;
+            pointer-events: none;
+            z-index: 0;
+            /* background removed — body now handles full-screen gradient */
+        }
+
+        .sh-gb-blob {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(70px);
+            pointer-events: none;
+        }
+
+        .sh-gb-b1 {
+            width: 420px;
+            height: 420px;
+            top: -80px;
+            left: -80px;
+            background: radial-gradient(circle,rgba(79,70,229,.1) 0%,transparent 70%);
+            animation: sh-blob 12s ease-in-out infinite;
+        }
+
+        .sh-gb-b2 {
+            width: 360px;
+            height: 360px;
+            bottom: -60px;
+            right: -60px;
+            background: radial-gradient(circle,rgba(236,72,153,.09) 0%,transparent 70%);
+            animation: sh-blob 14s ease-in-out infinite reverse;
+            animation-delay: 2s;
+        }
+
+        .sh-gb-b3 {
+            width: 280px;
+            height: 280px;
+            top: 45%;
+            left: 55%;
+            background: radial-gradient(circle,rgba(16,185,129,.07) 0%,transparent 70%);
+            animation: sh-blob 10s ease-in-out infinite;
+            animation-delay: 1s;
+        }
+
+        .sh-gb-dots {
+            position: absolute;
+            inset: 0;
+            background-image: radial-gradient(rgba(79,70,229,.09) 1.5px,transparent 1.5px);
+            background-size: 26px 26px;
+        }
+        /* floating ambient tech icons in grid bg */
+        .sh-gb-icon {
+            position: absolute;
+            pointer-events: none;
+            font-style: normal;
+            animation: sh-float-slow 6s ease-in-out infinite;
+        }
+
+        .sh-gbi-1 {
+            top: 4%;
+            left: 3%;
+            font-size: 44px;
+            color: rgba(79,70,229,.08);
+            animation-delay: 0s;
+        }
+
+        .sh-gbi-2 {
+            top: 4%;
+            right: 3%;
+            font-size: 52px;
+            color: rgba(124,58,237,.07);
+            animation-delay: .8s;
+        }
+
+        .sh-gbi-3 {
+            top: 30%;
+            left: 1%;
+            font-size: 38px;
+            color: rgba(16,185,129,.07);
+            animation-delay: 1.6s;
+        }
+
+        .sh-gbi-4 {
+            top: 30%;
+            right: 1%;
+            font-size: 40px;
+            color: rgba(245,158,11,.07);
+            animation-delay: 2.4s;
+        }
+
+        .sh-gbi-5 {
+            top: 57%;
+            left: 2%;
+            font-size: 36px;
+            color: rgba(236,72,153,.07);
+            animation-delay: 1.2s;
+        }
+
+        .sh-gbi-6 {
+            top: 57%;
+            right: 2%;
+            font-size: 42px;
+            color: rgba(59,130,246,.07);
+            animation-delay: 2s;
+        }
+
+        .sh-gbi-7 {
+            bottom: 5%;
+            left: 4%;
+            font-size: 46px;
+            color: rgba(79,70,229,.07);
+            animation-delay: .4s;
+        }
+
+        .sh-gbi-8 {
+            bottom: 5%;
+            right: 4%;
+            font-size: 44px;
+            color: rgba(124,58,237,.07);
+            animation-delay: 1.8s;
+        }
+
+        .sh-gb-svg {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* make toolbar, cards etc render above the background */
+        .sh-toolbar, .sh-card, .sh-reveal-up, .sh-empty {
+            position: relative;
+            z-index: 1;
+        }
+
+        /* ══ IMAGE AREA — pure CSS decorative background (no extra HTML needed) ══ */
+        .sh-card-img-wrap {
+            position: relative;
+            overflow: hidden;
+            height: 220px;
+            border-bottom: 1px solid var(--sh-border);
+            background: linear-gradient(145deg,#f5f7ff 0%,#faf0ff 50%,#f0f9ff 100%);
+        }
+
+        .sh-card:hover .sh-card-img-wrap {
+            border-color: transparent;
+        }
+
+        /* ::before — center radial glow + dot grid pattern */
+        .sh-card-img-wrap::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background-image: radial-gradient(circle at 50% 50%, rgba(79,70,229,.07) 0%, rgba(124,58,237,.04) 40%, transparent 70%), radial-gradient(rgba(79,70,229,.07) 1.5px, transparent 1.5px);
+            background-size: 100% 100%, 22px 22px;
+            pointer-events: none;
+            z-index: 0;
+            animation: sh-glow-pulse 4s ease-in-out infinite;
+        }
+        @@keyframes sh-glow-pulse {
+            0%,100%
+
+        {
+            opacity: .7;
+        }
+
+        50% {
+            opacity: 1;
+        }
+
+        }
+
+        /* ::after — spinning dashed ring */
+        .sh-card-img-wrap::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 130px;
+            height: 130px;
+            transform: translate(-50%,-50%) rotate(0deg);
+            border-radius: 50%;
+            border: 1.5px dashed rgba(79,70,229,.12);
+            pointer-events: none;
+            z-index: 0;
+            animation: sh-ring-spin 20s linear infinite;
+        }
+        @@keyframes sh-ring-spin {
+            from
+
+        {
+            transform: translate(-50%,-50%) rotate(0deg);
+        }
+
+        to {
+            transform: translate(-50%,-50%) rotate(360deg);
+        }
+
+        }
+
+        /* Corner gradient glows via box-shadow inset trick */
+        .sh-card-img-wrap .sh-img-link::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            z-index: 0;
+            pointer-events: none;
+            background: radial-gradient(circle at 5% 5%, rgba(79,70,229,.1) 0%, transparent 40%), radial-gradient(circle at 95% 5%, rgba(236,72,153,.09) 0%, transparent 40%), radial-gradient(circle at 5% 95%, rgba(16,185,129,.09) 0%, transparent 40%), radial-gradient(circle at 95% 95%, rgba(245,158,11,.09) 0%, transparent 40%);
+        }
+
+        /* make image and UI elements render above bg layers */
+        /* ⚠ sh-wishlist-btn giữ nguyên position:absolute — KHÔNG override ở đây */
+        .sh-img-link, .sh-badge-hot, .sh-actions, .sh-card-overlay {
+            position: relative;
+            z-index: 2;
+        }
+
+        .sh-product-img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            padding: 16px;
+            transition: transform .4s ease;
+            position: relative;
+            z-index: 2;
+        }
+
+        .sh-card:hover .sh-product-img {
+            transform: scale(1.07);
+        }
+
+        /* Per-card color variant backgrounds */
+        .sh-card:nth-child(3n+1) .sh-card-img-wrap {
+            background: linear-gradient(145deg,#f5f7ff,#faf0ff,#f0f9ff);
+        }
+
+            .sh-card:nth-child(3n+1) .sh-card-img-wrap::before {
+                background-image: radial-gradient(circle at 50% 50%,rgba(79,70,229,.09) 0%,rgba(124,58,237,.05) 40%,transparent 70%),radial-gradient(rgba(79,70,229,.07) 1.5px,transparent 1.5px);
+                background-size: 100% 100%,22px 22px;
+            }
+
+        .sh-card:nth-child(3n+2) .sh-card-img-wrap {
+            background: linear-gradient(145deg,#f0fdf9,#eff6ff,#faf5ff);
+        }
+
+            .sh-card:nth-child(3n+2) .sh-card-img-wrap::before {
+                background-image: radial-gradient(circle at 50% 50%,rgba(16,185,129,.09) 0%,rgba(59,130,246,.05) 40%,transparent 70%),radial-gradient(rgba(16,185,129,.07) 1.5px,transparent 1.5px);
+                background-size: 100% 100%,22px 22px;
+            }
+
+            .sh-card:nth-child(3n+2) .sh-card-img-wrap::after {
+                border-color: rgba(16,185,129,.12);
+            }
+
+        .sh-card:nth-child(3n) .sh-card-img-wrap {
+            background: linear-gradient(145deg,#fdf4ff,#fff7ed,#fdf2f8);
+        }
+
+            .sh-card:nth-child(3n) .sh-card-img-wrap::before {
+                background-image: radial-gradient(circle at 50% 50%,rgba(236,72,153,.09) 0%,rgba(245,158,11,.05) 40%,transparent 70%),radial-gradient(rgba(236,72,153,.07) 1.5px,transparent 1.5px);
+                background-size: 100% 100%,22px 22px;
+            }
+
+            .sh-card:nth-child(3n) .sh-card-img-wrap::after {
+                border-color: rgba(236,72,153,.12);
+            }
+
+        /* ══ EMPTY STATE ══ */
+        .sh-empty {
+            background: #fff;
+            border: 1px solid var(--sh-border);
+            border-radius: 24px;
+            padding: 72px 32px;
+            text-align: center;
+            box-shadow: var(--sh-sh-sm);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .sh-empty-ring {
+            position: absolute;
+            border-radius: 50%;
+            border: 1px dashed rgba(124,58,237,.15);
+            pointer-events: none;
+        }
+
+        .sh-er1 {
+            width: 300px;
+            height: 300px;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%,-50%);
+        }
+
+        .sh-er2 {
+            width: 460px;
+            height: 460px;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%,-50%);
+        }
+
+        .sh-er3 {
+            width: 620px;
+            height: 620px;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%,-50%);
+        }
+
+        .sh-empty-illus {
+            width: 200px;
+            margin: 0 auto 20px;
+            position: relative;
+            z-index: 1;
+        }
+
+            .sh-empty-illus svg {
+                width: 100%;
+                height: auto;
+            }
+
+        .sh-empty-title {
+            font-size: 20px;
+            font-weight: 800;
+            color: var(--sh-dark);
+            margin-bottom: 8px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .sh-empty-sub {
+            font-size: 14px;
+            color: var(--sh-muted);
+            margin-bottom: 24px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .sh-empty-btn {
+            display: inline-flex;
+            align-items: center;
+            background: var(--sh-g);
+            color: #fff;
+            padding: 12px 28px;
+            border-radius: 50px;
+            font-size: 14px;
+            font-weight: 700;
+            text-decoration: none;
+            box-shadow: 0 8px 24px rgba(79,70,229,.35);
+            transition: .25s;
+            position: relative;
+            z-index: 1;
+        }
+
+            .sh-empty-btn:hover {
+                transform: translateY(-3px);
+                color: #fff;
+                box-shadow: 0 14px 32px rgba(79,70,229,.45);
+            }
+
+        /* ══ SCROLL REVEAL ══ */
+        .sh-reveal-up {
+            opacity: 0;
+            transform: translateY(32px);
+            transition: opacity .65s cubic-bezier(.22,1,.36,1),transform .65s cubic-bezier(.22,1,.36,1);
+        }
+
+        .sh-revealed {
+            opacity: 1;
+            transform: none;
+        }
+
+        /* ══ RESPONSIVE ══ */
+        @@media(max-width:991px) {
+            .sh-hero {
+                padding: 56px 0 48px;
+            }
+
+            .sh-hero-inner {
+                flex-direction: column;
+                gap: 24px;
+            }
+
+            .sh-hd2, .sh-hd3 {
+                display: none;
+            }
+
+            .sh-hd1 {
+                width: 60px;
+            }
+
+            .sh-hd4 {
+                width: 70px;
+            }
+        }
+
+        @@media(max-width:767px) {
+            .sh-hero-title {
+                font-size: 1.8rem;
+            }
+
+            .sh-hero-cats {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .sh-hd1, .sh-hd2, .sh-hd3, .sh-hd4 {
+                display: none;
+            }
+
+            .sh-hero-pills {
+                display: none;
+            }
+        }
+
+        @@media(max-width:575px) {
+            .sh-card-img-wrap {
+                height: 200px;
+            }
+
+            .sh-toolbar {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+        }
+    </style>
+}
+
+
 @section Scripts {
     <script>
-        // --- 1. HÀM ADD TO CART (Giữ nguyên) ---
+        // ─── 1. ADD TO CART (GIỮ NGUYÊN) ───
         async function addToCart(productId, btnElement) {
             const originalContent = btnElement.innerHTML;
             btnElement.disabled = true;
             btnElement.innerHTML = '<span class="spinner-border spinner-border-sm text-primary" role="status"></span>';
-
             const formData = new FormData();
             formData.append('productId', productId);
             formData.append('quantity', 1);
-
-            // Lấy token
             const tokenInput = document.querySelector('#csrf-token-form input[name="__RequestVerificationToken"]');
             const token = tokenInput ? tokenInput.value : '';
             formData.append('__RequestVerificationToken', token);
-
             try {
-                const res = await fetch('/Cart/Add', {
-                    method: 'POST',
-                    headers: { 'X-Requested-With': 'XMLHttpRequest', 'RequestVerificationToken': token },
-                    body: formData
-                });
-
+                const res = await fetch('/Cart/Add', { method: 'POST', headers: { 'X-Requested-With': 'XMLHttpRequest', 'RequestVerificationToken': token }, body: formData });
                 if (!res.ok) throw new Error('Request failed');
                 const data = await res.json();
-
                 if (data.success) {
                     const badge = document.getElementById('cartBadge');
-                    if (badge) {
-                        badge.textContent = data.count ?? badge.textContent;
-                        badge.style.display = (data.count ?? 0) > 0 ? 'block' : 'none';
-                    }
+                    if (badge) { badge.textContent = data.count ?? badge.textContent; badge.style.display = (data.count ?? 0) > 0 ? 'block' : 'none'; }
                     btnElement.innerHTML = '<i class="bi bi-check-lg text-success fw-bold fs-4"></i>';
-
-                    const toastEl = document.getElementById('cartToast');
-                    const toast = new bootstrap.Toast(toastEl);
-                    toast.show();
-
-                    setTimeout(() => {
-                        btnElement.innerHTML = originalContent;
-                        btnElement.disabled = false;
-                    }, 1500);
-                } else {
-                    alert(data.error || 'Có lỗi xảy ra!');
-                    btnElement.innerHTML = originalContent;
-                    btnElement.disabled = false;
-                }
-            } catch (err) {
-                console.error(err);
-                alert('Lỗi kết nối! Vui lòng thử lại.');
-                btnElement.innerHTML = originalContent;
-                btnElement.disabled = false;
-            }
+                    new bootstrap.Toast(document.getElementById('cartToast')).show();
+                    setTimeout(() => { btnElement.innerHTML = originalContent; btnElement.disabled = false; }, 1500);
+                } else { alert(data.error || 'Có lỗi xảy ra!'); btnElement.innerHTML = originalContent; btnElement.disabled = false; }
+            } catch (err) { console.error(err); alert('Lỗi kết nối! Vui lòng thử lại.'); btnElement.innerHTML = originalContent; btnElement.disabled = false; }
         }
 
-        // --- 2. HÀM WISHLIST (YÊU THÍCH) ---
-        $(function() {
-            // Check trạng thái ban đầu (đỏ hay trắng) khi load trang
-            $('.wishlist-toggle').each(async function() {
-                const btn = this;
-                const productId = btn.dataset.productId;
+        // ─── 2. WISHLIST (GIỮ NGUYÊN) ───
+        $(function () {
+            $('.wishlist-toggle').each(async function () {
+                const btn = this; const productId = btn.dataset.productId;
                 try {
                     const res = await fetch(`/Wishlist/Check/${productId}`);
-                        const data = await res.json();
+                    const data = await res.json();
                     const icon = btn.querySelector('.wishlist-icon');
-
-                    if (data.isInWishlist) {
-                        icon.classList.remove('bi-heart', 'text-white');
-                        icon.classList.add('bi-heart-fill', 'text-danger');
-                        btn.title = 'Xóa khỏi Wishlist';
-                    } else {
-                        icon.classList.remove('bi-heart-fill', 'text-danger');
-                        icon.classList.add('bi-heart', 'text-white');
-                        btn.title = 'Thêm vào Wishlist';
-                    }
-                } catch(e) { console.log('Check wishlist fail:', e); }
+                    if (data.isInWishlist) { icon.classList.remove('bi-heart','text-white'); icon.classList.add('bi-heart-fill','text-danger'); btn.title = 'Xóa khỏi Wishlist'; }
+                    else { icon.classList.remove('bi-heart-fill','text-danger'); icon.classList.add('bi-heart','text-white'); btn.title = 'Thêm vào Wishlist'; }
+                } catch (e) { console.log('Check wishlist fail:', e); }
             });
-
-            // Xử lý click Toggle
-            $(document.body).on('click', '.wishlist-toggle', async function(e) {
-                e.preventDefault();
-                e.stopPropagation();
-
-                const btn = this;
-                const icon = btn.querySelector('.wishlist-icon');
-                const productId = btn.dataset.productId;
-
-                btn.disabled = true;
-
-                // Hiệu ứng scale khi bấm
-                btn.style.transform = 'scale(0.9)';
-                setTimeout(() => btn.style.transform = 'scale(1)', 150);
-
+            $(document.body).on('click', '.wishlist-toggle', async function (e) {
+                e.preventDefault(); e.stopPropagation();
+                const btn = this; const icon = btn.querySelector('.wishlist-icon'); const productId = btn.dataset.productId;
+                btn.disabled = true; btn.style.transform = 'scale(0.85)'; setTimeout(() => btn.style.transform = 'scale(1)', 150);
                 try {
                     const token = $('input[name="__RequestVerificationToken"]').val();
-                    const res = await fetch(`/Wishlist/Toggle/${productId}`, {
-                        method: 'POST',
-                        headers: { 'RequestVerificationToken': token }
-                    });
-
-                     if (res.status === 401) {
+                    const res = await fetch(`/Wishlist/Toggle/${productId}`, { method: 'POST', headers: { 'RequestVerificationToken': token } });
+                    if (res.status === 401) {
                         const returnUrl = encodeURIComponent(window.location.pathname + window.location.search);
                         document.getElementById("loginToastBtn").href = `/Account/Login?ReturnUrl=${returnUrl}`;
-                        bootstrap.Toast.getOrCreateInstance(document.getElementById("loginToast"),
-                        { autohide: true, delay: 3500, animation: true }).show();
+                        bootstrap.Toast.getOrCreateInstance(document.getElementById("loginToast"), { autohide: true, delay: 3500, animation: true }).show();
                         return;
-                     }
-
+                    }
                     if (!res.ok) throw new Error('Network error');
                     const data = await res.json();
-
                     if (data.success) {
-                        if (data.isAdded) {
-                            // Đổi sang tim đỏ
-                            icon.classList.remove('bi-heart', 'text-white');
-                            icon.classList.add('bi-heart-fill', 'text-danger');
-                            btn.title = 'Xóa khỏi Wishlist';
-                        } else {
-                            // Đổi về tim trắng
-                            icon.classList.remove('bi-heart-fill', 'text-danger');
-                            icon.classList.add('bi-heart', 'text-white');
-                            btn.title = 'Thêm vào Wishlist';
-                        }
-                    } else {
-                        alert(data.message || 'Lỗi xử lý wishlist');
-                    }
-                } catch(err) {
-                    console.error(err);
-                    // Nếu chưa đăng nhập (hoặc lỗi khác), có thể redirect user
-                    // window.location.href = '/Account/Login';
-                } finally {
-                    btn.disabled = false;
-                }
+                        if (data.isAdded) { icon.classList.remove('bi-heart','text-white'); icon.classList.add('bi-heart-fill','text-danger'); btn.title = 'Xóa khỏi Wishlist'; }
+                        else { icon.classList.remove('bi-heart-fill','text-danger'); icon.classList.add('bi-heart','text-white'); btn.title = 'Thêm vào Wishlist'; }
+                    } else { alert(data.message || 'Lỗi xử lý wishlist'); }
+                } catch (err) { console.error(err); } finally { btn.disabled = false; }
             });
         });
+
+        // ─── 3. SCROLL REVEAL ───
+        (function () {
+            var els = document.querySelectorAll('.sh-reveal-up');
+            if (!('IntersectionObserver' in window)) { els.forEach(function (el) { el.classList.add('sh-revealed'); }); return; }
+            var obs = new IntersectionObserver(function (entries) {
+                entries.forEach(function (e) {
+                    if (!e.isIntersecting) return;
+                    setTimeout(function () { e.target.classList.add('sh-revealed'); }, parseFloat(e.target.style.animationDelay || '0') * 1000);
+                    obs.unobserve(e.target);
+                });
+            }, { threshold: 0.1 });
+            els.forEach(function (el) { obs.observe(el); });
+        })();
+
+        // ─── 4. PRICE CHIPS ───
+        function setPrice(min, max) {
+            var minInp = document.getElementById('minPriceInp');
+            var maxInp = document.getElementById('maxPriceInp');
+            if (minInp) minInp.value = min > 0 ? min : '';
+            if (maxInp) maxInp.value = max < 999999999 ? max : '';
+        }
     </script>
 }
-
-<style>
-    /* 1. Hiệu ứng Hover Link */
-    .hover-primary:hover {
-        color: var(--bs-primary) !important;
-        transition: color 0.2s;
-    }
-
-    /* 2. Product Card Animation */
-    .shadow-hover {
-        transition: all 0.3s ease;
-        border: 1px solid #eee !important;
-    }
-
-        .shadow-hover:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 15px 30px rgba(0,0,0,0.1) !important;
-            border-color: transparent !important;
-        }
-
-    /* 3. Zoom ảnh khi hover */
-    .product-img {
-        transition: transform 0.4s ease;
-    }
-
-    .shadow-hover:hover .product-img {
-        transform: scale(1.08);
-    }
-
-    /* 4. Action Buttons (Trượt từ dưới lên) */
-    .product-actions {
-        opacity: 0;
-        transform: translateY(20px);
-        transition: all 0.3s ease;
-        background: linear-gradient(to top, rgba(0,0,0,0.05), transparent);
-    }
-
-    .shadow-hover:hover .product-actions {
-        opacity: 1;
-        transform: translateY(0);
-    }
-
-    /* 5. Style nút tròn Action */
-    .product-actions .btn {
-        width: 40px;
-        height: 40px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        transition: all 0.2s;
-    }
-
-        .product-actions .btn:hover {
-            background-color: var(--bs-primary);
-            color: white !important;
-            border-color: var(--bs-primary);
-        }
-
-            .product-actions .btn:hover i {
-                color: white !important;
-            }
-
-    /* 6. Cố định khung ảnh (QUAN TRỌNG) */
-    .product-img-container {
-        height: 280px;
-        width: 100%;
-        background-color: #fff;
-    }
-
-        .product-img-container img {
-            width: 100%;
-            height: 100%;
-            object-fit: contain;
-        }
-
-    /* 7. Nút Wishlist */
-    .wishlist-toggle:hover {
-        background: rgba(0,0,0,0.2) !important;
-    }
-
-    .transition-all {
-        transition: all 0.2s;
-    }
-</style>

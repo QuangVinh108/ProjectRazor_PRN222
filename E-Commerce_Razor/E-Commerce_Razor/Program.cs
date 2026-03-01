@@ -105,7 +105,12 @@ if (!app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();
-
+app.Use(async (context, next) =>
+{
+    // Mở khóa để popup của Google có thể gửi dữ liệu về trang web
+    context.Response.Headers["Cross-Origin-Opener-Policy"] = "same-origin-allow-popups";
+    await next();
+});
 app.UseRouting();
 
 app.UseAuthorization();

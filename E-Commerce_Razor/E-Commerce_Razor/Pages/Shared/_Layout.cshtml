@@ -11,8 +11,342 @@
 
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
 
-    @* ✅ THÊM DÒNG NÀY - Render page-specific styles *@
+    @* ✅ Render page-specific styles *@
     @await RenderSectionAsync("Styles", required: false)
+
+    @*
+    ══════════════════════════════════════════════════════════════════
+    ✅ FIX: Navbar & dropdown z-index override.
+    Đặt SAU @RenderSectionAsync("Styles") để luôn thắng bất kỳ
+    page CSS nào (kể cả !important cùng specificity — last wins).
+
+    Nguyên nhân lỗi: Shop/Index.cshtml có rule
+      .navbar { position:relative !important; z-index:1 !important }
+    để fix aurora blob che footer. Rule đó kéo navbar từ z-index 1020
+    xuống 1, khiến dropdown-menu (z-index 1000 theo Bootstrap nhưng
+    scoped trong stacking context z-index:1 của navbar) bị các element
+    khác trên trang đè lên.
+
+    Fix: Khôi phục z-index đúng cho navbar + dropdown LUÔN LUÔN,
+    dù page nào đang render.
+    ══════════════════════════════════════════════════════════════════
+    *@
+    <style>
+        /* ══════════════════════════════════════════════════════════════
+               GLOBAL NAVBAR + DROPDOWN UI OVERHAUL
+               - Z-index fix (dropdown không bị trang che)
+               - Modern glassmorphism dropdown panel
+               - Animated slide-in
+               - Item hover gradient
+               - Navbar pill toggle & brand polish
+            ══════════════════════════════════════════════════════════════ */
+
+        /* ── 0. Variables ── */
+        :root {
+            --nav-g: linear-gradient(135deg, #4f46e5 0%, #7c3aed 60%, #ec4899 100%);
+            --nav-g-soft: linear-gradient(135deg, rgba(79,70,229,.08) 0%, rgba(124,58,237,.06) 100%);
+            --nav-accent: #7c3aed;
+            --nav-shadow: 0 20px 60px rgba(79,70,229,.18), 0 4px 16px rgba(0,0,0,.10);
+            --nav-r: 16px;
+        }
+
+        /* ── 1. Z-index fix (always wins over page CSS) ── */
+
+        /* ══════════════════════════════════════════════════════════════
+               ✅ FIX ĐỊNH GỐC: TẠI SAO DROPDOWN BỊ CHE?
+               ══════════════════════════════════════════════════════════════
+               Nguyên nhân THỰC SỰ: các page dùng:
+                 • filter: blur() trên aurora blobs → tạo stacking context mới
+                 • transform-style: preserve-3d trên hero img → idem
+                 • backdrop-filter, opacity, transform trên cards → idem
+               Những stacking context này nổi lên ROOT context, chen ngang
+               với navbar. Dù navbar có z-index 1050, dropdown (nằm trong
+               navbar's stacking context) vẫn bị các page element đè lên
+               nếu chúng được paint SAU navbar theo DOM order.
+
+               GIẢI PHÁT ĐÚNG: isolation: isolate trên <main>
+               ── Tạo một stacking context CÔ LẬT cho toàn bộ page content ──
+               • Mọi stacking context bên trong main (filter, transform, z-index
+                 bất kỳ) đều bị "nhốt" hoàn toàn trong hộp này
+               • Hộp này ở z-index: 0 trong root
+               • Navbar ở z-index: 1050 → LUÔN trên main → dropdown KHÔNG BAO
+                 GIỜ bị che nữa, dù page có bao nhiêu filter/transform đi nữa
+            ══════════════════════════════════════════════════════════════ */
+
+        /* ── 1a. NHỐT tất cả page stacking contexts vào isolated box ── */
+        main[role="main"],
+        main.pb-3 {
+            position: relative !important;
+            z-index: 0 !important;
+            isolation: isolate !important;
+        }
+
+        /* ── 1b. Navbar: sticky, luôn trên main (0) ── */
+        .navbar, nav.navbar, header > nav, header nav.navbar {
+            position: sticky !important;
+            top: 0 !important;
+            z-index: 1050 !important;
+        }
+
+            /* ── 1c. Dropdown: cao nhất trong navbar's stacking context ── */
+            .dropdown-menu,
+            .navbar .dropdown-menu,
+            .navbar-nav .dropdown-menu {
+                z-index: 9999 !important;
+            }
+
+        /* ── 1d. Header wrapper: safety net ── */
+        body > header {
+            position: relative !important;
+            z-index: 1050 !important;
+        }
+
+        /* ── 2. Navbar bar polish ── */
+        nav.navbar {
+            background: rgba(255,255,255,.92) !important;
+            backdrop-filter: blur(16px) saturate(180%) !important;
+            -webkit-backdrop-filter: blur(16px) saturate(180%) !important;
+            border-bottom: 1px solid rgba(124,58,237,.12) !important;
+            box-shadow: 0 1px 24px rgba(79,70,229,.08), 0 1px 4px rgba(0,0,0,.04) !important;
+            padding-top: 10px !important;
+            padding-bottom: 10px !important;
+        }
+
+        /* Brand */
+        .navbar-brand {
+            background: var(--nav-g) !important;
+            -webkit-background-clip: text !important;
+            -webkit-text-fill-color: transparent !important;
+            background-clip: text !important;
+            font-weight: 900 !important;
+            letter-spacing: -.5px !important;
+            transition: opacity .2s !important;
+        }
+
+            .navbar-brand:hover {
+                opacity: .8 !important;
+            }
+
+            .navbar-brand i {
+                -webkit-text-fill-color: #4f46e5 !important;
+                color: #4f46e5 !important;
+            }
+
+        /* Nav links */
+        .navbar-nav .nav-link {
+            font-weight: 600 !important;
+            font-size: 14px !important;
+            color: #334155 !important;
+            padding: 8px 14px !important;
+            border-radius: 10px !important;
+            transition: background .2s, color .2s !important;
+            position: relative !important;
+        }
+
+            .navbar-nav .nav-link:hover,
+            .navbar-nav .nav-link:focus {
+                color: var(--nav-accent) !important;
+                background: var(--nav-g-soft) !important;
+            }
+
+        /* ── 3. Dropdown TOGGLE button ── */
+        .navbar-nav .dropdown-toggle {
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 8px !important;
+            background: var(--nav-g) !important;
+            color: #fff !important;
+            border-radius: 50px !important;
+            padding: 8px 18px !important;
+            font-weight: 700 !important;
+            font-size: 13.5px !important;
+            border: none !important;
+            box-shadow: 0 4px 14px rgba(79,70,229,.28) !important;
+            transition: all .25s !important;
+            letter-spacing: .1px !important;
+        }
+
+            .navbar-nav .dropdown-toggle::after {
+                margin-left: 4px !important;
+                border-top-color: rgba(255,255,255,.8) !important;
+                transition: transform .3s !important;
+            }
+
+            .navbar-nav .dropdown-toggle:hover,
+            .navbar-nav .dropdown-toggle:focus {
+                box-shadow: 0 8px 22px rgba(79,70,229,.40) !important;
+                transform: translateY(-1px) !important;
+                color: #fff !important;
+            }
+        /* Arrow rotate when open */
+        .navbar-nav .nav-item.show > .dropdown-toggle::after {
+            transform: rotate(180deg) !important;
+        }
+
+        /* ── 4. Dropdown PANEL ── */
+        .navbar-nav .dropdown-menu {
+            min-width: 220px !important;
+            padding: 0 !important;
+            border: none !important;
+            border-radius: var(--nav-r) !important;
+            box-shadow: var(--nav-shadow) !important;
+            background: rgba(255,255,255,.97) !important;
+            backdrop-filter: blur(24px) saturate(180%) !important;
+            -webkit-backdrop-filter: blur(24px) saturate(180%) !important;
+            overflow: hidden !important;
+            /* ✅ KHÔNG dùng display:block trick — Bootstrap JS tự quản lý show/hide */
+            /* Animation chỉ apply khi Bootstrap thêm class .show */
+        }
+
+            /* ✅ Animation: chạy đúng lúc Bootstrap thêm .show — không can thiệp toggle */
+            .navbar-nav .dropdown-menu.show {
+                animation: navDropIn .22s cubic-bezier(.34,1.56,.64,1) forwards !important;
+            }
+        @@keyframes navDropIn {
+            from
+
+        {
+            opacity: 0;
+            transform: translateY(-10px) scale(.96);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+
+        }
+
+        /* Remove old show rules — no longer needed */
+        .navbar-nav .nav-item.show > .dropdown-menu {
+            /* intentionally empty — Popper+fixed strategy handles positioning */
+        }
+
+        /* Panel — gradient header bar */
+        .navbar-nav .dropdown-menu::before {
+            content: '' !important;
+            display: block !important;
+            height: 4px !important;
+            background: var(--nav-g) !important;
+            border-radius: var(--nav-r) var(--nav-r) 0 0 !important;
+        }
+
+        /* Inner padding */
+        .navbar-nav .dropdown-menu li:not(:first-child) {
+            padding: 0 8px !important;
+        }
+
+        .navbar-nav .dropdown-menu li:first-child {
+            padding: 0 !important;
+        }
+
+        /* ── 5. Dropdown ITEMS ── */
+        .navbar-nav .dropdown-item {
+            display: flex !important;
+            align-items: center !important;
+            gap: 10px !important;
+            padding: 10px 16px !important;
+            font-size: 13.5px !important;
+            font-weight: 600 !important;
+            color: #334155 !important;
+            border-radius: 10px !important;
+            margin: 2px 0 !important;
+            transition: background .18s, color .18s, transform .18s !important;
+            position: relative !important;
+        }
+
+            .navbar-nav .dropdown-item:hover,
+            .navbar-nav .dropdown-item:focus {
+                background: var(--nav-g-soft) !important;
+                color: var(--nav-accent) !important;
+                transform: translateX(3px) !important;
+            }
+            /* Dot accent */
+            .navbar-nav .dropdown-item::before {
+                content: '' !important;
+                width: 6px !important;
+                height: 6px !important;
+                border-radius: 50% !important;
+                background: var(--nav-g) !important;
+                opacity: 0 !important;
+                flex-shrink: 0 !important;
+                transition: opacity .18s !important;
+            }
+
+            .navbar-nav .dropdown-item:hover::before,
+            .navbar-nav .dropdown-item:focus::before {
+                opacity: 1 !important;
+            }
+
+        /* ── 6. Divider ── */
+        .navbar-nav .dropdown-divider {
+            margin: 6px 16px !important;
+            border-color: rgba(124,58,237,.12) !important;
+            border-top-width: 1.5px !important;
+            opacity: 1 !important;
+        }
+
+        /* ── 7. Logout button ── */
+        .navbar-nav .dropdown-menu form button.dropdown-item {
+            width: 100% !important;
+            text-align: left !important;
+            background: none !important;
+            border: none !important;
+            cursor: pointer !important;
+        }
+
+            .navbar-nav .dropdown-menu form button.dropdown-item:hover {
+                background: linear-gradient(135deg, rgba(239,68,68,.08), rgba(251,113,133,.05)) !important;
+                color: #dc2626 !important;
+            }
+
+                .navbar-nav .dropdown-menu form button.dropdown-item:hover::before {
+                    background: #ef4444 !important;
+                    opacity: 1 !important;
+                }
+
+        /* ── 8. Spacing ── */
+        .navbar-nav .dropdown-menu > li:last-child {
+            padding-bottom: 8px !important;
+        }
+
+        .navbar-nav .dropdown-menu > li:nth-child(2) {
+            padding-top: 6px !important;
+        }
+
+        /* ── 9. Wishlist badge ── */
+        #wishlistBadge {
+            font-size: 0.6em !important;
+            padding: 2px 5px !important;
+            min-width: 18px !important;
+            line-height: 1.4 !important;
+            box-shadow: 0 2px 6px rgba(220,38,38,.35) !important;
+        }
+
+        /* ── 10. Mobile ── */
+        @@media (max-width: 991px) {
+            .navbar-nav .dropdown-toggle
+
+        {
+            width: 100% !important;
+            border-radius: 10px !important;
+            justify-content: space-between !important;
+            box-shadow: none !important;
+            margin-bottom: 4px !important;
+        }
+
+        .navbar-nav .dropdown-menu {
+            box-shadow: 0 4px 16px rgba(79,70,229,.12) !important;
+            margin-top: 4px !important;
+            /* no transform override needed — .show animation handles it */
+        }
+
+            .navbar-nav .dropdown-menu.show {
+                animation: none !important; /* no animation on mobile collapse */
+            }
+
+        }
+    </style>
 </head>
 
 <body>
@@ -51,7 +385,7 @@
                                 </li>
                             }
 
-                            @* ✅ WISHLIST - SỬA LẠI ĐÂY *@
+                            @* ✅ WISHLIST *@
                             <li class="nav-item position-relative">
                                 <a class="nav-link position-relative"
                                    id="wishlistLink"
@@ -204,7 +538,7 @@
             </div>
         </footer>
 
-        @* ✅ THÊM MODAL YÊU CẦU ĐĂNG NHẬP *@
+        @* ✅ MODAL YÊU CẦU ĐĂNG NHẬP (dùng cho Wishlist) *@
         <div class="modal fade" id="loginRequiredModal" tabindex="-1" aria-labelledby="loginRequiredModalLabel" aria-hidden="true">
             <div class="modal-dialog modal-dialog-centered">
                 <div class="modal-content border-0 shadow-lg">
@@ -242,78 +576,73 @@
         </div>
     }
 
-    <div class="modal fade" id="loginRequiredModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Thông báo</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    Xin vui lòng đăng nhập để sử dụng Wishlist.
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Đóng</button>
-                    <a class="btn btn-primary" id="goLoginBtn" href="#">Đăng nhập</a>
-                </div>
-            </div>
-        </div>
-    </div>
+    @*
+    ══ NOTE: Modal thứ 2 (loginRequiredModal) ở gốc trước đã bị duplicate —
+    đã xóa bản trùng ở đây. Chỉ giữ bản đầy đủ ở trong khối if ở trên.
+    ══
+    *@
 
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
-
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+
+    @*
+    ══════════════════════════════════════════════════════════════════
+    ✅ DROPDOWN FIX: Popper.js strategy: 'fixed'
+    ══════════════════════════════════════════════════════════════════
+    Vấn đề gốc: filter:blur() aurora blobs và transform-style:preserve-3d
+    trong hero section tạo stacking contexts mới, khiến dropdown (dù
+    z-index:9999) vẫn bị che khi browser paint các element này SAU navbar.
+
+    Giải pháp: strategy:'fixed' yêu cầu Popper.js đặt dropdown với
+    position:FIXED thay vì position:absolute. Element fixed được định vị
+    theo VIEWPORT, hoàn toàn thoát khỏi mọi stacking context, overflow,
+    transform, filter của parent — KHÔNG GÌ có thể che được.
+    ══════════════════════════════════════════════════════════════════
+    *@
     <script>
-        document.addEventListener("DOMContentLoaded", function () {
-          const wishlistLink = document.getElementById("wishlistLink");
-          if (!wishlistLink) return;
-
-          // Razor render true/false ra JS
-          const isAuthenticated = @((User?.Identity?.IsAuthenticated ?? false).ToString().ToLowerInvariant());
-
-
-          wishlistLink.addEventListener("click", function (e) {
-            if (isAuthenticated) return; // đã đăng nhập thì đi bình thường
-
-            e.preventDefault();
-
-            // gắn ReturnUrl để login xong quay lại đúng trang
-            const returnUrl = encodeURIComponent(wishlistLink.getAttribute("href") || "/Wishlist");
-            const loginUrl = `/Account/Login?ReturnUrl=${returnUrl}`;
-
-            const goLoginBtn = document.getElementById("goLoginBtn");
-            if (goLoginBtn) goLoginBtn.setAttribute("href", loginUrl);
-
-            bootstrap.Modal.getOrCreateInstance(
-               document.getElementById("loginRequiredModal")
-            ).show();
-          });
-        });
+        (function () {
+          function initDropdownsFixed() {
+            if (typeof bootstrap === 'undefined' || !bootstrap.Dropdown) return;
+            document.querySelectorAll('[data-bs-toggle="dropdown"]').forEach(function (el) {
+              // Dispose existing instance to avoid double-binding
+              var inst = bootstrap.Dropdown.getInstance(el);
+              if (inst) inst.dispose();
+              // Re-init với strategy:'fixed' — dropdown float trên TẤT CẢ page content
+              new bootstrap.Dropdown(el, {
+                popperConfig: function (defaultConfig) {
+                  return Object.assign({}, defaultConfig, { strategy: 'fixed' });
+                }
+              });
+            });
+          }
+          if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initDropdownsFixed);
+          } else {
+            initDropdownsFixed();
+          }
+        })();
     </script>
-
 
     <script src="~/js/site.js" asp-append-version="true"></script>
 
     @* ✅ Render page-specific scripts *@
     @await RenderSectionAsync("Scripts", required: false)
 
-    @* ✅ SỬA LẠI WISHLIST COUNTER SCRIPT - CHỈ CHẠY KHI ĐÃ ĐĂNG NHẬP *@
+    @* ✅ WISHLIST COUNTER — chỉ chạy khi đã đăng nhập *@
     <script>
         $(document).ready(function() {
-            // Kiểm tra authentication status
             const isAuthenticated = @Json.Serialize(User?.Identity?.IsAuthenticated ?? false);
 
-            // Chỉ update wishlist count khi đã đăng nhập
             if (isAuthenticated) {
                 updateWishlistCount();
-                setInterval(updateWishlistCount, 30000); // Update every 30 seconds
+                setInterval(updateWishlistCount, 30000);
             }
         });
 
         async function updateWishlistCount() {
             try {
                 const response = await fetch('/Wishlist/Count');
-                if (!response.ok) return; // Nếu API lỗi, bỏ qua
+                if (!response.ok) return;
 
                 const count = await response.json();
                 const badge = document.getElementById('wishlistBadge');

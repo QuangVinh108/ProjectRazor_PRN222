@@ -1,28 +1,30 @@
 ﻿using BLL.IService;
+using DAL.IRepository;
 using E_Commerce_Razor.ViewModels.Account;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-
+using Microsoft.SqlServer.Server;
+using Google.Apis.Auth; 
+using DAL.Entities;
 namespace E_Commerce_Razor.Pages.Account
 {
     public class LoginModel : PageModel
     {
         private readonly IAuthService _authService;
-        //private readonly IGoogleAuthService _googleAuthService;
+        private readonly IUserRepository _userRepository; // Bổ sung Repository
 
-        public LoginModel(IAuthService authService)
+        // Tiêm IUserRepository vào constructor
+        public LoginModel(IAuthService authService, IUserRepository userRepository)
         {
             _authService = authService;
-            //_googleAuthService = googleAuthService;
+            _userRepository = userRepository;
         }
 
         [BindProperty]
         public LoginViewModel Input { get; set; } = new LoginViewModel();
 
-        // Tương đương [HttpGet] Login
         public IActionResult OnGet(string returnUrl = "/")
         {
-            // Nếu đã login, redirect về trang Product
             var jwtCookie = Request.Cookies["jwt"];
             if (!string.IsNullOrEmpty(jwtCookie))
             {
@@ -33,7 +35,6 @@ namespace E_Commerce_Razor.Pages.Account
             return Page();
         }
 
-        // Tương đương [HttpPost] Login
         public async Task<IActionResult> OnPostAsync()
         {
             if (!ModelState.IsValid)
@@ -55,44 +56,10 @@ namespace E_Commerce_Razor.Pages.Account
 
                 Console.WriteLine($"✅ Login successful for {Input.Username} - Role: {role}");
 
-                // Set JWT cookie
-                Response.Cookies.Append("jwt", accessToken, new CookieOptions
-                {
-                    HttpOnly = true,
-                    Secure = Request.IsHttps,
-                    SameSite = SameSiteMode.Lax,
-                    Expires = DateTime.UtcNow.AddMinutes(25)
-                });
-
-                // Optional: Set refresh token
-                if (!string.IsNullOrEmpty(refreshToken))
-                {
-                    Response.Cookies.Append("refresh_token", refreshToken, new CookieOptions
-                    {
-                        HttpOnly = true,
-                        Secure = Request.IsHttps,
-                        SameSite = SameSiteMode.Strict,
-                        Expires = DateTime.UtcNow.AddDays(7)
-                    });
-                }
-
+                SetCookies(accessToken, refreshToken);
                 TempData["SuccessMessage"] = "Đăng nhập thành công!";
 
-                // ✅ REDIRECT THEO ROLE
-                if (!string.IsNullOrEmpty(role))
-                {
-                    switch (role.ToLower())
-                    {
-                        case "admin":
-                            return RedirectToPage("/Admin/Dashboard"); // Trỏ về thư mục Pages/Admin/Dashboard
-
-                        case "customer":
-                        default:
-                            return LocalRedirect(Input.ReturnUrl ?? "/Product/Index");
-                    }
-                }
-
-                return LocalRedirect(Input.ReturnUrl ?? "/Product/Index");
+                return RedirectBasedOnRole(role, Input.ReturnUrl);
             }
             catch (Exception ex)
             {
@@ -102,78 +69,131 @@ namespace E_Commerce_Razor.Pages.Account
             }
         }
 
-        // Tương đương [HttpPost] GoogleLogin
-        // Được gọi thông qua URL: /Account/Login?handler=GoogleLogin
-        //public async Task<IActionResult> OnPostGoogleLoginAsync(string idToken, string? returnUrl = "/")
-        //{
-        //    if (string.IsNullOrWhiteSpace(idToken))
-        //    {
-        //        TempData["ErrorMessage"] = "Lỗi xác thực Google";
-        //        return RedirectToPage(); // Tải lại chính trang Login
-        //    }
+        // --- XỬ LÝ ĐĂNG NHẬP GOOGLE ---
+        public async Task<IActionResult> OnPostGoogleLoginAsync([FromForm] string idToken, [FromForm] string? returnUrl = "/")
+        {
+            // 1. QUAN TRỌNG: Xóa lỗi Validation của Username/Password
+            ModelState.Clear();
 
-        //    try
-        //    {
-        //        // Verify Google token
-        //        var googleUser = await _googleAuthService.VerifyGoogleTokenAsync(idToken);
-        //        if (googleUser == null)
-        //        {
-        //            TempData["ErrorMessage"] = "Google token không hợp lệ";
-        //            return RedirectToPage();
-        //        }
+            if (string.IsNullOrWhiteSpace(idToken))
+            {
+                TempData["ErrorMessage"] = "Không nhận được thông tin xác thực từ Google.";
+                return RedirectToPage();
+            }
 
-        //        // Handle login
-        //        var result = await _googleAuthService.HandleGoogleLoginAsync(googleUser);
-        //        if (!result.Success)
-        //        {
-        //            TempData["ErrorMessage"] = result.Message ?? "Đăng nhập Google thất bại";
-        //            return RedirectToPage();
-        //        }
+            try
+            {
+                // 2. Xác thực Token với Google
+                var settings = new GoogleJsonWebSignature.ValidationSettings()
+                {
+                    Audience = new List<string> { "477307811776-7f6ptpobvega67l3cd6ghin732dntka2.apps.googleusercontent.com" }
+                };
+                var payload = await GoogleJsonWebSignature.ValidateAsync(idToken, settings);
 
-        //        // Set JWT cookie
-        //        Response.Cookies.Append("jwt", result.AccessToken!, new CookieOptions
-        //        {
-        //            HttpOnly = true,
-        //            Secure = Request.IsHttps,
-        //            SameSite = SameSiteMode.Lax,
-        //            Expires = DateTime.UtcNow.AddMinutes(25)
-        //        });
+                // 3. Kiểm tra user trong Database
+                var user = await _userRepository.GetByEmailAsync(payload.Email);
+                string roleName = "Customer"; // Mặc định role
 
-        //        // Set refresh token cookie
-        //        if (!string.IsNullOrEmpty(result.RefreshToken))
-        //        {
-        //            Response.Cookies.Append("refresh_token", result.RefreshToken, new CookieOptions
-        //            {
-        //                HttpOnly = true,
-        //                Secure = Request.IsHttps,
-        //                SameSite = SameSiteMode.Strict,
-        //                Expires = DateTime.UtcNow.AddDays(7)
-        //            });
-        //        }
+                if (user == null)
+                {
+                    // Tạo tài khoản mới nếu chưa tồn tại
+                    var customerRole = await _userRepository.GetRoleByNameAsync("Customer");
 
-        //        TempData["SuccessMessage"] = result.Message;
+                    user = new DAL.Entities.User
+                    {
+                        UserName = payload.Email.Split('@')[0] + "_google",
+                        Email = payload.Email,
+                        FullName = payload.Name,
+                        PasswordHash = null,
+                        LoginProvider = "Google",
+                        GoogleId = payload.Subject,
+                        CreatedAt = DateTime.UtcNow,
+                        IsActive = true,
+                        EmailConfirmed = true,
+                        EmailConfirmedAt = DateTime.UtcNow,
+                        RoleId = customerRole?.RoleId ?? 2
+                    };
 
-        //        if (!string.IsNullOrEmpty(result.Role))
-        //        {
-        //            switch (result.Role.ToLower())
-        //            {
-        //                case "admin":
-        //                    return RedirectToPage("/Admin/Dashboard");
-        //                case "manager":
-        //                    return RedirectToPage("/Manager/Dashboard");
-        //                default:
-        //                    return LocalRedirect(returnUrl ?? "/Product/Index");
-        //            }
-        //        }
+                    await _userRepository.AddUserAsync(user);
+                    await _userRepository.SaveChangesAsync();
 
-        //        return LocalRedirect(returnUrl ?? "/Product/Index");
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        Console.WriteLine($"❌ Exception in GoogleLogin: {ex.Message}");
-        //        TempData["ErrorMessage"] = "Đã xảy ra lỗi khi đăng nhập Google";
-        //        return RedirectToPage();
-        //    }
-        //}
+                    roleName = customerRole?.RoleName ?? "Customer";
+                    Console.WriteLine($"✅ Google User created: {user.UserName}");
+                }
+                else
+                {
+                    // Nếu user đã tồn tại, lấy role name của họ
+                    var userWithRole = await _userRepository.GetByIdWithRoleAsync(user.UserId);
+                    roleName = userWithRole?.Role?.RoleName ?? "Customer";
+                }
+
+                // 4. Sinh Token JWT bằng AuthService có sẵn của bạn
+                var (accessToken, refreshToken) = await _authService.GenerateTokensAsync(user.UserId);
+
+                if (accessToken == null)
+                {
+                    TempData["ErrorMessage"] = "Tài khoản của bạn đang bị khóa hoặc không hợp lệ.";
+                    return RedirectToPage();
+                }
+
+                // 5. Lưu Token vào Cookie và chuyển hướng
+                SetCookies(accessToken, refreshToken);
+                TempData["SuccessMessage"] = "Đăng nhập Google thành công!";
+
+                return RedirectBasedOnRole(roleName, returnUrl);
+            }
+            catch (InvalidJwtException)
+            {
+                TempData["ErrorMessage"] = "Token xác thực của Google không hợp lệ hoặc đã hết hạn.";
+                return RedirectToPage();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"❌ Exception in GoogleLogin: {ex.Message}");
+                TempData["ErrorMessage"] = "Đã xảy ra lỗi hệ thống khi đăng nhập bằng Google.";
+                return RedirectToPage();
+            }
+        }
+
+        // --- HÀM HỖ TRỢ DÙNG CHUNG ---
+
+        private void SetCookies(string accessToken, string? refreshToken)
+        {
+            Response.Cookies.Append("jwt", accessToken, new CookieOptions
+            {
+                HttpOnly = true,
+                Secure = Request.IsHttps,
+                SameSite = SameSiteMode.Lax,
+                Expires = DateTime.UtcNow.AddMinutes(25)
+            });
+
+            if (!string.IsNullOrEmpty(refreshToken))
+            {
+                Response.Cookies.Append("refresh_token", refreshToken, new CookieOptions
+                {
+                    HttpOnly = true,
+                    Secure = Request.IsHttps,
+                    SameSite = SameSiteMode.Strict,
+                    Expires = DateTime.UtcNow.AddDays(7)
+                });
+            }
+        }
+
+        private IActionResult RedirectBasedOnRole(string? role, string? returnUrl)
+        {
+            if (!string.IsNullOrEmpty(role))
+            {
+                switch (role.ToLower())
+                {
+                    case "admin":
+                        return RedirectToPage("/Admin/Dashboard");
+                    case "manager":
+                        return RedirectToPage("/Manager/Dashboard");
+                    default:
+                        return LocalRedirect(returnUrl ?? "/Product/Index");
+                }
+            }
+            return LocalRedirect(returnUrl ?? "/Product/Index");
+        }
     }
 }
