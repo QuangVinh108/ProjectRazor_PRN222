@@ -83,6 +83,33 @@
     </div>
 </div>
 
+<!-- Modal yêu cầu đăng nhập -->
+<div class="modal fade" id="loginRequiredModal" tabindex="-1" aria-labelledby="loginRequiredModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header bg-warning text-white border-0">
+                <h5 class="modal-title fw-bold" id="loginRequiredModalLabel">
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i>Yêu cầu đăng nhập
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-center py-4">
+                <div class="mb-3">
+                    <i class="bi bi-person-lock fs-1 text-warning"></i>
+                </div>
+                <h6 class="fw-bold mb-2">Bạn cần đăng nhập để thực hiện chức năng này</h6>
+                <p class="text-muted mb-0">Vui lòng đăng nhập để tiếp tục mua sắm</p>
+            </div>
+            <div class="modal-footer border-0 justify-content-center">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Để sau</button>
+                <a href="/Account/Login?returnUrl=@Uri.EscapeDataString(Request.Path)" class="btn btn-primary">
+                    <i class="bi bi-box-arrow-in-right me-2"></i>Đăng nhập ngay
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
 @section Scripts {
     <script>
         // Giữ nguyên JS cũ, chỉ lưu ý sửa code smart back nếu URL đổi:
@@ -90,9 +117,17 @@
             const referrer = document.referrer;
             const currentHost = window.location.hostname;
             if (referrer && referrer.includes(currentHost)) {
+                if (referrer.toLowerCase().includes('/wishlist')) {
+                    window.location.href = '/Wishlist/Index';
+                    return;
+                }
+                if (referrer.toLowerCase().includes('/shop')) {
+                    window.location.href = '/Shop/Index';
+                    return;
+                }
                 window.history.back();
             } else {
-                window.location.href = '/Index';
+                window.location.href = '/';
             }
         }
         function updateBackButton() {
@@ -140,10 +175,10 @@
                 const submitBtn = form.querySelector('button[type="submit"]');
                 const originalHTML = submitBtn.innerHTML;
 
-                try {
-                    submitBtn.disabled = true;
-                    submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Đang xử lý...';
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Đang xử lý...';
 
+                try {
                     const token = fd.get('__RequestVerificationToken');
                     const res = await fetch(form.action, {
                         method: 'POST',
@@ -155,10 +190,18 @@
                         body: fd
                     });
 
-                    const data = await res.json();
+                    // Nếu server redirect về login (401/403) → show modal
+                    if (res.status === 401 || res.status === 403) {
+                        showLoginModal();
+                        submitBtn.innerHTML = originalHTML;
+                        submitBtn.disabled = false;
+                        return;
+                    }
 
-                    // KIỂM TRA YÊU CẦU ĐĂNG NHẬP
-                    if (data?.requireLogin === true || res.status === 401) {
+                    let data;
+                    try { data = await res.json(); } catch { data = null; }
+
+                    if (data?.requireLogin === true) {
                         showLoginModal();
                         submitBtn.innerHTML = originalHTML;
                         submitBtn.disabled = false;
@@ -166,18 +209,14 @@
                     }
 
                     if (data?.success) {
-                        // Update cart badge
                         const badge = document.getElementById('cartBadge');
                         if (badge) {
                             badge.textContent = data.count ?? badge.textContent;
                             badge.style.display = (data.count ?? 0) > 0 ? 'block' : 'none';
                         }
-
-                        // Success feedback
                         submitBtn.innerHTML = '<i class="bi bi-check-lg me-2"></i>Đã thêm';
                         submitBtn.classList.remove('btn-primary');
                         submitBtn.classList.add('btn-success');
-
                         setTimeout(() => {
                             submitBtn.innerHTML = originalHTML;
                             submitBtn.classList.remove('btn-success');
@@ -185,13 +224,13 @@
                             submitBtn.disabled = false;
                         }, 1500);
                     } else {
-                        alert(data?.error ?? 'Không thể thêm vào giỏ hàng');
+                        alert(data?.error ?? 'Không thể thêm vào giỏ hàng. Lỗi: ' + res.status);
                         submitBtn.innerHTML = originalHTML;
                         submitBtn.disabled = false;
                     }
                 } catch (err) {
                     console.error('Add to cart error:', err);
-                    showLoginModal();
+                    alert('Lỗi kết nối: ' + err.message);
                     submitBtn.innerHTML = originalHTML;
                     submitBtn.disabled = false;
                 }
@@ -208,21 +247,17 @@
             buyNowForm.addEventListener('submit', async function(e) {
                 e.preventDefault();
 
-                // Đồng bộ số lượng từ input Add to Cart
                 const quantityInput = document.querySelector('.quantity-input');
                 const buyNowQuantity = buyNowForm.querySelector('.buy-now-quantity');
-                if (quantityInput && buyNowQuantity) {
-                    buyNowQuantity.value = quantityInput.value;
-                }
+                if (quantityInput && buyNowQuantity) buyNowQuantity.value = quantityInput.value;
 
                 const fd = new FormData(buyNowForm);
                 const submitBtn = buyNowForm.querySelector('button[type="submit"]');
                 const originalHTML = submitBtn.innerHTML;
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Đang xử lý...';
 
                 try {
-                    submitBtn.disabled = true;
-                    submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Đang xử lý...';
-
                     const token = fd.get('__RequestVerificationToken');
                     const res = await fetch(buyNowForm.action, {
                         method: 'POST',
@@ -234,10 +269,17 @@
                         body: fd
                     });
 
-                    const data = await res.json();
+                    if (res.status === 401 || res.status === 403) {
+                        showLoginModal();
+                        submitBtn.innerHTML = originalHTML;
+                        submitBtn.disabled = false;
+                        return;
+                    }
 
-                    // KIỂM TRA YÊU CẦU ĐĂNG NHẬP
-                    if (data?.requireLogin === true || res.status === 401) {
+                    let data;
+                    try { data = await res.json(); } catch { data = null; }
+
+                    if (data?.requireLogin === true) {
                         showLoginModal();
                         submitBtn.innerHTML = originalHTML;
                         submitBtn.disabled = false;
@@ -245,19 +287,15 @@
                     }
 
                     if (data?.success) {
-                        if (data.redirectUrl) {
-                            window.location.href = data.redirectUrl;
-                        } else {
-                            window.location.href = '/Order/Checkout';
-                        }
+                        window.location.href = data.redirectUrl || '/Order/Checkout';
                     } else {
-                        alert(data?.message ?? 'Có lỗi xảy ra');
+                        alert(data?.message ?? 'Có lỗi xảy ra. Lỗi: ' + res.status);
                         submitBtn.innerHTML = originalHTML;
                         submitBtn.disabled = false;
                     }
                 } catch (err) {
                     console.error('Buy now error:', err);
-                    showLoginModal();
+                    alert('Lỗi kết nối: ' + err.message);
                     submitBtn.innerHTML = originalHTML;
                     submitBtn.disabled = false;
                 }
