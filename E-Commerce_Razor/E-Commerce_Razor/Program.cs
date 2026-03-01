@@ -1,4 +1,4 @@
-﻿using BLL.Helper;
+using BLL.Helper;
 using BLL.IService;
 using BLL.Service;
 using DAL.Entities;
@@ -21,6 +21,10 @@ builder.Services.AddRazorPages();
 
 builder.Services.AddHttpClient();
 builder.Services.AddScoped<GeminiHelper>();
+builder.Services.AddSignalR(options =>
+{
+    options.MaximumReceiveMessageSize = 5 * 1024 * 1024; // 5 MB
+});
 
 // DbContext
 builder.Services.AddDbContext<ShopDbContext>(options =>
@@ -113,8 +117,12 @@ app.Use(async (context, next) =>
 });
 app.UseRouting();
 
+app.UseAuthentication();
+
 app.UseAuthorization();
 
 app.MapRazorPages();
+
+app.MapHub<E_Commerce_Razor.Hubs.AppHub>("/appHub");
 
 app.Run();

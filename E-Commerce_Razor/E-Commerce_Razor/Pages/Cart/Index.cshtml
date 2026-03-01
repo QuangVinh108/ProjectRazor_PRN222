@@ -1,0 +1,151 @@
+@page "{handler?}"
+@model E_Commerce_Razor.Pages.Cart.IndexModel
+@{
+    ViewData["Title"] = "Giỏ hàng";
+}
+
+<div class="container py-5">
+    <div class="row mb-4">
+        <div class="col-12 d-flex justify-content-between align-items-center">
+            <div>
+                <h1 class="fw-bold mb-1">
+                    <i class="bi bi-cart-check text-primary me-2"></i> @ViewData["Title"]
+                </h1>
+                <p class="text-muted mb-0">Xem và quản lý các sản phẩm trong giỏ hàng của bạn</p>
+            </div>
+            <a href="/Shop" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Tiếp tục mua sắm
+            </a>
+        </div>
+    </div>
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            @TempData["Error"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    @if (Model.Cart == null || !Model.Cart.CartItems.Any())
+    {
+        <div class="text-center py-5 bg-white rounded shadow-sm">
+            <div class="mb-3 opacity-25"><i class="bi bi-cart-x display-1"></i></div>
+            <h4 class="fw-bold">Giỏ hàng trống</h4>
+            <p class="text-muted">Bạn chưa thêm sản phẩm nào vào giỏ hàng.</p>
+            <a href="/Shop" class="btn btn-primary px-4 rounded-pill mt-2">
+                <i class="bi bi-shop"></i> Mua sắm ngay
+            </a>
+        </div>
+    }
+    else
+    {
+        <div class="row">
+            <div class="col-lg-8">
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-header bg-white border-0">
+                        <h5 class="mb-0 fw-bold">
+                            <i class="bi bi-bag me-2 text-primary"></i>
+                            Sản phẩm trong giỏ (@Model.Cart.CartItems.Count)
+                        </h5>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table align-middle mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Sản phẩm</th>
+                                        <th class="text-center" style="width: 150px;">Số lượng</th>
+                                        <th class="text-end">Đơn giá</th>
+                                        <th class="text-end">Thành tiền</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var item in Model.Cart.CartItems)
+                                    {
+                                        var subtotal = item.Quantity * item.UnitPrice;
+                                        <tr>
+                                            <td>
+                                                <div class="d-flex align-items-center">
+                                                    <div class="flex-shrink-0 me-3">
+                                                        <img src="@(string.IsNullOrEmpty(item.Product.Image) ? "https://placehold.co/80x80?text=No+Image" : item.Product.Image)"
+                                                             alt="@item.Product.ProductName"
+                                                             class="rounded"
+                                                             style="width: 64px; height: 64px; object-fit: contain;" />
+                                                    </div>
+                                                    <div>
+                                                        <div class="fw-bold">@item.Product.ProductName</div>
+                                                        <div class="text-muted small">@item.Product.Category?.CategoryName</div>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td class="text-center">
+                                                <form method="post" asp-page-handler="Update" class="d-inline-flex align-items-center">
+                                                    @Html.AntiForgeryToken()
+                                                    <input type="hidden" name="cartItemId" value="@item.CartItemId" />
+                                                    <input type="number"
+                                                           name="quantity"
+                                                           class="form-control form-control-sm text-center"
+                                                           style="width: 70px;"
+                                                           min="1"
+                                                           value="@item.Quantity" />
+                                                    <button type="submit" class="btn btn-sm btn-outline-secondary ms-2">
+                                                        <i class="bi bi-arrow-repeat"></i>
+                                                    </button>
+                                                </form>
+                                            </td>
+                                            <td class="text-end">@item.UnitPrice.ToString("N0") ₫</td>
+                                            <td class="text-end fw-bold text-danger">@subtotal.ToString("N0") ₫</td>
+                                            <td class="text-end">
+                                                <form method="post" asp-page-handler="Remove" class="d-inline">
+                                                    @Html.AntiForgeryToken()
+                                                    <input type="hidden" name="cartItemId" value="@item.CartItemId" />
+                                                    <button type="submit"
+                                                            class="btn btn-sm btn-outline-danger"
+                                                            onclick="return confirm('Xóa sản phẩm này khỏi giỏ hàng?');">
+                                                        <i class="bi bi-trash"></i>
+                                                    </button>
+                                                </form>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-4">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">Tóm tắt đơn hàng</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Tạm tính</span>
+                            <span class="fw-semibold">@Model.TotalAmount.ToString("N0") ₫</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Phí vận chuyển</span>
+                            <span class="fw-semibold text-success">Miễn phí</span>
+                        </div>
+                        <hr />
+                        <div class="d-flex justify-content-between mb-3">
+                            <span class="fw-bold">Tổng cộng</span>
+                            <span class="fw-bold text-danger fs-5">@Model.TotalAmount.ToString("N0") ₫</span>
+                        </div>
+                        <a href="/Order/Checkout" class="btn btn-success btn-lg w-100 mb-2">
+                            <i class="bi bi-credit-card"></i> Tiến hành thanh toán
+                        </a>
+                        <p class="text-muted small mb-0">
+                            <i class="bi bi-shield-check"></i> Thanh toán an toàn & bảo mật.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+

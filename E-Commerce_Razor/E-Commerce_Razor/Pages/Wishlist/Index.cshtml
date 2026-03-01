@@ -1,0 +1,186 @@
+﻿@page
+@model E_Commerce_Razor.Pages.Wishlist.IndexModel
+@{
+    ViewData["Title"] = "Wishlist";
+}
+
+<div class="container py-4">
+
+    <div class="d-flex align-items-center mb-4">
+        <h2 class="mb-0">
+            <i class="bi bi-heart-fill text-danger me-2"></i>
+            Wishlist của bạn
+        </h2>
+    </div>
+
+    @if (!Model.WishlistProducts.Any())
+    {
+        <div class="text-center py-5">
+            <i class="bi bi-heart text-danger" style="font-size: 60px;"></i>
+            <h4 class="mt-3">Wishlist đang trống</h4>
+            <p class="text-muted">Hãy thêm những sản phẩm bạn yêu thích ❤️</p>
+
+            <a asp-page="/Shop/Index" class="btn btn-dark rounded-pill px-4 mt-2">
+                Mua sắm ngay
+            </a>
+        </div>
+    }
+    else
+    {
+        <p class="text-muted mb-4">
+            Bạn có <strong>@Model.WishlistProducts.Count</strong> sản phẩm
+        </p>
+
+        <div class="row g-4">
+            @foreach (var item in Model.WishlistProducts)
+            {
+                <div class="col-md-6 col-lg-4">
+                    <div class="card h-100 shadow-sm border-0">
+
+                        <div>
+                            <img src="@(string.IsNullOrEmpty(item.ProductImage)
+                                ? "/images/no-image.png"
+                                : item.ProductImage)"
+                                 class="card-img-top"
+                                 style="height:220px;object-fit:cover;" />
+                        </div>
+
+                        <div class="card-body d-flex flex-column">
+
+                            <h5 class="fw-bold text-truncate">
+                                @item.ProductName
+                            </h5>
+
+                            <p class="text-danger fw-bold fs-5 mb-2">
+                                @item.Price.ToString("N0")₫
+                            </p>
+
+                            <small class="text-muted mb-3">
+                                <i class="bi bi-clock me-1"></i>
+                                Đã thêm: @item.AddedAt.ToString("dd/MM/yyyy HH:mm")
+                            </small>
+
+                            <div class="mt-auto d-flex justify-content-between">
+
+                                <!-- Delete Item -->
+                                <form method="post"
+                                      asp-page-handler="Remove"
+                                      class="delete-form">
+
+                                    <input type="hidden"
+                                           name="wishlistProductId"
+                                           value="@item.WishlistProductId" />
+
+                                    <button type="button"
+                                            class="btn btn-outline-danger btn-sm rounded-pill px-3 delete-btn">
+                                        <i class="bi bi-trash3"></i> Xóa
+                                    </button>
+                                </form>
+
+                                <a asp-page="/Shop/Details"
+                                   asp-route-id="@item.ProductId"
+                                   class="btn btn-dark btn-sm rounded-pill px-3">
+                                    Xem
+                                </a>
+
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+
+        <!-- Clear All -->
+        <div class="text-end mt-4">
+            <form method="post"
+                  asp-page-handler="Clear"
+                  id="clearAllForm">
+
+                <button type="button"
+                        class="btn btn-danger rounded-pill px-4"
+                        id="clearAllBtn">
+                    <i class="bi bi-trash"></i> Xóa tất cả
+                </button>
+            </form>
+        </div>
+    }
+</div>
+
+
+<!-- 🔥 CONFIRM MODAL -->
+<div class="modal fade" id="confirmModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <h5 class="modal-title text-danger">
+                    <i class="bi bi-exclamation-triangle me-2"></i>
+                    Xác nhận hành động
+                </h5>
+                <button type="button"
+                        class="btn-close"
+                        data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body" id="confirmMessage">
+                Bạn có chắc muốn thực hiện hành động này?
+            </div>
+
+            <div class="modal-footer">
+                <button type="button"
+                        class="btn btn-secondary"
+                        data-bs-dismiss="modal">
+                    Hủy
+                </button>
+
+                <button type="button"
+                        id="confirmBtn"
+                        class="btn btn-danger">
+                    Đồng ý
+                </button>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+
+@section Scripts {
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+
+            let formToSubmit = null;
+
+            const modalElement = document.getElementById('confirmModal');
+            const modal = new bootstrap.Modal(modalElement);
+            const confirmBtn = document.getElementById('confirmBtn');
+            const confirmMessage = document.getElementById('confirmMessage');
+
+            // Delete single item
+            document.querySelectorAll('.delete-btn').forEach(btn => {
+                btn.addEventListener('click', function () {
+                    formToSubmit = this.closest('form');
+                    confirmMessage.textContent =
+                        "Bạn có chắc muốn xóa sản phẩm này khỏi Wishlist?";
+                    modal.show();
+                });
+            });
+
+            // Clear all
+            document.getElementById('clearAllBtn')?.addEventListener('click', function () {
+                formToSubmit = document.getElementById('clearAllForm');
+                confirmMessage.textContent =
+                    "Bạn có chắc muốn xóa TẤT CẢ sản phẩm khỏi Wishlist?";
+                modal.show();
+            });
+
+            // Confirm button
+            confirmBtn.addEventListener('click', function () {
+                if (formToSubmit) {
+                    formToSubmit.submit();
+                }
+            });
+
+        });
+    </script>
+}

@@ -1,11 +1,6 @@
 using BLL.DTOs;
 using BLL.Helper;
 using DAL.Entities;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace BLL.IService
 {
@@ -18,7 +13,10 @@ namespace BLL.IService
         Task<GenericResult<bool>> ClearWishlistAsync();
         Task<GenericResult<IEnumerable<WishlistProduct>>> GetAllWishlistProductsForAdminAsync();
         Task<bool> IsProductInWishlistAsync(int productId);
-        Task<GenericResult<bool>> ToggleWishlistAsync(int productId);
+        Task<GenericResult<WishlistToggleResultDTO>> ToggleWishlistAsync(int productId);
         Task<GenericResult<bool>> CreateEmptyWishlistForUserAsync(int userId, string? note = null);
+
+        Task<bool> IsInWishlistAsync(int userId, int productId);
+        Task ToggleWishlistAsync(int userId, int productId);
     }
 }

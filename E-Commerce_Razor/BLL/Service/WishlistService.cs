@@ -236,35 +236,51 @@ namespace BLL.Service
             }
         }
 
-        public async Task<GenericResult<bool>> ToggleWishlistAsync(int productId)
+        public async Task<GenericResult<WishlistToggleResultDTO>> ToggleWishlistAsync(int productId)
         {
             var userId = GetCurrentUserId();
-            if (userId <= 0) return GenericResult<bool>.Failure("Chưa đăng nhập");
+            if (userId <= 0)
+                return GenericResult<WishlistToggleResultDTO>.Failure("Chưa đăng nhập");
 
-            var isInWishlist = await _wishlistRepository.IsProductInWishlistAsync(userId, productId);
+            var isInWishlist = await _wishlistRepository
+                .IsProductInWishlistAsync(userId, productId);
+
+            bool isAdded;
 
             if (isInWishlist)
             {
                 // REMOVE
-                var wishlistProductId = await _wishlistRepository.GetWishlistProductIdAsync(userId, productId);
+                var wishlistProductId =
+                    await _wishlistRepository.GetWishlistProductIdAsync(userId, productId);
+
                 if (wishlistProductId > 0)
                 {
                     await _wishlistRepository.RemoveWishlistProductAsync(wishlistProductId);
-                    return GenericResult<bool>.Success(false, "Đã xóa khỏi wishlist");
+                    isAdded = false;
                 }
-                return GenericResult<bool>.Failure("Không tìm thấy trong wishlist");
+                else
+                {
+                    return GenericResult<WishlistToggleResultDTO>
+                        .Failure("Không tìm thấy trong wishlist");
+                }
             }
             else
             {
                 // ADD
                 var wishlist = await _wishlistRepository.GetWishlistByUserAsync(userId);
+
                 if (wishlist == null)
                 {
-                    wishlist = new Wishlist { UserId = userId, CreatedAt = DateTime.UtcNow };
+                    wishlist = new Wishlist
+                    {
+                        UserId = userId,
+                        CreatedAt = DateTime.UtcNow
+                    };
                     await _wishlistRepository.AddAsync(wishlist);
                 }
 
                 var product = _productRepo.GetProductById(productId);
+
                 var wishlistProduct = new WishlistProduct
                 {
                     WishlistId = wishlist.WishlistId,
@@ -272,9 +288,21 @@ namespace BLL.Service
                     AddedAt = DateTime.UtcNow,
                     Image = product?.Image
                 };
+
                 await _wishlistRepository.AddWishlistProductAsync(wishlistProduct);
-                return GenericResult<bool>.Success(true, "Đã thêm vào wishlist");
+                isAdded = true;
             }
+
+            // 🔥 LẤY COUNT SAU KHI TOGGLE
+            var count = await _wishlistRepository.GetCountByUserAsync(userId);
+
+            return GenericResult<WishlistToggleResultDTO>.Success(
+                new WishlistToggleResultDTO
+                {
+                    IsAdded = isAdded,
+                    Count = count
+                }
+            );
         }
 
         public async Task<GenericResult<bool>> CreateEmptyWishlistForUserAsync(int userId, string? note = null)
@@ -301,6 +329,42 @@ namespace BLL.Service
             catch (Exception ex)
             {
                 return GenericResult<bool>.Failure($"Error creating wishlist: {ex.Message}");
+            }
+        }
+
+        public async Task<bool> IsInWishlistAsync(int userId, int productId)
+        {
+            return await _wishlistRepository
+                .IsProductInWishlistAsync(userId, productId);
+        }
+
+        public async Task ToggleWishlistAsync(int userId, int productId)
+        {
+            var isExist = await _wishlistRepository
+                .IsProductInWishlistAsync(userId, productId);
+
+            if (isExist)
+            {
+                // Lấy wishlistProductId rồi remove
+                var wishlistProductId = await _wishlistRepository
+                    .GetWishlistProductIdAsync(userId, productId);
+
+                await _wishlistRepository
+                    .RemoveWishlistProductAsync(wishlistProductId);
+            }
+            else
+            {
+                var wishlist = await _wishlistRepository
+                    .GetWishlistByUserAsync(userId);
+
+                var wishlistProduct = new WishlistProduct
+                {
+                    WishlistId = wishlist.WishlistId,
+                    ProductId = productId
+                };
+
+                await _wishlistRepository
+                    .AddWishlistProductAsync(wishlistProduct);
             }
         }
     }

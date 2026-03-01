@@ -1,4 +1,4 @@
-﻿@page "{id:int}"
+@page "{id:int}"
 @model E_Commerce_Razor.Pages.Shop.DetailsModel
 @{
     ViewData["Title"] = Model.ProductDetail.ProductName;
@@ -14,32 +14,32 @@
 <div class="container py-5">
     <div class="row gx-5">
         <div class="col-lg-6 mb-4">
-            <div class="border rounded-4 p-3 bg-light text-center d-flex align-items-center justify-content-center" style="min-height: 400px;">
+            <div class="border rounded-4 p-3 bg-light text-center d-flex align-items-center justify-content-center" style="min-height: 400px; position: relative;" id="image-container">
                 @if (!string.IsNullOrEmpty(Model.ProductDetail.Image))
                 {
-                    <img src="@Model.ProductDetail.Image" class="img-fluid rounded shadow-sm" style="max-height: 500px; object-fit: contain;" alt="@Model.ProductDetail.ProductName">
+                    <img id="detail-image" src="@Model.ProductDetail.Image" class="img-fluid rounded shadow-sm" style="max-height: 500px; object-fit: contain; transition: all 0.3s ease;" alt="@Model.ProductDetail.ProductName">
                 }
                 else
                 {
-                    <img src="https://placehold.co/600x600?text=No+Image" class="img-fluid rounded opacity-50" alt="@Model.ProductDetail.ProductName">
+                    <img id="detail-image" src="https://placehold.co/600x600?text=No+Image" class="img-fluid rounded opacity-50" style="transition: all 0.3s ease;" alt="@Model.ProductDetail.ProductName">
                 }
             </div>
         </div>
 
         <div class="col-lg-6">
-            <div class="ps-lg-3">
-                <h4 class="text-muted text-uppercase mb-2">@Model.ProductDetail.CategoryName</h4>
-                <h1 class="fw-bold mb-3">@Model.ProductDetail.ProductName</h1>
+            <div class="ps-lg-3" id="info-container" style="transition: all 0.3s ease; padding: 15px; border-radius: 10px;">
+                <h4 id="detail-category" class="text-muted text-uppercase mb-2">@Model.ProductDetail.CategoryName</h4>
+                <h1 id="detail-name" class="fw-bold mb-3">@Model.ProductDetail.ProductName</h1>
 
                 <div class="mb-3">
-                    <span class="fs-2 fw-bold text-danger me-2">@Model.ProductDetail.Price.ToString("N0") ₫</span>
-                    @if (!string.IsNullOrEmpty(Model.ProductDetail.Sku))
-                    {
-                        <span class="badge bg-secondary">SKU: @Model.ProductDetail.Sku</span>
-                    }
+                    <span id="detail-price" class="fs-2 fw-bold text-danger me-2">@Model.ProductDetail.Price.ToString("N0") ₫</span>
+
+                    <span id="detail-sku" class="badge bg-secondary" style="display: @(string.IsNullOrEmpty(Model.ProductDetail.Sku) ? "none" : "inline-block")">
+                        SKU: @Model.ProductDetail.Sku
+                    </span>
                 </div>
 
-                <p class="lead mb-4 text-secondary" style="font-size: 1rem;">
+                <p id="detail-desc" class="lead mb-4 text-secondary" style="font-size: 1rem; white-space: pre-line;">
                     @(Model.ProductDetail.Description ?? "Sản phẩm này chưa có mô tả chi tiết.")
                 </p>
 
@@ -83,27 +83,62 @@
     </div>
 </div>
 
+<div class="modal fade" id="loginRequiredModal" tabindex="-1" aria-labelledby="loginRequiredModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header bg-warning text-white border-0">
+                <h5 class="modal-title fw-bold" id="loginRequiredModalLabel">
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i>Yêu cầu đăng nhập
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-center py-4">
+                <div class="mb-3">
+                    <i class="bi bi-person-lock fs-1 text-warning"></i>
+                </div>
+                <h6 class="fw-bold mb-2">Bạn cần đăng nhập để thực hiện chức năng này</h6>
+                <p class="text-muted mb-0">Vui lòng đăng nhập để tiếp tục mua sắm</p>
+            </div>
+            <div class="modal-footer border-0 justify-content-center">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Để sau</button>
+                <a href="/Account/Login?returnUrl=@Uri.EscapeDataString(Request.Path)" class="btn btn-primary">
+                    <i class="bi bi-box-arrow-in-right me-2"></i>Đăng nhập ngay
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
 @section Scripts {
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.12/signalr.min.js"></script>
     <script>
-        // Giữ nguyên JS cũ, chỉ lưu ý sửa code smart back nếu URL đổi:
+        // ----------------------------------------------------
+        // 1. CÁC HÀM CŨ CỦA BẠN (Giữ nguyên - không đổi)
+        // ----------------------------------------------------
         function smartBack() {
             const referrer = document.referrer;
             const currentHost = window.location.hostname;
             if (referrer && referrer.includes(currentHost)) {
+                if (referrer.toLowerCase().includes('/wishlist')) {
+                    window.location.href = '/Wishlist/Index';
+                    return;
+                }
+                if (referrer.toLowerCase().includes('/shop')) {
+                    window.location.href = '/Shop/Index';
+                    return;
+                }
                 window.history.back();
             } else {
-                window.location.href = '/Index';
+                window.location.href = '/';
             }
         }
+
         function updateBackButton() {
             const backBtn = document.getElementById('smartBackBtn');
             const backText = document.getElementById('backButtonText');
             const backIcon = document.getElementById('backButtonIcon');
-
             if (!backBtn) return;
-
             const referrer = document.referrer;
-
             if (referrer) {
                 if (referrer.toLowerCase().includes('/wishlist')) {
                     backText.textContent = 'Quay lại Wishlist';
@@ -119,31 +154,22 @@
             }
         }
 
-        // ============================================
-        // 2. SHOW LOGIN MODAL
-        // ============================================
         function showLoginModal() {
             const modal = new bootstrap.Modal(document.getElementById('loginRequiredModal'));
             modal.show();
         }
 
-        // ============================================
-        // 3. ADD TO CART WITH AUTH CHECK
-        // ============================================
         (function () {
             const form = document.querySelector('.add-to-cart-form');
             if (!form) return;
-
             form.addEventListener('submit', async function (e) {
                 e.preventDefault();
                 const fd = new FormData(form);
                 const submitBtn = form.querySelector('button[type="submit"]');
                 const originalHTML = submitBtn.innerHTML;
-
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Đang xử lý...';
                 try {
-                    submitBtn.disabled = true;
-                    submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Đang xử lý...';
-
                     const token = fd.get('__RequestVerificationToken');
                     const res = await fetch(form.action, {
                         method: 'POST',
@@ -154,30 +180,29 @@
                         credentials: 'same-origin',
                         body: fd
                     });
-
-                    const data = await res.json();
-
-                    // KIỂM TRA YÊU CẦU ĐĂNG NHẬP
-                    if (data?.requireLogin === true || res.status === 401) {
+                    if (res.status === 401 || res.status === 403) {
                         showLoginModal();
                         submitBtn.innerHTML = originalHTML;
                         submitBtn.disabled = false;
                         return;
                     }
-
+                    let data;
+                    try { data = await res.json(); } catch { data = null; }
+                    if (data?.requireLogin === true) {
+                        showLoginModal();
+                        submitBtn.innerHTML = originalHTML;
+                        submitBtn.disabled = false;
+                        return;
+                    }
                     if (data?.success) {
-                        // Update cart badge
                         const badge = document.getElementById('cartBadge');
                         if (badge) {
                             badge.textContent = data.count ?? badge.textContent;
                             badge.style.display = (data.count ?? 0) > 0 ? 'block' : 'none';
                         }
-
-                        // Success feedback
                         submitBtn.innerHTML = '<i class="bi bi-check-lg me-2"></i>Đã thêm';
                         submitBtn.classList.remove('btn-primary');
                         submitBtn.classList.add('btn-success');
-
                         setTimeout(() => {
                             submitBtn.innerHTML = originalHTML;
                             submitBtn.classList.remove('btn-success');
@@ -185,44 +210,33 @@
                             submitBtn.disabled = false;
                         }, 1500);
                     } else {
-                        alert(data?.error ?? 'Không thể thêm vào giỏ hàng');
+                        alert(data?.error ?? 'Không thể thêm vào giỏ hàng. Lỗi: ' + res.status);
                         submitBtn.innerHTML = originalHTML;
                         submitBtn.disabled = false;
                     }
                 } catch (err) {
                     console.error('Add to cart error:', err);
-                    showLoginModal();
+                    alert('Lỗi kết nối: ' + err.message);
                     submitBtn.innerHTML = originalHTML;
                     submitBtn.disabled = false;
                 }
             });
         })();
 
-        // ============================================
-        // 4. BUY NOW WITH AUTH CHECK
-        // ============================================
         (function() {
             const buyNowForm = document.querySelector('.buy-now-form');
             if (!buyNowForm) return;
-
             buyNowForm.addEventListener('submit', async function(e) {
                 e.preventDefault();
-
-                // Đồng bộ số lượng từ input Add to Cart
                 const quantityInput = document.querySelector('.quantity-input');
                 const buyNowQuantity = buyNowForm.querySelector('.buy-now-quantity');
-                if (quantityInput && buyNowQuantity) {
-                    buyNowQuantity.value = quantityInput.value;
-                }
-
+                if (quantityInput && buyNowQuantity) buyNowQuantity.value = quantityInput.value;
                 const fd = new FormData(buyNowForm);
                 const submitBtn = buyNowForm.querySelector('button[type="submit"]');
                 const originalHTML = submitBtn.innerHTML;
-
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Đang xử lý...';
                 try {
-                    submitBtn.disabled = true;
-                    submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Đang xử lý...';
-
                     const token = fd.get('__RequestVerificationToken');
                     const res = await fetch(buyNowForm.action, {
                         method: 'POST',
@@ -233,64 +247,55 @@
                         credentials: 'same-origin',
                         body: fd
                     });
-
-                    const data = await res.json();
-
-                    // KIỂM TRA YÊU CẦU ĐĂNG NHẬP
-                    if (data?.requireLogin === true || res.status === 401) {
+                    if (res.status === 401 || res.status === 403) {
                         showLoginModal();
                         submitBtn.innerHTML = originalHTML;
                         submitBtn.disabled = false;
                         return;
                     }
-
+                    let data;
+                    try { data = await res.json(); } catch { data = null; }
+                    if (data?.requireLogin === true) {
+                        showLoginModal();
+                        submitBtn.innerHTML = originalHTML;
+                        submitBtn.disabled = false;
+                        return;
+                    }
                     if (data?.success) {
-                        if (data.redirectUrl) {
-                            window.location.href = data.redirectUrl;
-                        } else {
-                            window.location.href = '/Order/Checkout';
-                        }
+                        window.location.href = data.redirectUrl || '/Order/Checkout';
                     } else {
-                        alert(data?.message ?? 'Có lỗi xảy ra');
+                        alert(data?.message ?? 'Có lỗi xảy ra. Lỗi: ' + res.status);
                         submitBtn.innerHTML = originalHTML;
                         submitBtn.disabled = false;
                     }
                 } catch (err) {
                     console.error('Buy now error:', err);
-                    showLoginModal();
+                    alert('Lỗi kết nối: ' + err.message);
                     submitBtn.innerHTML = originalHTML;
                     submitBtn.disabled = false;
                 }
             });
         })();
 
-        // ============================================
-        // 5. WISHLIST TOGGLE WITH AUTH CHECK
-        // ============================================
         $(function() {
             const wishlistBtn = $('.wishlist-toggle-detail');
             if (!wishlistBtn.length) return;
 
-            // Check trạng thái ban đầu
             (async function checkWishlistStatus() {
                 const productId = wishlistBtn.data('product-id');
                 try {
-                    const res = await fetch(`/Wishlist/Check/${productId}`);
-                    const isInWishlist = await res.json();
+                    const res = await fetch(`/Wishlist?handler=CheckWishlist&productId=${productId}`);
+                    const data = await res.json();
                     const icon = wishlistBtn.find('.wishlist-icon');
-
-                    if (isInWishlist) {
+                    if (data.isInWishlist) {
                         icon.removeClass('bi-heart').addClass('bi-heart-fill');
                         wishlistBtn.removeClass('btn-outline-danger').addClass('btn-danger');
                         wishlistBtn.attr('title', 'Xóa khỏi yêu thích');
                     }
-                } catch(e) {
-                    console.log('Check wishlist fail:', e);
-                }
+                } catch(e) { console.log('Check wishlist fail:', e); }
             })();
 
-            // Click toggle
-            wishlistBtn.on('click', async function(e) {
+            wishlistBtn.on('click', async function (e) {
                 e.preventDefault();
                 const btn = $(this);
                 const icon = btn.find('.wishlist-icon');
@@ -302,27 +307,24 @@
 
                 try {
                     const token = $('input[name="__RequestVerificationToken"]').first().val();
-                    const res = await fetch(`/Wishlist/Toggle/${productId}`, {
+                    const res = await fetch(`/Wishlist?handler=ToggleWishlist&productId=${productId}`, {
                         method: 'POST',
                         headers: {
                             'RequestVerificationToken': token,
                             'X-Requested-With': 'XMLHttpRequest'
                         }
                     });
-
                     const data = await res.json();
 
-                    // KIỂM TRA YÊU CẦU ĐĂNG NHẬP
                     if (data?.requireLogin === true || res.status === 401) {
                         showLoginModal();
                         btn.html(originalHTML);
                         btn.prop('disabled', false);
                         return;
                     }
-
                     if (data?.success) {
                         btn.html(originalHTML);
-                        if (data.isAdded) {
+                        if (data.isAdded === true) {
                             icon.removeClass('bi-heart').addClass('bi-heart-fill');
                             btn.removeClass('btn-outline-danger').addClass('btn-danger');
                             btn.attr('title', 'Xóa khỏi yêu thích');
@@ -331,11 +333,19 @@
                             btn.removeClass('btn-danger').addClass('btn-outline-danger');
                             btn.attr('title', 'Thêm vào yêu thích');
                         }
+
+                        if (typeof data.count === 'number') {
+                            const badge = document.getElementById('wishlistBadge');
+                            if (badge) {
+                                badge.textContent = data.count;
+                                badge.style.display = data.count > 0 ? 'block' : 'none';
+                            }
+                        }
                     } else {
                         alert(data?.message || 'Lỗi xử lý wishlist');
                         btn.html(originalHTML);
                     }
-                } catch(err) {
+                } catch (err) {
                     console.error('Wishlist error:', err);
                     showLoginModal();
                     btn.html(originalHTML);
@@ -345,11 +355,82 @@
             });
         });
 
-        // ============================================
-        // 6. INIT ON PAGE LOAD
-        // ============================================
         document.addEventListener('DOMContentLoaded', function() {
             updateBackButton();
         });
+
+        // ----------------------------------------------------
+        // 2. SIGNALR: LẮNG NGHE CẬP NHẬT TỪ ADMIN
+        // ----------------------------------------------------
+
+        const currentProductId = @Model.ProductDetail.ProductId;
+        const detailConnection = new signalR.HubConnectionBuilder()
+            .withUrl("/appHub")
+            .build();
+
+        // XỬ LÝ KHI ADMIN CẬP NHẬT SẢN PHẨM
+        detailConnection.on("ReceiveProductUpdate", function (product) {
+            console.log("SignalR - Cập nhật sản phẩm: ", product);
+
+            if (String(product.productId) === String(currentProductId)) {
+
+                // Trường hợp 1: Admin đổi trạng thái thành "Ẩn" (Inactive)
+                if (product.status === 0) {
+                    alert("Sản phẩm này vừa ngừng kinh doanh hoặc tạm ẩn! Đang đưa bạn về Cửa hàng...");
+                    window.location.href = '/Shop/Index';
+                    return;
+                }
+
+                // Trường hợp 2: Cập nhật thông tin Giá, Tên, Danh Mục
+                document.getElementById('detail-name').innerText = product.productName;
+                document.getElementById('detail-category').innerText = product.categoryName;
+                document.getElementById('detail-price').innerText = Number(product.price).toLocaleString('vi-VN') + ' ₫';
+
+                // Cập nhật SKU nếu có
+                const skuEl = document.getElementById('detail-sku');
+                if (skuEl) {
+                    if (product.sku) {
+                        skuEl.innerText = "SKU: " + product.sku;
+                        skuEl.style.display = "inline-block";
+                    } else {
+                        skuEl.style.display = "none";
+                    }
+                }
+
+                // Cập nhật Mô tả
+                const descEl = document.getElementById('detail-desc');
+                if (descEl) {
+                    descEl.innerText = product.description ? product.description : "Sản phẩm này chưa có mô tả chi tiết.";
+                }
+
+                // Cập nhật Ảnh
+                const imgEl = document.getElementById('detail-image');
+                if (imgEl && imgEl.src !== window.location.origin + product.image) {
+                    imgEl.src = product.image;
+                }
+
+                // Hiệu ứng chớp sáng
+                const infoBox = document.getElementById('info-container');
+                if (infoBox) {
+                    infoBox.style.boxShadow = "0 0 20px rgba(25, 135, 84, 0.5)";
+                    infoBox.style.backgroundColor = "rgba(25, 135, 84, 0.05)";
+                    setTimeout(() => {
+                        infoBox.style.boxShadow = "none";
+                        infoBox.style.backgroundColor = "transparent";
+                    }, 1500);
+                }
+            }
+        });
+
+        // XỬ LÝ KHI ADMIN XÓA HẲN SẢN PHẨM
+        detailConnection.on("ReceiveProductDelete", function (deletedProductId) {
+            if (String(deletedProductId) === String(currentProductId)) {
+                alert("Sản phẩm này vừa bị quản trị viên xóa khỏi hệ thống! Đang đưa bạn về Cửa hàng...");
+                window.location.href = '/Shop/Index';
+            }
+        });
+
+        detailConnection.start().catch(err => console.error("Lỗi kết nối Detail SignalR: ", err));
+
     </script>
 }

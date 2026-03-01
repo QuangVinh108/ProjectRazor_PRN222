@@ -1,0 +1,266 @@
+﻿@page
+@model E_Commerce_Razor.Pages.Inventory.IndexModel
+@{
+    ViewData["Title"] = "Quản lý Kho hàng";
+    Layout = "_AdminLayout";
+    var search = Model.Search ?? "";
+}
+
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2><i class="bi bi-box-seam"></i> Quản lý Kho hàng</h2>
+            <a asp-page="Create" class="btn btn-primary">
+                <i class="bi bi-plus-lg"></i> Thêm kho mới
+            </a>
+        </div>
+
+        @if (TempData["Success"] != null)
+        {
+            <div class="alert alert-success alert-dismissible fade show">
+                @TempData["Success"]
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        }
+
+        @if (TempData["Error"] != null)
+        {
+            <div class="alert alert-danger alert-dismissible fade show">
+                @TempData["Error"]
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        }
+
+        <!-- SEARCH -->
+        <form method="get" class="mb-4">
+            <div class="row g-3">
+                <div class="col-md-5">
+                    <input type="text"
+                           asp-for="Search"
+                           class="form-control"
+                           placeholder="Tìm theo tên sản phẩm..." />
+                </div>
+
+                <div class="col-md-3">
+                    <select asp-for="PageSize" class="form-select">
+                        <option value="10">10 / trang</option>
+                        <option value="25">25 / trang</option>
+                        <option value="50">50 / trang</option>
+                    </select>
+                </div>
+
+                <div class="col-md-4">
+                    <button type="submit" class="btn btn-outline-primary w-100">
+                        <i class="bi bi-search"></i> Tìm kiếm
+                    </button>
+                </div>
+            </div>
+        </form>
+
+        <!-- TABLE -->
+        <div class="card shadow-sm">
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th class="text-center" style="width:80px;">Hình ảnh</th>
+                                <th>Sản phẩm</th>
+                                <th>Tồn kho</th>
+                                <th>Kho</th>
+                                <th>Cập nhật</th>
+                                <th>Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (Model.Result?.Items.Any() == true)
+                            {
+                                @foreach (var item in Model.Result.Items)
+                                {
+                                    <tr>
+                                        <td class="text-center">
+                                            @if (!string.IsNullOrEmpty(item.ProductImage))
+                                            {
+                                                <img src="@item.ProductImage"
+                                                     style="width:50px;height:50px;object-fit:cover;"
+                                                     class="rounded border bg-white" />
+                                            }
+                                            else
+                                            {
+                                                <div class="d-flex align-items-center justify-content-center rounded border bg-light"
+                                                     style="width:50px;height:50px;">
+                                                    <i class="bi bi-image text-secondary"></i>
+                                                </div>
+                                            }
+                                        </td>
+
+                                        <td>
+                                            <strong>@item.ProductName</strong>
+                                            <br />
+                                            <small>ID: @item.ProductId</small>
+                                        </td>
+
+                                        <td>
+                                            <span class="badge @(item.Quantity > 0 ? "bg-success" : "bg-danger")">
+                                                @item.Quantity
+                                            </span>
+                                        </td>
+
+                                        <td>@(item.Warehouse ?? "Chưa khai báo")</td>
+
+                                        <td>@item.UpdatedAt.ToString("dd/MM/yyyy HH:mm")</td>
+
+                                        <td>
+                                            <a asp-page="Edit"
+                                               asp-route-productId="@item.ProductId"
+                                               class="btn btn-sm btn-outline-primary">
+                                                <i class="bi bi-pencil"></i>
+                                            </a>
+
+                                            <form method="post"
+                                                  asp-page-handler="Delete"
+                                                  asp-route-productId="@item.ProductId"
+                                                  class="inventory-delete-form"
+                                                  data-product-name="@item.ProductName"
+                                                  style="display:inline;">
+
+                                                <button type="button"
+                                                        class="btn btn-sm btn-outline-danger inventory-delete-btn">
+                                                    <i class="bi bi-trash"></i>
+                                                </button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                            else
+                            {
+                                <tr>
+                                    <td colspan="6" class="text-center py-4 text-muted">
+                                        <i class="bi bi-inbox display-4 opacity-25 mb-3 d-block"></i>
+                                        Không có dữ liệu kho hàng
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- PAGINATION -->
+        @if (Model.Result != null && Model.Result.TotalPages > 1)
+        {
+            <nav class="mt-4">
+                <ul class="pagination justify-content-center">
+
+                    <li class="page-item @(Model.Result.PageIndex <= 1 ? "disabled" : "")">
+                        <a class="page-link"
+                           asp-page="./Index"
+                           asp-route-pageIndex="@(Model.Result.PageIndex - 1)"
+                           asp-route-search="@search">
+                            Trước
+                        </a>
+                    </li>
+
+                    @for (int i = 1; i <= Model.Result.TotalPages; i++)
+                    {
+                        <li class="page-item @(i == Model.Result.PageIndex ? "active" : "")">
+                            <a class="page-link"
+                               asp-page="./Index"
+                               asp-route-pageIndex="@i"
+                               asp-route-search="@search">
+                                @i
+                            </a>
+                        </li>
+                    }
+
+                    <li class="page-item @(Model.Result.PageIndex >= Model.Result.TotalPages ? "disabled" : "")">
+                        <a class="page-link"
+                           asp-page="./Index"
+                           asp-route-pageIndex="@(Model.Result.PageIndex + 1)"
+                           asp-route-search="@search">
+                            Sau
+                        </a>
+                    </li>
+
+                </ul>
+            </nav>
+        }
+    </div>
+
+    <div class="modal fade" id="inventoryConfirmModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+
+                <div class="modal-header">
+                    <h5 class="modal-title text-danger">
+                        <i class="bi bi-exclamation-triangle me-2"></i>
+                        Xác nhận xóa
+                    </h5>
+                    <button type="button"
+                            class="btn-close"
+                            data-bs-dismiss="modal"></button>
+                </div>
+
+                <div class="modal-body" id="inventoryConfirmMessage">
+                    Bạn có chắc muốn xóa sản phẩm này?
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button"
+                            class="btn btn-secondary"
+                            data-bs-dismiss="modal">
+                        Hủy
+                    </button>
+
+                    <button type="button"
+                            id="inventoryConfirmBtn"
+                            class="btn btn-danger">
+                        Xóa
+                    </button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    @section Scripts {
+        <script>
+            document.addEventListener("DOMContentLoaded", function () {
+
+                let formToSubmit = null;
+
+                const modal = new bootstrap.Modal(
+                    document.getElementById('inventoryConfirmModal')
+                );
+
+                const confirmBtn = document.getElementById('inventoryConfirmBtn');
+                const confirmMessage = document.getElementById('inventoryConfirmMessage');
+
+                document.querySelectorAll('.inventory-delete-btn')
+                    .forEach(btn => {
+                        btn.addEventListener('click', function () {
+
+                            const form = this.closest('form');
+                            const productName = form.dataset.productName;
+
+                            formToSubmit = form;
+
+                            confirmMessage.textContent =
+                                `Bạn có chắc muốn xóa "${productName}" khỏi kho?`;
+
+                            modal.show();
+                        });
+                    });
+
+                confirmBtn.addEventListener('click', function () {
+                    if (formToSubmit) {
+                        formToSubmit.submit();
+                    }
+                });
+
+            });
+        </script>
+    }
+</div>
