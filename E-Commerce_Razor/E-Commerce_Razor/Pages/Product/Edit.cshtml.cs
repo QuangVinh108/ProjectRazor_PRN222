@@ -1,10 +1,12 @@
 ﻿using BLL.DTOs;
 using BLL.IService;
+using E_Commerce_Razor.Hubs;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.Mvc.Rendering;
-using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.SignalR;
 using System.IO;
 using System.Linq;
 
@@ -16,12 +18,14 @@ namespace E_Commerce_Razor.Pages.Product
         private readonly IProductService _productService;
         private readonly ICategoryService _categoryService;
         private readonly IWebHostEnvironment _webHostEnvironment;
+        private readonly IHubContext<AppHub> _hubContext;
 
-        public EditModel(IProductService productService, ICategoryService categoryService, IWebHostEnvironment webHostEnvironment)
+        public EditModel(IProductService productService, ICategoryService categoryService, IWebHostEnvironment webHostEnvironment, IHubContext<AppHub> hubContext)
         {
             _productService = productService;
             _categoryService = categoryService;
             _webHostEnvironment = webHostEnvironment;
+            _hubContext = hubContext;
         }
 
         [BindProperty]
@@ -93,6 +97,24 @@ namespace E_Commerce_Razor.Pages.Product
                 }
 
                 _productService.Update(Input);
+
+                var allCategories = _categoryService.GetAll();
+                var categoryName = allCategories.FirstOrDefault(c => c.CategoryId == Input.CategoryId)?.CategoryName ?? "Chưa phân loại";
+
+                var updatedProductData = new
+                {
+                    productId = Input.ProductId,
+                    productName = Input.ProductName,
+                    price = Input.Price,
+                    image = string.IsNullOrEmpty(Input.Image) ? "https://placehold.co/400x400?text=No+Image" : Input.Image,
+                    categoryName = categoryName,
+                    status = Input.Status,
+                    sku = Input.Sku,
+                    description = Input.Description
+                };
+
+                // PHÁT LOA: "Sản phẩm này vừa bị đổi thông tin nhé!"
+                await _hubContext.Clients.All.SendAsync("ReceiveProductUpdate", updatedProductData);
 
                 TempData["SuccessMessage"] = "Cập nhật sản phẩm thành công!";
                 return RedirectToPage("./Index", new { CurrentParentId = ReturnParentId });

@@ -103,21 +103,22 @@ namespace BLL.Service
             };
         }
 
-        public void Create(CreateProductViewModel model)
+        public int Create(CreateProductViewModel model) 
         {
-            var product = new Product
+            var newProduct = new Product
             {
                 ProductName = model.ProductName,
-                Sku = model.Sku,
                 Price = model.Price,
-                Description = model.Description,
+                Image = model.Image,
                 CategoryId = model.CategoryId,
+                Sku = model.Sku,
                 Status = model.Status,
-                CreatedAt = DateTime.Now,
-                Image = model.Image
+                Description = model.Description
             };
 
-            _productRepository.AddProduct(product);
+            _productRepository.AddProduct(newProduct);
+
+            return newProduct.ProductId;
         }
 
         public void Update(CreateProductViewModel model)

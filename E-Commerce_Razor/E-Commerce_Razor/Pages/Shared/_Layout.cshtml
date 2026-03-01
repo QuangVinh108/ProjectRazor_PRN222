@@ -6,12 +6,9 @@
     <title>@ViewData["Title"] - E-Commerce</title>
 
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
-
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
-
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
 
-    @* ✅ THÊM DÒNG NÀY - Render page-specific styles *@
     @await RenderSectionAsync("Styles", required: false)
 </head>
 
@@ -51,7 +48,7 @@
                                 </li>
                             }
 
-                            @* ✅ WISHLIST - SỬA LẠI ĐÂY *@
+                            @* WISHLIST *@
                             <li class="nav-item position-relative">
                                 <a class="nav-link position-relative"
                                    id="wishlistLink"
@@ -105,21 +102,11 @@
                                     Hàng ngàn sản phẩm chính hãng, giá tốt nhất thị trường.
                                 </p>
                                 <div class="footer-social">
-                                    <a href="#" class="social-link" title="Facebook">
-                                        <i class="bi bi-facebook"></i>
-                                    </a>
-                                    <a href="#" class="social-link" title="Instagram">
-                                        <i class="bi bi-instagram"></i>
-                                    </a>
-                                    <a href="#" class="social-link" title="Twitter">
-                                        <i class="bi bi-twitter"></i>
-                                    </a>
-                                    <a href="#" class="social-link" title="YouTube">
-                                        <i class="bi bi-youtube"></i>
-                                    </a>
-                                    <a href="#" class="social-link" title="TikTok">
-                                        <i class="bi bi-tiktok"></i>
-                                    </a>
+                                    <a href="#" class="social-link" title="Facebook"><i class="bi bi-facebook"></i></a>
+                                    <a href="#" class="social-link" title="Instagram"><i class="bi bi-instagram"></i></a>
+                                    <a href="#" class="social-link" title="Twitter"><i class="bi bi-twitter"></i></a>
+                                    <a href="#" class="social-link" title="YouTube"><i class="bi bi-youtube"></i></a>
+                                    <a href="#" class="social-link" title="TikTok"><i class="bi bi-tiktok"></i></a>
                                 </div>
                             </div>
                         </div>
@@ -160,22 +147,10 @@
                         <div class="col-lg-2 col-md-6 col-6">
                             <h5 class="footer-title">Liên hệ</h5>
                             <ul class="footer-contact">
-                                <li>
-                                    <i class="bi bi-telephone"></i>
-                                    <span>1900-xxxx</span>
-                                </li>
-                                <li>
-                                    <i class="bi bi-envelope"></i>
-                                    <span>support@eshop.vn</span>
-                                </li>
-                                <li>
-                                    <i class="bi bi-geo-alt"></i>
-                                    <span>Hà Nội, Việt Nam</span>
-                                </li>
-                                <li>
-                                    <i class="bi bi-clock"></i>
-                                    <span>24/7 hỗ trợ</span>
-                                </li>
+                                <li><i class="bi bi-telephone"></i><span>1900-xxxx</span></li>
+                                <li><i class="bi bi-envelope"></i><span>support@eshop.vn</span></li>
+                                <li><i class="bi bi-geo-alt"></i><span>Hà Nội, Việt Nam</span></li>
+                                <li><i class="bi bi-clock"></i><span>24/7 hỗ trợ</span></li>
                             </ul>
                         </div>
                     </div>
@@ -204,7 +179,7 @@
             </div>
         </footer>
 
-        @* ✅ THÊM MODAL YÊU CẦU ĐĂNG NHẬP *@
+        @* MODAL YÊU CẦU ĐĂNG NHẬP (Dùng chung cho Wishlist & Chat) *@
         <div class="modal fade" id="loginRequiredModal" tabindex="-1" aria-labelledby="loginRequiredModalLabel" aria-hidden="true">
             <div class="modal-dialog modal-dialog-centered">
                 <div class="modal-content border-0 shadow-lg">
@@ -218,13 +193,13 @@
                         <div class="mb-4">
                             <i class="bi bi-lock-fill text-primary" style="font-size: 4rem; opacity: 0.3;"></i>
                         </div>
-                        <h5 class="fw-bold mb-3">Bạn cần đăng nhập để sử dụng Wishlist</h5>
+                        <h5 class="fw-bold mb-3" id="loginModalTitleText">Bạn cần đăng nhập để sử dụng tính năng này</h5>
                         <p class="text-muted mb-0">
-                            Đăng nhập để lưu sản phẩm yêu thích và quản lý danh sách của bạn dễ dàng hơn
+                            Đăng nhập để trải nghiệm đầy đủ các dịch vụ của E-Shop
                         </p>
                     </div>
                     <div class="modal-footer border-0 justify-content-center pt-0 pb-4">
-                        <a href="/Account/Login?returnUrl=%2FWishlist" class="btn btn-primary px-4 py-2">
+                        <a href="/Account/Login?returnUrl=@Uri.EscapeDataString(Context.Request.Path + Context.Request.QueryString.ToString())" id="goLoginBtn" class="btn btn-primary px-4 py-2">
                             <i class="bi bi-box-arrow-in-right"></i> Đăng nhập ngay
                         </a>
                         <button type="button" class="btn btn-outline-secondary px-4 py-2" data-bs-dismiss="modal">
@@ -243,74 +218,199 @@
     }
 
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.12/signalr.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/picmo@5.7.6/dist/umd/index.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@@picmo/popup-picker@5.7.6/dist/umd/index.js"></script>
 
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/wishlist.js"></script>
     <script>
         document.addEventListener("DOMContentLoaded", function () {
-          const wishlistLink = document.getElementById("wishlistLink");
-          if (!wishlistLink) return;
+            const wishlistLink = document.getElementById("wishlistLink");
+            if (!wishlistLink) return;
 
-          // Razor render true/false ra JS
-          const isAuthenticated = @((User?.Identity?.IsAuthenticated ?? false).ToString().ToLowerInvariant());
+            const isAuthenticated = @((User?.Identity?.IsAuthenticated ?? false).ToString().ToLowerInvariant());
 
+            wishlistLink.addEventListener("click", function (e) {
+                if (isAuthenticated) return;
+                e.preventDefault();
+                document.getElementById('loginRequiredModalLabel').innerHTML = '<i class="bi bi-heart-fill text-danger"></i> Yêu cầu đăng nhập';
+                document.getElementById('loginModalTitleText').innerText = 'Bạn cần đăng nhập để sử dụng Wishlist';
 
-          wishlistLink.addEventListener("click", function (e) {
-            if (isAuthenticated) return; // đã đăng nhập thì đi bình thường
-
-            e.preventDefault();
-
-            // gắn ReturnUrl để login xong quay lại đúng trang
-            const returnUrl = encodeURIComponent(wishlistLink.getAttribute("href") || "/Wishlist");
-            const loginUrl = `/Account/Login?ReturnUrl=${returnUrl}`;
-
-            const goLoginBtn = document.getElementById("goLoginBtn");
-            if (goLoginBtn) goLoginBtn.setAttribute("href", loginUrl);
-
-            bootstrap.Modal.getOrCreateInstance(
-               document.getElementById("loginRequiredModal")
-            ).show();
-          });
+                bootstrap.Modal.getOrCreateInstance(document.getElementById("loginRequiredModal")).show();
+            });
         });
-    </script>
 
-
-    <script src="~/js/site.js" asp-append-version="true"></script>
-
-    @* ✅ Render page-specific scripts *@
-    @await RenderSectionAsync("Scripts", required: false)
-
-    @* ✅ SỬA LẠI WISHLIST COUNTER SCRIPT - CHỈ CHẠY KHI ĐÃ ĐĂNG NHẬP *@
-    <script>
         $(document).ready(function() {
-            // Kiểm tra authentication status
             const isAuthenticated = @Json.Serialize(User?.Identity?.IsAuthenticated ?? false);
-
-            // Chỉ update wishlist count khi đã đăng nhập
             if (isAuthenticated) {
                 updateWishlistCount();
-                setInterval(updateWishlistCount, 30000); // Update every 30 seconds
+                setInterval(updateWishlistCount, 30000);
             }
         });
 
         async function updateWishlistCount() {
             try {
                 const response = await fetch('/Wishlist/Count');
-                if (!response.ok) return; // Nếu API lỗi, bỏ qua
-
+                if (!response.ok) return;
                 const count = await response.json();
                 const badge = document.getElementById('wishlistBadge');
-
                 if (badge) {
                     badge.textContent = count;
                     badge.style.display = count > 0 ? 'block' : 'none';
                 }
-            } catch (e) {
-                console.log('Failed to load wishlist count:', e);
-            }
+            } catch (e) { console.log('Failed to load wishlist count:', e); }
         }
     </script>
 
+    <script>
+        const isAuthenticatedChat = @((User?.Identity?.IsAuthenticated ?? false).ToString().ToLowerInvariant());
+        let chatConnection = null;
+
+        if (isAuthenticatedChat) {
+            chatConnection = new signalR.HubConnectionBuilder().withUrl("/appHub").build();
+
+            chatConnection.on("ReceiveMessage", function (user, message) {
+                const msgDiv = document.getElementById("chatMessages");
+                const isMyMsg = (user === "Bạn");
+                const alignClass = isMyMsg ? "text-end" : "text-start";
+                const bgClass = isMyMsg ? "bg-primary text-white" : "bg-white border border-success border-2 shadow-sm";
+
+                const msgHtml = `
+                    <div class="mb-2 ${alignClass}">
+                        <small class="d-block text-muted mb-1" style="font-size: 10px; font-weight: ${!isMyMsg ? 'bold' : 'normal'}">${user}</small>
+                        <div class="d-inline-block p-2 rounded-3 shadow-sm ${bgClass}" style="max-width: 85%; text-align: left; word-break: break-word; font-size: 0.9rem;">
+                            ${message}
+                        </div>
+                    </div>
+                `;
+
+                msgDiv.insertAdjacentHTML('beforeend', msgHtml);
+                msgDiv.scrollTop = msgDiv.scrollHeight;
+            });
+
+            chatConnection.start().catch(err => console.error("SignalR Chat Error: ", err.toString()));
+
+            // ==========================================
+            // LOGIC EMOJI MỚI: PICMO createPicker (INLINE)
+            // ==========================================
+            document.addEventListener('DOMContentLoaded', () => {
+                const emojiButton = document.getElementById('emojiButton');
+                const chatInput = document.getElementById('chatInput');
+                const emojiPickerContainer = document.getElementById('emojiPickerContainer');
+                const chatMessages = document.getElementById('chatMessages');
+
+                let picker = null; // Biến lưu trữ đối tượng picker để không tạo lại nhiều lần
+
+                if(emojiButton && typeof picmo !== 'undefined') {
+                    // Gắn sự kiện click cho nút mặt cười
+                    emojiButton.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+
+                        // 1. Chỉ khởi tạo bảng Emoji một lần duy nhất khi click đầu tiên
+                        if(!picker && picmo.createPicker) {
+                            picker = picmo.createPicker({
+                                rootElement: emojiPickerContainer, // Nơi chèn bảng
+                                showSearch: true,
+                                autoFocusSearch: false
+                            });
+
+                            // Bắt sự kiện khi người dùng chọn một Emoji
+                            picker.addEventListener('emoji:select', selection => {
+                                chatInput.value += selection.emoji; // Nối icon vào ô input
+                                chatInput.focus(); // Focus lại để gõ tiếp
+                            });
+                        }
+
+                        // 2. Bật/tắt d-none cho container chứa bảng Emoji
+                        emojiPickerContainer.classList.toggle('d-none');
+
+                        // 3. Cuộn chat messages xuống cuối cùng để tin nhắn không bị che khuất khi bảng mọc ra
+                        chatMessages.scrollTop = chatMessages.scrollHeight;
+                    });
+                }
+            });
+        }
+
+        function sendChatMessage() {
+            if (!isAuthenticatedChat) return;
+            const input = document.getElementById("chatInput");
+            const message = input.value.trim();
+            if (message && chatConnection) {
+                chatConnection.invoke("SendMessageToSupport", message).catch(err => console.error(err.toString()));
+                input.value = "";
+            }
+        }
+
+        function handleEnterChat(e) {
+            if (e.key === 'Enter') sendChatMessage();
+        }
+
+        function toggleChat() {
+            if (!isAuthenticatedChat) {
+                document.getElementById('loginRequiredModalLabel').innerHTML = '<i class="bi bi-chat-dots-fill text-primary"></i> Hỗ trợ trực tuyến';
+                document.getElementById('loginModalTitleText').innerText = 'Vui lòng đăng nhập để Chat với CSKH';
+                bootstrap.Modal.getOrCreateInstance(document.getElementById("loginRequiredModal")).show();
+                return;
+            }
+            const box = document.getElementById('chatBox');
+            const btn = document.getElementById('btnOpenChat');
+            box.classList.toggle('d-none');
+            btn.classList.toggle('d-none');
+
+            if (!box.classList.contains('d-none')) {
+                setTimeout(() => document.getElementById('chatInput').focus(), 100);
+            }
+        }
+
+        // HÀM XỬ LÝ ĐÍNH KÈM FILE VÀ ẢNH (ĐÃ UPDATE CHO ĐA DẠNG FILE)
+        function handleChatFileUpload(event) {
+            if (!isAuthenticatedChat || !chatConnection) return;
+
+            const file = event.target.files[0];
+            if (!file) return;
+
+            // Chặn file > 5MB
+            if (file.size > 5 * 1024 * 1024) {
+                alert("Kích thước file quá lớn. Vui lòng chọn file dưới 5MB.");
+                event.target.value = '';
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const base64Data = e.target.result;
+                let htmlMessage = "";
+
+                // 1. Kiểm tra nếu là Ảnh -> Vẽ thành thẻ <img> để hiển thị luôn
+                if (file.type.startsWith("image/")) {
+                    htmlMessage = `<img src="${base64Data}" style="max-width: 100%; border-radius: 8px; cursor: pointer; max-height: 150px; object-fit: contain;" onclick="window.open(this.src, '_blank')" alt="Hình ảnh" />`;
+                }
+                // 2. Nếu là file khác -> Vẽ thành nút tải xuống có icon
+                else {
+                    htmlMessage = `
+                        <a href="${base64Data}" download="${file.name}" class="d-inline-flex align-items-center text-decoration-none text-dark bg-white border p-2 rounded shadow-sm">
+                            <i class="bi bi-file-earmark-arrow-down-fill text-primary fs-4 me-2"></i>
+                            <div class="text-truncate" style="max-width: 150px; font-size: 0.85rem;">
+                                <strong class="d-block text-truncate">${file.name}</strong>
+                                <span class="text-muted small">${(file.size / 1024).toFixed(1)} KB</span>
+                            </div>
+                        </a>`;
+                }
+
+                chatConnection.invoke("SendMessageToSupport", htmlMessage).catch(err => console.error(err.toString()));
+            };
+
+            reader.readAsDataURL(file);
+            event.target.value = '';
+        }
+    </script>
+
+    @await RenderSectionAsync("Scripts", required: false)
     <div class="position-fixed top-0 end-0 p-3" style="z-index: 9999">
         <div id="wishlistToast"
              class="toast align-items-center text-white bg-danger border-0 shadow-lg"

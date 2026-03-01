@@ -149,8 +149,8 @@
                                             <a asp-page="./Edit" asp-route-id="@item.ProductId" asp-route-returnParentId="@Model.CurrentParentId" class="btn btn-sm btn-outline-primary">
                                                 <i class="bi bi-pencil"></i>
                                             </a>
-                                            <form asp-page-handler="Delete" asp-route-id="@item.ProductId" asp-route-parentId="@Model.CurrentParentId" method="post" class="d-inline" onsubmit="return confirm('Bạn có chắc chắn muốn xóa sản phẩm này?')">
-                                                <button type="submit" class="btn btn-sm btn-outline-danger">
+                                            <form asp-page-handler="Delete" asp-route-id="@item.ProductId" asp-route-parentId="@Model.CurrentParentId" method="post" class="d-inline delete-form-product">
+                                                <button type="button" class="btn btn-sm btn-outline-danger btn-delete-product" title="Xóa sản phẩm">
                                                     <i class="bi bi-trash"></i>
                                                 </button>
                                             </form>
@@ -175,6 +175,40 @@
         </div>
     }
 </div>
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // Lấy tất cả các nút xóa sản phẩm
+            const deleteButtons = document.querySelectorAll('.btn-delete-product');
+
+            deleteButtons.forEach(button => {
+                button.addEventListener('click', function () {
+                    // Lấy form cha chứa nút vừa bấm
+                    const form = this.closest('.delete-form-product');
+
+                    // Hiển thị Popup xác nhận đẹp mắt
+                    Swal.fire({
+                        title: 'Xóa sản phẩm?',
+                        text: "Bạn có chắc chắn muốn xóa sản phẩm này?",
+                        icon: 'error', // Icon dấu X màu đỏ
+                        showCancelButton: true,
+                        confirmButtonColor: '#dc3545', // Màu đỏ giống nút Danger
+                        cancelButtonColor: '#6c757d', // Màu xám cho nút Hủy
+                        confirmButtonText: '<i class="bi bi-trash"></i> Có',
+                        cancelButtonText: 'Hủy bỏ'
+                    }).then((result) => {
+                        // Nếu user bấm "Có"
+                        if (result.isConfirmed) {
+                            form.submit(); // Thực hiện gọi lệnh xóa xuống Backend
+                        }
+                    });
+                });
+            });
+        });
+    </script>
+}
 
 <style>
     .category-card {

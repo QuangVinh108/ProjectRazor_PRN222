@@ -148,17 +148,17 @@
 
             @if (Model.Products != null && Model.Products.Any())
             {
-                <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 g-4">
+                <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 g-4" id="productGrid">
                     @foreach (var item in Model.Products)
                     {
-                        <div class="col">
+                        <div class="col" id="product-card-@item.ProductId">
                             <div class="card h-100 border-0 shadow-hover product-card position-relative">
                                 <div class="position-relative overflow-hidden bg-white border-bottom rounded-top product-img-container">
                                     <span class="badge bg-danger position-absolute top-0 start-0 m-3 z-2 shadow-sm">HOT</span>
 
                                     <a asp-page="./Details" asp-route-id="@item.ProductId" class="d-block w-100 h-100">
                                         <img src="@(string.IsNullOrEmpty(item.Image) ? "https://placehold.co/400x400?text=No+Image" : item.Image)"
-                                             class="card-img-top object-fit-contain w-100 h-100 p-3 product-img"
+                                             class="card-img-top object-fit-contain w-100 h-100 p-3 product-img p-img"
                                              alt="@item.ProductName">
                                     </a>
 
@@ -181,9 +181,9 @@
                                 </div>
 
                                 <div class="card-body d-flex flex-column p-3">
-                                    <div class="small text-muted text-uppercase mb-1 fw-bold" style="font-size: 0.75rem;">@item.CategoryName</div>
+                                    <div class="small text-muted text-uppercase mb-1 fw-bold p-cat" style="font-size: 0.75rem;">@item.CategoryName</div>
                                     <h6 class="card-title fw-bold text-truncate mb-2">
-                                        <a asp-page="./Details" asp-route-id="@item.ProductId" class="text-decoration-none text-dark hover-primary">
+                                        <a asp-page="./Details" asp-route-id="@item.ProductId" class="text-decoration-none text-dark hover-primary p-name">
                                             @item.ProductName
                                         </a>
                                     </h6>
@@ -191,7 +191,7 @@
                                         <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-half"></i>
                                     </div>
                                     <div class="mt-auto">
-                                        <span class="fw-bold text-primary fs-5">@item.Price.ToString("N0") ₫</span>
+                                        <span class="fw-bold text-primary fs-5 p-price">@item.Price.ToString("N0") ₫</span>
                                     </div>
                                 </div>
                             </div>
@@ -312,7 +312,6 @@
 
         // --- 2. HÀM WISHLIST (YÊU THÍCH) ---
         $(function() {
-            // Check trạng thái ban đầu (đỏ hay trắng) khi load trang
             $('.wishlist-toggle').each(async function() {
                 const btn = this;
                 const productId = btn.dataset.productId;
@@ -333,7 +332,6 @@
                 } catch(e) { console.log('Check wishlist fail:', e); }
             });
 
-            // Xử lý click Toggle
             $(document.body).on('click', '.wishlist-toggle', async function(e) {
                 e.preventDefault();
                 e.stopPropagation();
@@ -343,8 +341,6 @@
                 const productId = btn.dataset.productId;
 
                 btn.disabled = true;
-
-                // Hiệu ứng scale khi bấm
                 btn.style.transform = 'scale(0.9)';
                 setTimeout(() => btn.style.transform = 'scale(1)', 150);
 
@@ -405,6 +401,146 @@
                     }
                 });
             });
+                    } else {
+                        alert(data.message || 'Lỗi xử lý wishlist');
+                    }
+                } catch(err) {
+                    console.error(err);
+                } finally {
+                    btn.disabled = false;
+                }
+            });
+        });
+
+        // ===============================================
+        // 3. SIGNALR: LẮNG NGHE THAY ĐỔI TỪ ADMIN
+        // ===============================================
+        const connection = new signalR.HubConnectionBuilder()
+            .withUrl("/appHub")
+            .build();
+
+        // XÓA (DELETE)
+        connection.on("ReceiveProductDelete", function (deletedProductId) {
+            var productElement = document.getElementById("product-card-" + deletedProductId);
+            if (productElement) {
+                productElement.style.transition = "all 0.5s ease";
+                productElement.style.opacity = "0";
+                productElement.style.transform = "scale(0.8)";
+                setTimeout(() => productElement.remove(), 500);
+            }
+        });
+
+        // ===============================================
+        // HÀM HỖ TRỢ: VẼ HTML CHO SẢN PHẨM MỚI
+        // ===============================================
+        function renderNewProductCard(product) {
+            var formattedPrice = product.price.toLocaleString('vi-VN') + ' ₫';
+
+            // ĐÃ SỬA: Thay /Shop/Details?id=${product.productId} thành /Shop/Details/${product.productId}
+            return `
+                <div class="col" id="product-card-${product.productId}" style="opacity: 0; transform: scale(0.8); transition: all 0.5s ease;">
+                    <div class="card h-100 border-0 shadow-hover product-card position-relative">
+                        <div class="position-relative overflow-hidden bg-white border-bottom rounded-top product-img-container">
+                            <span class="badge bg-danger position-absolute top-0 start-0 m-3 z-2 shadow-sm">MỚI</span>
+                            <a href="/Shop/Details/${product.productId}" class="d-block w-100 h-100">
+                                <img src="${product.image}" class="card-img-top object-fit-contain w-100 h-100 p-3 product-img p-img" alt="${product.productName}">
+                            </a>
+                            <button class="position-absolute top-0 end-0 m-2 btn btn-link text-white shadow-sm rounded-circle wishlist-toggle z-index-5 p-0" data-product-id="${product.productId}" style="width: 40px; height: 40px; background: rgba(0,0,0,0.1); backdrop-filter: blur(2px);">
+                                <i class="bi bi-heart fs-5 wishlist-icon transition-all"></i>
+                            </button>
+                            <div class="product-actions position-absolute bottom-0 start-0 w-100 p-3 d-flex justify-content-center gap-2">
+                                <button class="btn btn-light rounded-circle shadow-sm btn-add-cart" onclick="addToCart(${product.productId}, this)">
+                                    <i class="bi bi-cart-plus text-primary fs-5"></i>
+                                </button>
+                                <a href="/Shop/Details/${product.productId}" class="btn btn-light rounded-circle shadow-sm">
+                                    <i class="bi bi-eye text-dark fs-5"></i>
+                                </a>
+                            </div>
+                        </div>
+                        <div class="card-body d-flex flex-column p-3">
+                            <div class="small text-muted text-uppercase mb-1 fw-bold p-cat" style="font-size: 0.75rem;">${product.categoryName}</div>
+                            <h6 class="card-title fw-bold text-truncate mb-2">
+                                <a href="/Shop/Details/${product.productId}" class="text-decoration-none text-dark hover-primary p-name">${product.productName}</a>
+                            </h6>
+                            <div class="mb-2 text-warning small">
+                                <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-half"></i>
+                            </div>
+                            <div class="mt-auto">
+                                <span class="fw-bold text-primary fs-5 p-price">${formattedPrice}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // ===============================================
+        // LẮNG NGHE LỆNH SỬA (UPDATE) THÔNG MINH
+        // ===============================================
+        connection.on("ReceiveProductUpdate", function (product) {
+            var card = document.getElementById("product-card-" + product.productId);
+            var grid = document.getElementById("productGrid");
+
+            // NẾU ADMIN ĐỔI THÀNH ẨN (INACTIVE)
+            if (product.status === 0) {
+                if (card) {
+                    card.style.transition = "all 0.5s ease-out";
+                    card.style.opacity = "0";
+                    card.style.transform = "scale(0.8)";
+                    setTimeout(() => card.remove(), 500);
+                }
+                return;
+            }
+
+            // NẾU ADMIN ĐỔI THÀNH HIỂN THỊ (ACTIVE)
+            if (product.status === 1) {
+                if (card) {
+                    card.querySelector('.p-name').innerText = product.productName;
+                    card.querySelector('.p-price').innerText = product.price.toLocaleString('vi-VN') + ' ₫';
+                    card.querySelector('.p-img').src = product.image;
+                    card.querySelector('.p-cat').innerText = product.categoryName;
+
+                    card.style.transition = "box-shadow 0.3s";
+                    card.style.boxShadow = "0 0 20px rgba(25, 135, 84, 0.8)";
+                    setTimeout(() => card.style.boxShadow = "", 1500);
+                }
+                else if (grid) {
+                    grid.insertAdjacentHTML('afterbegin', renderNewProductCard(product));
+                    setTimeout(() => {
+                        var newEl = document.getElementById("product-card-" + product.productId);
+                        if(newEl) {
+                            newEl.style.opacity = "1";
+                            newEl.style.transform = "scale(1)";
+                        }
+                    }, 50);
+                }
+            }
+        });
+
+        // ===============================================
+        // LẮNG NGHE LỆNH THÊM MỚI (CREATE)
+        // ===============================================
+        connection.on("ReceiveProductCreate", function (product) {
+            if (product.status === 0) return;
+
+            var grid = document.getElementById("productGrid");
+            if (grid) {
+                grid.insertAdjacentHTML('afterbegin', renderNewProductCard(product));
+                setTimeout(() => {
+                    var newEl = document.getElementById("product-card-" + product.productId);
+                    if(newEl) {
+                        newEl.style.opacity = "1";
+                        newEl.style.transform = "scale(1)";
+                    }
+                }, 50);
+            }
+        });
+
+        connection.start().then(function () {
+            console.log("Đã kết nối SignalR - Đang chờ nhận Update/Create/Delete !");
+        }).catch(function (err) {
+            return console.error(err.toString());
+        });
     </script>
 
 

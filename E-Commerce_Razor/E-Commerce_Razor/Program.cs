@@ -21,6 +21,10 @@ builder.Services.AddRazorPages();
 
 builder.Services.AddHttpClient();
 builder.Services.AddScoped<GeminiHelper>();
+builder.Services.AddSignalR(options =>
+{
+    options.MaximumReceiveMessageSize = 5 * 1024 * 1024; // 5 MB
+});
 
 // DbContext
 builder.Services.AddDbContext<ShopDbContext>(options =>
@@ -113,5 +117,7 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapRazorPages();
+
+app.MapHub<E_Commerce_Razor.Hubs.AppHub>("/appHub");
 
 app.Run();
