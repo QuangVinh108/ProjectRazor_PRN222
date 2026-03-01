@@ -1,4 +1,4 @@
-﻿@page "{id:int}"
+@page "{id:int}"
 @model E_Commerce_Razor.Pages.Shop.DetailsModel
 @{
     ViewData["Title"] = Model.ProductDetail.ProductName;
@@ -357,9 +357,8 @@
                     }
 
                     if (data?.success) {
-
                         // 🔥 Đồng nhất trạng thái icon
-                        if (data.isAdded) {
+                        if (data.isAdded === true) {
                             icon.removeClass('bi-heart').addClass('bi-heart-fill');
                             btn.removeClass('btn-outline-danger').addClass('btn-danger');
                             btn.attr('title', 'Xóa khỏi yêu thích');
@@ -369,6 +368,21 @@
                             btn.attr('title', 'Thêm vào yêu thích');
                         }
 
+                        // 🔄 Cập nhật badge wishlist realtime nếu có dữ liệu count
+                        if (typeof data.count === 'number') {
+                            const badge = document.getElementById('wishlistBadge');
+                            if (badge) {
+                                badge.textContent = data.count;
+                                badge.style.display = data.count > 0 ? 'block' : 'none';
+                            }
+                        }
+
+                        // 🔔 Hiển thị toast thông báo (nếu tồn tại trong layout)
+                        const toastEl = document.getElementById('wishlistToast');
+                        if (toastEl && window.bootstrap?.Toast) {
+                            const toast = bootstrap.Toast.getOrCreateInstance(toastEl);
+                            toast.show();
+                        }
                     } else {
                         alert(data?.message || 'Lỗi xử lý wishlist');
                     }

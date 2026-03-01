@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using BLL.DTOs;
 using BLL.IService;
@@ -54,6 +54,18 @@ namespace E_Commerce_Razor.Pages.Wishlist
             }
 
             return RedirectToPage();
+        }
+
+        public async Task<IActionResult> OnGetCountAsync()
+        {
+            var result = await _wishlistService.GetWishlistCountAsync();
+
+            if (!result.IsSuccess)
+            {
+                return new JsonResult(0);
+            }
+
+            return new JsonResult(result.Data);
         }
 
         public async Task<IActionResult> OnGetCheckAsync(int productId)

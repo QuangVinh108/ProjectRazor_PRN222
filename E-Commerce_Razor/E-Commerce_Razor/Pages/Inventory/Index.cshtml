@@ -120,11 +120,12 @@
                                             <form method="post"
                                                   asp-page-handler="Delete"
                                                   asp-route-productId="@item.ProductId"
-                                                  style="display:inline;"
-                                                  onsubmit="return confirm('Xóa kho @item.ProductName?')">
+                                                  class="inventory-delete-form"
+                                                  data-product-name="@item.ProductName"
+                                                  style="display:inline;">
 
-                                                <button type="submit"
-                                                        class="btn btn-sm btn-outline-danger">
+                                                <button type="button"
+                                                        class="btn btn-sm btn-outline-danger inventory-delete-btn">
                                                     <i class="bi bi-trash"></i>
                                                 </button>
                                             </form>
@@ -187,4 +188,79 @@
             </nav>
         }
     </div>
+
+    <div class="modal fade" id="inventoryConfirmModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+
+                <div class="modal-header">
+                    <h5 class="modal-title text-danger">
+                        <i class="bi bi-exclamation-triangle me-2"></i>
+                        Xác nhận xóa
+                    </h5>
+                    <button type="button"
+                            class="btn-close"
+                            data-bs-dismiss="modal"></button>
+                </div>
+
+                <div class="modal-body" id="inventoryConfirmMessage">
+                    Bạn có chắc muốn xóa sản phẩm này?
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button"
+                            class="btn btn-secondary"
+                            data-bs-dismiss="modal">
+                        Hủy
+                    </button>
+
+                    <button type="button"
+                            id="inventoryConfirmBtn"
+                            class="btn btn-danger">
+                        Xóa
+                    </button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    @section Scripts {
+        <script>
+            document.addEventListener("DOMContentLoaded", function () {
+
+                let formToSubmit = null;
+
+                const modal = new bootstrap.Modal(
+                    document.getElementById('inventoryConfirmModal')
+                );
+
+                const confirmBtn = document.getElementById('inventoryConfirmBtn');
+                const confirmMessage = document.getElementById('inventoryConfirmMessage');
+
+                document.querySelectorAll('.inventory-delete-btn')
+                    .forEach(btn => {
+                        btn.addEventListener('click', function () {
+
+                            const form = this.closest('form');
+                            const productName = form.dataset.productName;
+
+                            formToSubmit = form;
+
+                            confirmMessage.textContent =
+                                `Bạn có chắc muốn xóa "${productName}" khỏi kho?`;
+
+                            modal.show();
+                        });
+                    });
+
+                confirmBtn.addEventListener('click', function () {
+                    if (formToSubmit) {
+                        formToSubmit.submit();
+                    }
+                });
+
+            });
+        </script>
+    }
 </div>

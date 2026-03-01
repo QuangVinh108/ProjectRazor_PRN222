@@ -35,23 +35,16 @@
             @foreach (var item in Model.WishlistProducts)
             {
                 <div class="col-md-6 col-lg-4">
-                    <div class="card wishlist-card h-100 shadow-sm border-0">
+                    <div class="card h-100 shadow-sm border-0">
 
-                        <!-- Image -->
-                        <div class="wishlist-img">
-                            @if (!string.IsNullOrEmpty(item.ProductImage))
-                            {
-                                <img src="@item.ProductImage"
-                                     alt="@item.ProductName" />
-                            }
-                            else
-                            {
-                                <img src="/images/no-image.png"
-                                     alt="No image" />
-                            }
+                        <div>
+                            <img src="@(string.IsNullOrEmpty(item.ProductImage)
+                                ? "/images/no-image.png"
+                                : item.ProductImage)"
+                                 class="card-img-top"
+                                 style="height:220px;object-fit:cover;" />
                         </div>
 
-                        <!-- Body -->
                         <div class="card-body d-flex flex-column">
 
                             <h5 class="fw-bold text-truncate">
@@ -69,11 +62,17 @@
 
                             <div class="mt-auto d-flex justify-content-between">
 
-                                <form method="post" asp-page-handler="Remove">
+                                <!-- Delete Item -->
+                                <form method="post"
+                                      asp-page-handler="Remove"
+                                      class="delete-form">
+
                                     <input type="hidden"
                                            name="wishlistProductId"
                                            value="@item.WishlistProductId" />
-                                    <button class="btn btn-outline-danger btn-sm rounded-pill px-3">
+
+                                    <button type="button"
+                                            class="btn btn-outline-danger btn-sm rounded-pill px-3 delete-btn">
                                         <i class="bi bi-trash3"></i> Xóa
                                     </button>
                                 </form>
@@ -86,19 +85,102 @@
 
                             </div>
                         </div>
-
                     </div>
                 </div>
             }
         </div>
 
+        <!-- Clear All -->
         <div class="text-end mt-4">
-            <form method="post" asp-page-handler="Clear">
-                <button class="btn btn-danger rounded-pill px-4">
+            <form method="post"
+                  asp-page-handler="Clear"
+                  id="clearAllForm">
+
+                <button type="button"
+                        class="btn btn-danger rounded-pill px-4"
+                        id="clearAllBtn">
                     <i class="bi bi-trash"></i> Xóa tất cả
                 </button>
             </form>
         </div>
     }
-
 </div>
+
+
+<!-- 🔥 CONFIRM MODAL -->
+<div class="modal fade" id="confirmModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <h5 class="modal-title text-danger">
+                    <i class="bi bi-exclamation-triangle me-2"></i>
+                    Xác nhận hành động
+                </h5>
+                <button type="button"
+                        class="btn-close"
+                        data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body" id="confirmMessage">
+                Bạn có chắc muốn thực hiện hành động này?
+            </div>
+
+            <div class="modal-footer">
+                <button type="button"
+                        class="btn btn-secondary"
+                        data-bs-dismiss="modal">
+                    Hủy
+                </button>
+
+                <button type="button"
+                        id="confirmBtn"
+                        class="btn btn-danger">
+                    Đồng ý
+                </button>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+
+@section Scripts {
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+
+            let formToSubmit = null;
+
+            const modalElement = document.getElementById('confirmModal');
+            const modal = new bootstrap.Modal(modalElement);
+            const confirmBtn = document.getElementById('confirmBtn');
+            const confirmMessage = document.getElementById('confirmMessage');
+
+            // Delete single item
+            document.querySelectorAll('.delete-btn').forEach(btn => {
+                btn.addEventListener('click', function () {
+                    formToSubmit = this.closest('form');
+                    confirmMessage.textContent =
+                        "Bạn có chắc muốn xóa sản phẩm này khỏi Wishlist?";
+                    modal.show();
+                });
+            });
+
+            // Clear all
+            document.getElementById('clearAllBtn')?.addEventListener('click', function () {
+                formToSubmit = document.getElementById('clearAllForm');
+                confirmMessage.textContent =
+                    "Bạn có chắc muốn xóa TẤT CẢ sản phẩm khỏi Wishlist?";
+                modal.show();
+            });
+
+            // Confirm button
+            confirmBtn.addEventListener('click', function () {
+                if (formToSubmit) {
+                    formToSubmit.submit();
+                }
+            });
+
+        });
+    </script>
+}

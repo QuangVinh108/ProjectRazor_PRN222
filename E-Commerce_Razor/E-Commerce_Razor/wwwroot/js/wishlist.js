@@ -1,4 +1,5 @@
-﻿document.addEventListener("DOMContentLoaded", async function () {
+﻿console.log("wishlist js loaded");
+document.addEventListener("DOMContentLoaded", async function () {
     try {
         const res = await fetch('/Wishlist?handler=Count');
         const data = await res.json();
