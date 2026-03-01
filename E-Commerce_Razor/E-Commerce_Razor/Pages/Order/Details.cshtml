@@ -48,23 +48,31 @@
                                 <p><strong>Trạng thái:</strong>
                                     @if (Model.Order.Status == "Pending")
                                     {
-                                        <span class="badge bg-warning text-dark">Chờ xử lý</span>
+                                        <span class="badge bg-warning text-dark"><i class="bi bi-clock-history"></i> Chờ xử lý</span>
+                                    }
+                                    else if (Model.Order.Status == "Hoàn thành")
+                                    {
+                                        <span class="badge bg-success"><i class="bi bi-patch-check-fill"></i> Hoàn thành</span>
                                     }
                                     else if (Model.Order.Status == "Paid")
                                     {
-                                        <span class="badge bg-info">Đã thanh toán</span>
+                                        <span class="badge bg-info"><i class="bi bi-credit-card"></i> Đã thanh toán</span>
                                     }
                                     else if (Model.Order.Status == "Shipped")
                                     {
-                                        <span class="badge bg-primary">Đang giao</span>
+                                        <span class="badge bg-primary"><i class="bi bi-truck"></i> Đang giao</span>
                                     }
                                     else if (Model.Order.Status == "Delivered")
                                     {
-                                        <span class="badge bg-success">Đã giao</span>
+                                        <span class="badge bg-success"><i class="bi bi-check-circle"></i> Đã giao</span>
                                     }
                                     else if (Model.Order.Status == "Cancelled")
                                     {
-                                        <span class="badge bg-danger">Đã hủy</span>
+                                        <span class="badge bg-danger"><i class="bi bi-x-circle"></i> Đã hủy</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-secondary">@Model.Order.Status</span>
                                     }
                                 </p>
                                 <p><strong>Tổng tiền:</strong> <span class="text-danger fs-5">@Model.Order.TotalAmount.ToString("N0") ₫</span></p>

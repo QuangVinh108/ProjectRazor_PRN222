@@ -78,6 +78,7 @@
                             <label asp-for="Input.PaymentMethod" class="form-label">Phương thức thanh toán <span class="text-danger">*</span></label>
                             <select asp-for="Input.PaymentMethod" class="form-select" required>
                                 <option value="COD">Thanh toán khi nhận hàng (COD)</option>
+                                <option value="VNPAY">💳 Thanh toán qua VNPAY</option>
                                 <option value="BankTransfer">Chuyển khoản ngân hàng</option>
                                 <option value="CreditCard">Thẻ tín dụng</option>
                             </select>

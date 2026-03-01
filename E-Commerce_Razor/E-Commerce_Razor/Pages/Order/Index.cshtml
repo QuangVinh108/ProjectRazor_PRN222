@@ -94,39 +94,31 @@
                                     <td>
                                         @if (order.Status == "Pending")
                                         {
-                                            <span class="status-badge status-pending">
-                                                <i class="bi bi-clock-history"></i> Chờ xử lý
-                                            </span>
+                                            <span class="status-badge status-pending"><i class="bi bi-clock-history"></i> Chờ xử lý</span>
+                                        }
+                                        else if (order.Status == "Hoàn thành")
+                                        {
+                                            <span class="status-badge status-delivered"><i class="bi bi-patch-check-fill"></i> Hoàn thành</span>
                                         }
                                         else if (order.Status == "Paid")
                                         {
-                                            <span class="status-badge status-paid">
-                                                <i class="bi bi-credit-card"></i> Đã thanh toán
-                                            </span>
+                                            <span class="status-badge status-paid"><i class="bi bi-credit-card"></i> Đã thanh toán</span>
                                         }
                                         else if (order.Status == "Shipped")
                                         {
-                                            <span class="status-badge status-shipped">
-                                                <i class="bi bi-truck"></i> Đang giao
-                                            </span>
+                                            <span class="status-badge status-shipped"><i class="bi bi-truck"></i> Đang giao</span>
                                         }
                                         else if (order.Status == "Delivered")
                                         {
-                                            <span class="status-badge status-delivered">
-                                                <i class="bi bi-check-circle"></i> Đã giao
-                                            </span>
+                                            <span class="status-badge status-delivered"><i class="bi bi-check-circle"></i> Đã giao</span>
                                         }
                                         else if (order.Status == "Cancelled")
                                         {
-                                            <span class="status-badge status-cancelled">
-                                                <i class="bi bi-x-circle"></i> Đã hủy
-                                            </span>
+                                            <span class="status-badge status-cancelled"><i class="bi bi-x-circle"></i> Đã hủy</span>
                                         }
                                         else
                                         {
-                                            <span class="status-badge status-default">
-                                                @order.Status
-                                            </span>
+                                            <span class="status-badge status-default">@order.Status</span>
                                         }
                                     </td>
                                     <td>
@@ -165,39 +157,31 @@
                             <div>
                                 @if (order.Status == "Pending")
                                 {
-                                    <span class="status-badge status-pending">
-                                        <i class="bi bi-clock-history"></i> Chờ xử lý
-                                    </span>
+                                    <span class="status-badge status-pending"><i class="bi bi-clock-history"></i> Chờ xử lý</span>
+                                }
+                                else if (order.Status == "Hoàn thành")
+                                {
+                                    <span class="status-badge status-delivered"><i class="bi bi-patch-check-fill"></i> Hoàn thành</span>
                                 }
                                 else if (order.Status == "Paid")
                                 {
-                                    <span class="status-badge status-paid">
-                                        <i class="bi bi-credit-card"></i> Đã thanh toán
-                                    </span>
+                                    <span class="status-badge status-paid"><i class="bi bi-credit-card"></i> Đã thanh toán</span>
                                 }
                                 else if (order.Status == "Shipped")
                                 {
-                                    <span class="status-badge status-shipped">
-                                        <i class="bi bi-truck"></i> Đang giao
-                                    </span>
+                                    <span class="status-badge status-shipped"><i class="bi bi-truck"></i> Đang giao</span>
                                 }
                                 else if (order.Status == "Delivered")
                                 {
-                                    <span class="status-badge status-delivered">
-                                        <i class="bi bi-check-circle"></i> Đã giao
-                                    </span>
+                                    <span class="status-badge status-delivered"><i class="bi bi-check-circle"></i> Đã giao</span>
                                 }
                                 else if (order.Status == "Cancelled")
                                 {
-                                    <span class="status-badge status-cancelled">
-                                        <i class="bi bi-x-circle"></i> Đã hủy
-                                    </span>
+                                    <span class="status-badge status-cancelled"><i class="bi bi-x-circle"></i> Đã hủy</span>
                                 }
                                 else
                                 {
-                                    <span class="status-badge status-default">
-                                        @order.Status
-                                    </span>
+                                    <span class="status-badge status-default">@order.Status</span>
                                 }
                             </div>
                         </div>

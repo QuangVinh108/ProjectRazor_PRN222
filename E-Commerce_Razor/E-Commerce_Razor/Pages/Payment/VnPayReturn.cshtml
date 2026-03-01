@@ -1,0 +1,65 @@
+@page "/Payment/VnPayReturn"
+@model E_Commerce_Razor.Pages.Payment.VnPayReturnModel
+@{
+    ViewData["Title"] = Model.IsSuccess ? "Thanh toán thành công" : "Thanh toán thất bại";
+    Layout = "_Layout";
+}
+
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            @if (Model.IsSuccess)
+            {
+                <div class="card border-success shadow-sm text-center p-4">
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <span style="font-size: 4rem;">✅</span>
+                        </div>
+                        <h3 class="card-title text-success fw-bold">Thanh toán thành công!</h3>
+                        <p class="card-text text-muted">@Model.Message</p>
+                        <hr />
+                        <p class="mb-1">Mã đơn hàng: <strong>#@Model.OrderId</strong></p>
+                        <p class="text-muted small">Cảm ơn bạn đã mua hàng. Chúng tôi sẽ xử lý đơn hàng của bạn sớm nhất có thể.</p>
+                        <div class="d-grid gap-2 mt-4">
+                            <a href="/Order/Details/@Model.OrderId" class="btn btn-success btn-lg">
+                                📋 Xem đơn hàng
+                            </a>
+                            <a href="/Shop" class="btn btn-outline-secondary">
+                                🛍️ Tiếp tục mua sắm
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            }
+            else
+            {
+                <div class="card border-danger shadow-sm text-center p-4">
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <span style="font-size: 4rem;">❌</span>
+                        </div>
+                        <h3 class="card-title text-danger fw-bold">Thanh toán thất bại</h3>
+                        <p class="card-text text-muted">@Model.Message</p>
+                        <hr />
+                        @if (Model.OrderId > 0)
+                        {
+                            <p class="mb-1">Mã đơn hàng: <strong>#@Model.OrderId</strong></p>
+                        }
+                        <p class="text-muted small">Đơn hàng của bạn chưa được thanh toán. Vui lòng thử lại hoặc chọn phương thức khác.</p>
+                        <div class="d-grid gap-2 mt-4">
+                            @if (Model.OrderId > 0)
+                            {
+                                <a href="/Order/Details/@Model.OrderId" class="btn btn-danger btn-lg">
+                                    📋 Xem đơn hàng
+                                </a>
+                            }
+                            <a href="/Shop" class="btn btn-outline-secondary">
+                                🛍️ Quay lại cửa hàng
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</div>

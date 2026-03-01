@@ -10,20 +10,21 @@ namespace E_Commerce_Razor.Pages.Order
     [Authorize]
     public class BuyNowModel : PageModel
     {
-        private readonly IOrderService _orderService;
+        private readonly ICartService _cartService;
         private readonly ILogger<BuyNowModel> _logger;
 
-        public BuyNowModel(IOrderService orderService, ILogger<BuyNowModel> logger)
+        public BuyNowModel(ICartService cartService, ILogger<BuyNowModel> logger)
         {
-            _orderService = orderService;
+            _cartService = cartService;
             _logger = logger;
         }
 
-        public void OnGet()
-        {
-            // Không có giao diện, chỉ dùng POST
-        }
+        public void OnGet() { }
 
+        /// <summary>
+        /// BuyNow: thêm sản phẩm vào giỏ rồi chuyển sang Checkout để người dùng
+        /// nhập địa chỉ giao hàng và chọn phương thức thanh toán (COD / VNPAY).
+        /// </summary>
         public async Task<IActionResult> OnPostAsync(int productId, int quantity = 1)
         {
             bool isAjax = Request.Headers["X-Requested-With"] == "XMLHttpRequest";
@@ -46,43 +47,34 @@ namespace E_Commerce_Razor.Pages.Order
                 }
 
                 var userId = GetCurrentUserId();
+                if (quantity <= 0) quantity = 1;
 
-                _logger.LogInformation($"BuyNow: User {userId}, Product {productId}, Quantity {quantity}");
+                // Thêm/thay thế 1 sản phẩm vào giỏ → sau đó vào Checkout nhập địa chỉ
+                await _cartService.AddOrReplaceSingleItemAsync(userId, productId, quantity);
 
-                var dto = new CreateOrderDto
-                {
-                    UserId = userId,
-                    PaymentMethod = "COD",
-                    Country = "Vietnam"
-                };
+                _logger.LogInformation("BuyNow: User {UserId}, Product {ProductId}, Qty {Qty} → Checkout", userId, productId, quantity);
 
-                var order = await _orderService.CreateOrderBuyNowAsync(userId, productId, quantity, dto);
-
-                _logger.LogInformation($"BuyNow: Order created - OrderId {order.OrderId}");
+                var checkoutUrl = Url.Page("/Order/Checkout");
 
                 if (isAjax)
                 {
                     return new JsonResult(new
                     {
                         success = true,
-                        redirectUrl = Url.Page("./Details", new { id = order.OrderId }),
-                        message = "Đặt hàng thành công"
+                        redirectUrl = checkoutUrl,
+                        message = "Chuyển sang trang thanh toán"
                     });
                 }
 
-                return RedirectToPage("./Details", new { id = order.OrderId });
+                return Redirect(checkoutUrl!);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"BuyNow error: {ex.Message}");
+                _logger.LogError(ex, "BuyNow error: {Message}", ex.Message);
 
                 if (isAjax)
                 {
-                    return new JsonResult(new
-                    {
-                        success = false,
-                        message = ex.Message
-                    });
+                    return new JsonResult(new { success = false, message = ex.Message });
                 }
 
                 TempData["Error"] = ex.Message;
@@ -93,8 +85,7 @@ namespace E_Commerce_Razor.Pages.Order
         private int GetCurrentUserId()
         {
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (string.IsNullOrEmpty(userIdClaim))
-                throw new Exception("Vui lòng đăng nhập");
+            if (string.IsNullOrEmpty(userIdClaim)) throw new Exception("Vui lòng đăng nhập");
             return int.Parse(userIdClaim);
         }
     }
