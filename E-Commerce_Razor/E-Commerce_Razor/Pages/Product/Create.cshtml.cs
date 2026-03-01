@@ -1,11 +1,13 @@
 ﻿using BLL.DTOs;
 using BLL.Helper;
 using BLL.IService;
+using E_Commerce_Razor.Hubs;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.Mvc.Rendering;
-using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.SignalR;
 using System.IO;
 using System.Linq;
 
@@ -18,13 +20,15 @@ namespace E_Commerce_Razor.Pages.Product
         private readonly ICategoryService _categoryService;
         private readonly IWebHostEnvironment _webHostEnvironment;
         private readonly GeminiHelper _geminiHelper;
+        private readonly IHubContext<AppHub> _hubContext;
 
-        public CreateModel(IProductService productService, ICategoryService categoryService, IWebHostEnvironment webHostEnvironment, GeminiHelper geminiHelper)
+        public CreateModel(IProductService productService, ICategoryService categoryService, IWebHostEnvironment webHostEnvironment, GeminiHelper geminiHelper, IHubContext<AppHub> hubContext)
         {
             _productService = productService;
             _categoryService = categoryService;
             _webHostEnvironment = webHostEnvironment;
             _geminiHelper = geminiHelper;
+            _hubContext = hubContext;
         }
 
         [BindProperty]
@@ -66,7 +70,23 @@ namespace E_Commerce_Razor.Pages.Product
                     Input.Image = "/images/products/" + uniqueFileName;
                 }
 
-                _productService.Create(Input);
+                int realProductId = _productService.Create(Input);
+
+                var allCategories = _categoryService.GetAll();
+                var categoryName = allCategories.FirstOrDefault(c => c.CategoryId == Input.CategoryId)?.CategoryName ?? "Chưa phân loại";
+
+                var newProductData = new
+                {
+                    productId = realProductId, 
+                    productName = Input.ProductName,
+                    price = Input.Price,
+                    image = string.IsNullOrEmpty(Input.Image) ? "https://placehold.co/400x400?text=No+Image" : Input.Image,
+                    categoryName = categoryName,
+                    sku = Input.Sku,
+                    status = Input.Status
+                };
+
+                await _hubContext.Clients.All.SendAsync("ReceiveProductCreate", newProductData);
 
                 TempData["SuccessMessage"] = "Thêm sản phẩm thành công!";
                 return RedirectToPage("./Index", new { CurrentParentId = ReturnParentId });

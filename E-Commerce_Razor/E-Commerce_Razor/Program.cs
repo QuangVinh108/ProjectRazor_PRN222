@@ -21,6 +21,7 @@ builder.Services.AddRazorPages();
 
 builder.Services.AddHttpClient();
 builder.Services.AddScoped<GeminiHelper>();
+builder.Services.AddSignalR();
 
 // DbContext
 builder.Services.AddDbContext<ShopDbContext>(options =>
@@ -111,5 +112,7 @@ app.UseRouting();
 app.UseAuthorization();
 
 app.MapRazorPages();
+
+app.MapHub<E_Commerce_Razor.Hubs.AppHub>("/appHub");
 
 app.Run();
