@@ -303,5 +303,41 @@ namespace BLL.Service
                 return GenericResult<bool>.Failure($"Error creating wishlist: {ex.Message}");
             }
         }
+
+        public async Task<bool> IsInWishlistAsync(int userId, int productId)
+        {
+            return await _wishlistRepository
+                .IsProductInWishlistAsync(userId, productId);
+        }
+
+        public async Task ToggleWishlistAsync(int userId, int productId)
+        {
+            var isExist = await _wishlistRepository
+                .IsProductInWishlistAsync(userId, productId);
+
+            if (isExist)
+            {
+                // Lấy wishlistProductId rồi remove
+                var wishlistProductId = await _wishlistRepository
+                    .GetWishlistProductIdAsync(userId, productId);
+
+                await _wishlistRepository
+                    .RemoveWishlistProductAsync(wishlistProductId);
+            }
+            else
+            {
+                var wishlist = await _wishlistRepository
+                    .GetWishlistByUserAsync(userId);
+
+                var wishlistProduct = new WishlistProduct
+                {
+                    WishlistId = wishlist.WishlistId,
+                    ProductId = productId
+                };
+
+                await _wishlistRepository
+                    .AddWishlistProductAsync(wishlistProduct);
+            }
+        }
     }
 }

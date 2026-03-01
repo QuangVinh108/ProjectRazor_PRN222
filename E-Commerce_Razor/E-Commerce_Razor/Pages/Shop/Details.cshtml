@@ -275,7 +275,7 @@
             (async function checkWishlistStatus() {
                 const productId = wishlistBtn.data('product-id');
                 try {
-                    const res = await fetch(`/Wishlist/Check/${productId}`);
+                    const res = await fetch(`?handler=CheckWishlist&productId=${productId}`);
                     const isInWishlist = await res.json();
                     const icon = wishlistBtn.find('.wishlist-icon');
 
@@ -290,19 +290,19 @@
             })();
 
             // Click toggle
-            wishlistBtn.on('click', async function(e) {
+            wishlistBtn.on('click', async function (e) {
                 e.preventDefault();
+
                 const btn = $(this);
                 const icon = btn.find('.wishlist-icon');
                 const productId = btn.data('product-id');
-                const originalHTML = btn.html();
 
                 btn.prop('disabled', true);
-                btn.html('<span class="spinner-border spinner-border-sm"></span>');
 
                 try {
                     const token = $('input[name="__RequestVerificationToken"]').first().val();
-                    const res = await fetch(`/Wishlist/Toggle/${productId}`, {
+
+                    const res = await fetch(`?handler=ToggleWishlist&productId=${productId}`, {
                         method: 'POST',
                         headers: {
                             'RequestVerificationToken': token,
@@ -312,16 +312,15 @@
 
                     const data = await res.json();
 
-                    // KIỂM TRA YÊU CẦU ĐĂNG NHẬP
                     if (data?.requireLogin === true || res.status === 401) {
                         showLoginModal();
-                        btn.html(originalHTML);
                         btn.prop('disabled', false);
                         return;
                     }
 
                     if (data?.success) {
-                        btn.html(originalHTML);
+
+                        // 🔥 Đồng nhất trạng thái icon
                         if (data.isAdded) {
                             icon.removeClass('bi-heart').addClass('bi-heart-fill');
                             btn.removeClass('btn-outline-danger').addClass('btn-danger');
@@ -331,14 +330,14 @@
                             btn.removeClass('btn-danger').addClass('btn-outline-danger');
                             btn.attr('title', 'Thêm vào yêu thích');
                         }
+
                     } else {
                         alert(data?.message || 'Lỗi xử lý wishlist');
-                        btn.html(originalHTML);
                     }
-                } catch(err) {
+
+                } catch (err) {
                     console.error('Wishlist error:', err);
                     showLoginModal();
-                    btn.html(originalHTML);
                 } finally {
                     btn.prop('disabled', false);
                 }

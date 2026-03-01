@@ -317,7 +317,7 @@
                 const btn = this;
                 const productId = btn.dataset.productId;
                 try {
-                    const res = await fetch(`/Wishlist/Check/${productId}`);
+                    const res = await fetch(`/Wishlist?handler=Check&productId=${productId}`);
                         const data = await res.json();
                     const icon = btn.querySelector('.wishlist-icon');
 
@@ -350,9 +350,11 @@
 
                 try {
                     const token = $('input[name="__RequestVerificationToken"]').val();
-                    const res = await fetch(`/Wishlist/Toggle/${productId}`, {
+                    const res = await fetch(`/Wishlist?handler=Toggle&productId=${productId}`, {
                         method: 'POST',
-                        headers: { 'RequestVerificationToken': token }
+                        headers: {
+                            'RequestVerificationToken': token
+                        }
                     });
 
                      if (res.status === 401) {
