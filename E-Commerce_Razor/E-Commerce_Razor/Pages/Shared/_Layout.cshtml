@@ -217,16 +217,53 @@
         </div>
     }
 
+    <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 1050">
+        <div class="card shadow-lg border-0 d-none" id="chatBox" style="width: 340px; height: 500px; border-radius: 12px 12px 0 0; overflow: hidden; display: flex; flex-direction: column;">
+            <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center flex-shrink-0" style="border-radius: 12px 12px 0 0;">
+                <h6 class="mb-0 fw-bold"><i class="bi bi-chat-dots-fill me-2"></i> Hỗ trợ trực tuyến</h6>
+                <button type="button" class="btn-close btn-close-white" onclick="toggleChat()"></button>
+            </div>
+
+            <div class="card-body p-2" id="chatMessages" style="flex-grow: 1; overflow-y: auto; background: #f8f9fa;">
+                <div class="text-center text-muted small my-2">Bắt đầu cuộc trò chuyện</div>
+            </div>
+
+            <div id="emojiPickerContainer" class="d-none border-top flex-shrink-0" style="height: 250px; overflow-y: auto; background: #fff;"></div>
+
+            <div class="card-footer p-2 bg-white border-0 flex-shrink-0">
+                <div class="input-group bg-light rounded-pill border p-1 d-flex align-items-center">
+                    <button class="btn btn-sm btn-link text-secondary rounded-circle px-2" onclick="document.getElementById('chatFileInput').click()" title="Đính kèm ảnh/file">
+                        <i class="bi bi-paperclip fs-5"></i>
+                    </button>
+                    <input type="file" id="chatFileInput" class="d-none" accept="image/*, .pdf, .doc, .docx, .xls, .xlsx, .txt, .zip, .rar" onchange="handleChatFileUpload(event)">
+
+                    <input type="text" id="chatInput" class="form-control border-0 bg-transparent shadow-none" placeholder="Nhập tin nhắn..." onkeypress="handleEnterChat(event)">
+
+                    <button class="btn btn-sm btn-link text-warning rounded-circle px-2" id="emojiButton" title="Biểu tượng cảm xúc">
+                        <i class="bi bi-emoji-smile fs-5"></i>
+                    </button>
+
+                    <button class="btn btn-primary btn-sm rounded-pill px-3 ms-1" onclick="sendChatMessage()">
+                        <i class="bi bi-send-fill"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <button class="btn btn-primary rounded-circle shadow-lg mt-2 float-end d-flex align-items-center justify-content-center"
+                id="btnOpenChat" onclick="toggleChat()"
+                style="width: 60px; height: 60px; transition: transform 0.2s;">
+            <i class="bi bi-chat-dots-fill fs-3"></i>
+        </button>
+    </div>
+
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.12/signalr.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/picmo@5.7.6/dist/umd/index.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@@picmo/popup-picker@5.7.6/dist/umd/index.js"></script>
 
-    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="~/js/wishlist.js"></script>
     <script>
         document.addEventListener("DOMContentLoaded", function () {
             const wishlistLink = document.getElementById("wishlistLink");
@@ -295,7 +332,7 @@
             chatConnection.start().catch(err => console.error("SignalR Chat Error: ", err.toString()));
 
             // ==========================================
-            // LOGIC EMOJI MỚI: PICMO createPicker (INLINE)
+            // LOGIC EMOJI INLINE (NẰM BÊN TRONG KHUNG CHAT)
             // ==========================================
             document.addEventListener('DOMContentLoaded', () => {
                 const emojiButton = document.getElementById('emojiButton');
@@ -303,33 +340,30 @@
                 const emojiPickerContainer = document.getElementById('emojiPickerContainer');
                 const chatMessages = document.getElementById('chatMessages');
 
-                let picker = null; // Biến lưu trữ đối tượng picker để không tạo lại nhiều lần
+                let picker = null;
 
-                if(emojiButton && typeof picmo !== 'undefined') {
-                    // Gắn sự kiện click cho nút mặt cười
+                if (emojiButton && typeof picmo !== 'undefined') {
                     emojiButton.addEventListener('click', (e) => {
                         e.preventDefault();
                         e.stopPropagation();
 
-                        // 1. Chỉ khởi tạo bảng Emoji một lần duy nhất khi click đầu tiên
-                        if(!picker && picmo.createPicker) {
+                        // Lần đầu bấm mới khởi tạo bảng
+                        if (!picker) {
                             picker = picmo.createPicker({
-                                rootElement: emojiPickerContainer, // Nơi chèn bảng
+                                rootElement: emojiPickerContainer, // Chèn thẳng vào thẻ div đã chuẩn bị
                                 showSearch: true,
                                 autoFocusSearch: false
                             });
 
-                            // Bắt sự kiện khi người dùng chọn một Emoji
                             picker.addEventListener('emoji:select', selection => {
-                                chatInput.value += selection.emoji; // Nối icon vào ô input
-                                chatInput.focus(); // Focus lại để gõ tiếp
+                                chatInput.value += selection.emoji;
+                                chatInput.focus();
                             });
                         }
 
-                        // 2. Bật/tắt d-none cho container chứa bảng Emoji
+                        // Ẩn/Hiện vùng chứa emoji
                         emojiPickerContainer.classList.toggle('d-none');
-
-                        // 3. Cuộn chat messages xuống cuối cùng để tin nhắn không bị che khuất khi bảng mọc ra
+                        // Tự động đẩy khung chat xuống dưới cùng
                         chatMessages.scrollTop = chatMessages.scrollHeight;
                     });
                 }
@@ -343,6 +377,12 @@
             if (message && chatConnection) {
                 chatConnection.invoke("SendMessageToSupport", message).catch(err => console.error(err.toString()));
                 input.value = "";
+
+                // Gửi xong tự động giấu bảng emoji đi cho gọn (nếu đang mở)
+                const emojiContainer = document.getElementById('emojiPickerContainer');
+                if(emojiContainer && !emojiContainer.classList.contains('d-none')) {
+                    emojiContainer.classList.add('d-none');
+                }
             }
         }
 
@@ -367,14 +407,15 @@
             }
         }
 
-        // HÀM XỬ LÝ ĐÍNH KÈM FILE VÀ ẢNH (ĐÃ UPDATE CHO ĐA DẠNG FILE)
+        // ==========================================
+        // XỬ LÝ GỬI FILE VÀ ẢNH QUA BASE64
+        // ==========================================
         function handleChatFileUpload(event) {
             if (!isAuthenticatedChat || !chatConnection) return;
 
             const file = event.target.files[0];
             if (!file) return;
 
-            // Chặn file > 5MB
             if (file.size > 5 * 1024 * 1024) {
                 alert("Kích thước file quá lớn. Vui lòng chọn file dưới 5MB.");
                 event.target.value = '';
@@ -386,12 +427,9 @@
                 const base64Data = e.target.result;
                 let htmlMessage = "";
 
-                // 1. Kiểm tra nếu là Ảnh -> Vẽ thành thẻ <img> để hiển thị luôn
                 if (file.type.startsWith("image/")) {
                     htmlMessage = `<img src="${base64Data}" style="max-width: 100%; border-radius: 8px; cursor: pointer; max-height: 150px; object-fit: contain;" onclick="window.open(this.src, '_blank')" alt="Hình ảnh" />`;
-                }
-                // 2. Nếu là file khác -> Vẽ thành nút tải xuống có icon
-                else {
+                } else {
                     htmlMessage = `
                         <a href="${base64Data}" download="${file.name}" class="d-inline-flex align-items-center text-decoration-none text-dark bg-white border p-2 rounded shadow-sm">
                             <i class="bi bi-file-earmark-arrow-down-fill text-primary fs-4 me-2"></i>
@@ -411,18 +449,14 @@
     </script>
 
     @await RenderSectionAsync("Scripts", required: false)
+
     <div class="position-fixed top-0 end-0 p-3" style="z-index: 9999">
-        <div id="wishlistToast"
-             class="toast align-items-center text-white bg-danger border-0 shadow-lg"
-             role="alert">
+        <div id="wishlistToast" class="toast align-items-center text-white bg-danger border-0 shadow-lg" role="alert">
             <div class="d-flex">
                 <div class="toast-body fw-bold">
-                    <i class="bi bi-heart-fill me-2"></i>
-                    Đã cập nhật Wishlist!
+                    <i class="bi bi-heart-fill me-2"></i> Đã cập nhật Wishlist!
                 </div>
-                <button type="button"
-                        class="btn-close btn-close-white me-2 m-auto"
-                        data-bs-dismiss="toast"></button>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
             </div>
         </div>
     </div>

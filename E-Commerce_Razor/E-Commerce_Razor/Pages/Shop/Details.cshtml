@@ -110,6 +110,7 @@
 </div>
 
 @section Scripts {
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.12/signalr.min.js"></script>
     <script>
         // ----------------------------------------------------
         // 1. CÁC HÀM CŨ CỦA BẠN (Giữ nguyên - không đổi)
@@ -279,25 +280,23 @@
         $(function() {
             const wishlistBtn = $('.wishlist-toggle-detail');
             if (!wishlistBtn.length) return;
+
             (async function checkWishlistStatus() {
                 const productId = wishlistBtn.data('product-id');
                 try {
-                    const res = await fetch(`?handler=CheckWishlist&productId=${productId}`);
-                    const isInWishlist = await res.json();
+                    const res = await fetch(`/Wishlist?handler=CheckWishlist&productId=${productId}`);
+                    const data = await res.json();
                     const icon = wishlistBtn.find('.wishlist-icon');
-                    if (isInWishlist) {
+                    if (data.isInWishlist) {
                         icon.removeClass('bi-heart').addClass('bi-heart-fill');
                         wishlistBtn.removeClass('btn-outline-danger').addClass('btn-danger');
                         wishlistBtn.attr('title', 'Xóa khỏi yêu thích');
                     }
                 } catch(e) { console.log('Check wishlist fail:', e); }
             })();
-            wishlistBtn.on('click', async function(e) {
 
-            // Click toggle
             wishlistBtn.on('click', async function (e) {
                 e.preventDefault();
-
                 const btn = $(this);
                 const icon = btn.find('.wishlist-icon');
                 const productId = btn.data('product-id');
@@ -308,8 +307,7 @@
 
                 try {
                     const token = $('input[name="__RequestVerificationToken"]').first().val();
-
-                    const res = await fetch(`?handler=ToggleWishlist&productId=${productId}`, {
+                    const res = await fetch(`/Wishlist?handler=ToggleWishlist&productId=${productId}`, {
                         method: 'POST',
                         headers: {
                             'RequestVerificationToken': token,
@@ -320,11 +318,12 @@
 
                     if (data?.requireLogin === true || res.status === 401) {
                         showLoginModal();
+                        btn.html(originalHTML);
                         btn.prop('disabled', false);
                         return;
                     }
                     if (data?.success) {
-                        // 🔥 Đồng nhất trạng thái icon
+                        btn.html(originalHTML);
                         if (data.isAdded === true) {
                             icon.removeClass('bi-heart').addClass('bi-heart-fill');
                             btn.removeClass('btn-outline-danger').addClass('btn-danger');
@@ -335,7 +334,6 @@
                             btn.attr('title', 'Thêm vào yêu thích');
                         }
 
-                        // 🔄 Cập nhật badge wishlist realtime nếu có dữ liệu count
                         if (typeof data.count === 'number') {
                             const badge = document.getElementById('wishlistBadge');
                             if (badge) {
@@ -343,21 +341,14 @@
                                 badge.style.display = data.count > 0 ? 'block' : 'none';
                             }
                         }
-
-                        // 🔔 Hiển thị toast thông báo (nếu tồn tại trong layout)
-                        const toastEl = document.getElementById('wishlistToast');
-                        if (toastEl && window.bootstrap?.Toast) {
-                            const toast = bootstrap.Toast.getOrCreateInstance(toastEl);
-                            toast.show();
-                        }
                     } else {
                         alert(data?.message || 'Lỗi xử lý wishlist');
+                        btn.html(originalHTML);
                     }
-                } catch(err) {
-
                 } catch (err) {
                     console.error('Wishlist error:', err);
                     showLoginModal();
+                    btn.html(originalHTML);
                 } finally {
                     btn.prop('disabled', false);
                 }
@@ -372,18 +363,15 @@
         // 2. SIGNALR: LẮNG NGHE CẬP NHẬT TỪ ADMIN
         // ----------------------------------------------------
 
-        // Lấy ID của sản phẩm đang xem hiện tại
         const currentProductId = @Model.ProductDetail.ProductId;
-
         const detailConnection = new signalR.HubConnectionBuilder()
             .withUrl("/appHub")
             .build();
 
         // XỬ LÝ KHI ADMIN CẬP NHẬT SẢN PHẨM
         detailConnection.on("ReceiveProductUpdate", function (product) {
-            console.log("SignalR - Cập nhật sản phẩm: ", product); // Để debug F12
+            console.log("SignalR - Cập nhật sản phẩm: ", product);
 
-            // Ép kiểu String để so sánh an toàn, tránh lỗi mismatch
             if (String(product.productId) === String(currentProductId)) {
 
                 // Trường hợp 1: Admin đổi trạng thái thành "Ẩn" (Inactive)
@@ -396,7 +384,6 @@
                 // Trường hợp 2: Cập nhật thông tin Giá, Tên, Danh Mục
                 document.getElementById('detail-name').innerText = product.productName;
                 document.getElementById('detail-category').innerText = product.categoryName;
-                // Ép kiểu số an toàn trước khi in định dạng tiền tệ
                 document.getElementById('detail-price').innerText = Number(product.price).toLocaleString('vi-VN') + ' ₫';
 
                 // Cập nhật SKU nếu có
@@ -410,7 +397,7 @@
                     }
                 }
 
-                // Cập nhật Mô tả (Description)
+                // Cập nhật Mô tả
                 const descEl = document.getElementById('detail-desc');
                 if (descEl) {
                     descEl.innerText = product.description ? product.description : "Sản phẩm này chưa có mô tả chi tiết.";
@@ -422,7 +409,7 @@
                     imgEl.src = product.image;
                 }
 
-                // Hiệu ứng chớp sáng khung thông tin để báo hiệu cập nhật
+                // Hiệu ứng chớp sáng
                 const infoBox = document.getElementById('info-container');
                 if (infoBox) {
                     infoBox.style.boxShadow = "0 0 20px rgba(25, 135, 84, 0.5)";
