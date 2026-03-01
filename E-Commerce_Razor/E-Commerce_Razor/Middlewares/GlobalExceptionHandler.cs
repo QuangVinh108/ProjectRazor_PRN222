@@ -4,7 +4,7 @@ using System.Text.Json;
 using Sprache;
 using BLL.Helpers;
 
-namespace E_Commerce_MVC.Middlewares
+namespace E_Commerce_Razor.Middlewares
 {
     public class GlobalExceptionHandler(RequestDelegate next, ILogger<GlobalExceptionHandler> logger)
     {

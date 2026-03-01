@@ -90,7 +90,8 @@ namespace E_Commerce_Razor.Pages.Wishlist
             return new JsonResult(new
             {
                 success = result.IsSuccess,
-                isAdded = result.Data
+                isAdded = result.Data?.IsAdded ?? false,
+                count = result.Data?.Count ?? 0
             });
         }
     }

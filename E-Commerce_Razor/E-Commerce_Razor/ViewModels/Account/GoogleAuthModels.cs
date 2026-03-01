@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace E_Commerce_MVC.Models
+namespace E_Commerce_Razor.ViewModels.Account
 {
     public class GoogleLoginRequest
     {

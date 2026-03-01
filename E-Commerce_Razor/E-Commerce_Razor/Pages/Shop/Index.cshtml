@@ -368,31 +368,46 @@
                     if (!res.ok) throw new Error('Network error');
                     const data = await res.json();
 
-                    if (data.success) {
+                     if (data.success) {
+                        // 🔥 1. UPDATE BADGE REALTIME
+                        const badge = document.getElementById('wishlistBadge');
+                        if (badge) {
+                            badge.textContent = data.count ?? 0;
+                            badge.style.display = (data.count ?? 0) > 0 ? 'block' : 'none';
+                        }
+
+                        // 🔥 2. UPDATE ICON
                         if (data.isAdded) {
-                            // Đổi sang tim đỏ
                             icon.classList.remove('bi-heart', 'text-white');
                             icon.classList.add('bi-heart-fill', 'text-danger');
                             btn.title = 'Xóa khỏi Wishlist';
                         } else {
-                            // Đổi về tim trắng
                             icon.classList.remove('bi-heart-fill', 'text-danger');
                             icon.classList.add('bi-heart', 'text-white');
                             btn.title = 'Thêm vào Wishlist';
                         }
-                    } else {
-                        alert(data.message || 'Lỗi xử lý wishlist');
+
+                        // 🔥 3. SHOW TOAST
+                        const toastEl = document.getElementById('wishlistToast');
+                        if (toastEl) {
+                            const toast = new bootstrap.Toast(toastEl);
+                            toast.show();
+                        }
+                    }else {
+                            alert(data.message || 'Lỗi xử lý wishlist');
+                        }
+                    } catch(err) {
+                        console.error(err);
+                        // Nếu chưa đăng nhập (hoặc lỗi khác), có thể redirect user
+                        // window.location.href = '/Account/Login';
+                    } finally {
+                        btn.disabled = false;
                     }
-                } catch(err) {
-                    console.error(err);
-                    // Nếu chưa đăng nhập (hoặc lỗi khác), có thể redirect user
-                    // window.location.href = '/Account/Login';
-                } finally {
-                    btn.disabled = false;
-                }
+                });
             });
-        });
     </script>
+
+
 }
 
 <style>

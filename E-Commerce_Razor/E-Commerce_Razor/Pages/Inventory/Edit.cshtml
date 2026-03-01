@@ -1,0 +1,81 @@
+@page "{productId:int}"
+@model E_Commerce_Razor.Pages.Inventory.EditModel
+@{
+    ViewData["Title"] = "Chỉnh sửa kho hàng";
+    Layout = "_AdminLayout";
+}
+
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card shadow-sm border-0">
+
+            <!-- HEADER -->
+            <div class="card-header bg-warning text-dark d-flex justify-content-between align-items-center">
+                <div>
+                    <h4 class="mb-0">
+                        <i class="bi bi-pencil-square"></i> Chỉnh sửa kho
+                    </h4>
+                    <small class="text-dark opacity-75">
+                        Sản phẩm ID: @Model.ProductId
+                    </small>
+                </div>
+            </div>
+
+            <!-- BODY -->
+            <div class="card-body">
+
+                <form method="post">
+
+                    <input type="hidden" asp-for="ProductId" />
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="Input.Quantity" class="form-label fw-semibold">
+                                Số lượng tồn
+                            </label>
+                            <input asp-for="Input.Quantity"
+                                   type="number"
+                                   min="0"
+                                   class="form-control" />
+                            <span asp-validation-for="Input.Quantity"
+                                  class="text-danger small"></span>
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="Input.Warehouse"
+                                   class="form-label fw-semibold">
+                                Kho hàng
+                            </label>
+                            <input asp-for="Input.Warehouse"
+                                   class="form-control" />
+                            <span asp-validation-for="Input.Warehouse"
+                                  class="text-danger small"></span>
+                        </div>
+                    </div>
+
+                    <div asp-validation-summary="ModelOnly"
+                         class="alert alert-danger"></div>
+
+                    <hr />
+
+                    <div class="d-flex justify-content-end gap-2">
+                        <a asp-page="Index"
+                           class="btn btn-secondary">
+                            <i class="bi bi-arrow-left"></i> Hủy
+                        </a>
+
+                        <button type="submit"
+                                class="btn btn-warning">
+                            <i class="bi bi-check-circle"></i> Cập nhật
+                        </button>
+                    </div>
+
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

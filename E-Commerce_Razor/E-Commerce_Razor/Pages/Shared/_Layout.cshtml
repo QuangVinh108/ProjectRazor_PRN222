@@ -242,27 +242,10 @@
         </div>
     }
 
-    <div class="modal fade" id="loginRequiredModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Thông báo</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    Xin vui lòng đăng nhập để sử dụng Wishlist.
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Đóng</button>
-                    <a class="btn btn-primary" id="goLoginBtn" href="#">Đăng nhập</a>
-                </div>
-            </div>
-        </div>
-    </div>
-
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
 
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/wishlist.js"></script>
     <script>
         document.addEventListener("DOMContentLoaded", function () {
           const wishlistLink = document.getElementById("wishlistLink");
@@ -328,5 +311,20 @@
         }
     </script>
 
+    <div class="position-fixed top-0 end-0 p-3" style="z-index: 9999">
+        <div id="wishlistToast"
+             class="toast align-items-center text-white bg-danger border-0 shadow-lg"
+             role="alert">
+            <div class="d-flex">
+                <div class="toast-body fw-bold">
+                    <i class="bi bi-heart-fill me-2"></i>
+                    Đã cập nhật Wishlist!
+                </div>
+                <button type="button"
+                        class="btn-close btn-close-white me-2 m-auto"
+                        data-bs-dismiss="toast"></button>
+            </div>
+        </div>
+    </div>
 </body>
 </html>

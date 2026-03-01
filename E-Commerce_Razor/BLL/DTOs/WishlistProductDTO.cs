@@ -23,4 +23,10 @@ namespace BLL.DTOs
     {
         public int Count { get; set; }
     }
+
+    public class WishlistToggleResultDTO
+    {
+        public bool IsAdded { get; set; }
+        public int Count { get; set; }
+    }
 }

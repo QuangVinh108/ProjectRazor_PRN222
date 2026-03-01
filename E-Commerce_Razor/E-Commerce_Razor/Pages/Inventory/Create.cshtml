@@ -1,0 +1,89 @@
+﻿@page
+@model E_Commerce_Razor.Pages.Inventory.CreateModel
+@{
+    ViewData["Title"] = "Thêm kho hàng mới";
+    Layout = "_AdminLayout";
+}
+
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card shadow-sm border-0">
+
+            <!-- HEADER -->
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0">
+                    <i class="bi bi-plus-circle"></i> Thêm kho hàng mới
+                </h4>
+            </div>
+
+            <!-- BODY -->
+            <div class="card-body">
+
+                <form method="post">
+
+                    <div asp-validation-summary="ModelOnly"
+                         class="alert alert-danger"></div>
+
+                    <div class="row">
+
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="Input.ProductId"
+                                   class="form-label fw-semibold">
+                                Mã sản phẩm *
+                            </label>
+                            <input asp-for="Input.ProductId"
+                                   class="form-control" />
+                            <span asp-validation-for="Input.ProductId"
+                                  class="text-danger small"></span>
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="Input.Quantity"
+                                   class="form-label fw-semibold">
+                                Số lượng tồn *
+                            </label>
+                            <input asp-for="Input.Quantity"
+                                   type="number"
+                                   min="0"
+                                   class="form-control" />
+                            <span asp-validation-for="Input.Quantity"
+                                  class="text-danger small"></span>
+                        </div>
+
+                    </div>
+
+                    <div class="mb-4">
+                        <label asp-for="Input.Warehouse"
+                               class="form-label fw-semibold">
+                            Kho hàng
+                        </label>
+                        <input asp-for="Input.Warehouse"
+                               class="form-control" />
+                        <span asp-validation-for="Input.Warehouse"
+                              class="text-danger small"></span>
+                    </div>
+
+                    <hr />
+
+                    <div class="d-flex justify-content-end gap-2">
+                        <a asp-page="Index"
+                           class="btn btn-secondary">
+                            <i class="bi bi-arrow-left"></i> Hủy
+                        </a>
+
+                        <button type="submit"
+                                class="btn btn-primary">
+                            <i class="bi bi-check-circle"></i> Thêm kho
+                        </button>
+                    </div>
+
+                </form>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

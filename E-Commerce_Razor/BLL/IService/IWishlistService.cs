@@ -13,7 +13,7 @@ namespace BLL.IService
         Task<GenericResult<bool>> ClearWishlistAsync();
         Task<GenericResult<IEnumerable<WishlistProduct>>> GetAllWishlistProductsForAdminAsync();
         Task<bool> IsProductInWishlistAsync(int productId);
-        Task<GenericResult<bool>> ToggleWishlistAsync(int productId);
+        Task<GenericResult<WishlistToggleResultDTO>> ToggleWishlistAsync(int productId);
         Task<GenericResult<bool>> CreateEmptyWishlistForUserAsync(int userId, string? note = null);
 
         Task<bool> IsInWishlistAsync(int userId, int productId);
