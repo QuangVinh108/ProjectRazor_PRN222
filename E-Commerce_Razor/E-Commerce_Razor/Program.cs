@@ -1,4 +1,4 @@
-﻿using BLL.Helper;
+using BLL.Helper;
 using BLL.IService;
 using BLL.Service;
 using DAL.Entities;
@@ -107,6 +107,8 @@ app.UseHttpsRedirection();
 app.UseStaticFiles();
 
 app.UseRouting();
+
+app.UseAuthentication();
 
 app.UseAuthorization();
 
