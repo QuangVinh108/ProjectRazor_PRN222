@@ -12,34 +12,10 @@
     @* ✅ Render page-specific styles *@
     @await RenderSectionAsync("Styles", required: false)
 
-    @*
-    ══════════════════════════════════════════════════════════════════
-    ✅ FIX: Navbar & dropdown z-index override.
-    Đặt SAU @RenderSectionAsync("Styles") để luôn thắng bất kỳ
-    page CSS nào (kể cả !important cùng specificity — last wins).
-
-    Nguyên nhân lỗi: Shop/Index.cshtml có rule
-      .navbar { position:relative !important; z-index:1 !important }
-    để fix aurora blob che footer. Rule đó kéo navbar từ z-index 1020
-    xuống 1, khiến dropdown-menu (z-index 1000 theo Bootstrap nhưng
-    scoped trong stacking context z-index:1 của navbar) bị các element
-    khác trên trang đè lên.
-
-    Fix: Khôi phục z-index đúng cho navbar + dropdown LUÔN LUÔN,
-    dù page nào đang render.
-    ══════════════════════════════════════════════════════════════════
-    *@
     <style>
         /* ══════════════════════════════════════════════════════════════
-               GLOBAL NAVBAR + DROPDOWN UI OVERHAUL
-               - Z-index fix (dropdown không bị trang che)
-               - Modern glassmorphism dropdown panel
-               - Animated slide-in
-               - Item hover gradient
-               - Navbar pill toggle & brand polish
-            ══════════════════════════════════════════════════════════════ */
-
-        /* ── 0. Variables ── */
+                       GLOBAL NAVBAR + DROPDOWN UI OVERHAUL
+                    ══════════════════════════════════════════════════════════════ */
         :root {
             --nav-g: linear-gradient(135deg, #4f46e5 0%, #7c3aed 60%, #ec4899 100%);
             --nav-g-soft: linear-gradient(135deg, rgba(79,70,229,.08) 0%, rgba(124,58,237,.06) 100%);
@@ -49,29 +25,6 @@
         }
 
         /* ── 1. Z-index fix (always wins over page CSS) ── */
-
-        /* ══════════════════════════════════════════════════════════════
-               ✅ FIX ĐỊNH GỐC: TẠI SAO DROPDOWN BỊ CHE?
-               ══════════════════════════════════════════════════════════════
-               Nguyên nhân THỰC SỰ: các page dùng:
-                 • filter: blur() trên aurora blobs → tạo stacking context mới
-                 • transform-style: preserve-3d trên hero img → idem
-                 • backdrop-filter, opacity, transform trên cards → idem
-               Những stacking context này nổi lên ROOT context, chen ngang
-               với navbar. Dù navbar có z-index 1050, dropdown (nằm trong
-               navbar's stacking context) vẫn bị các page element đè lên
-               nếu chúng được paint SAU navbar theo DOM order.
-
-               GIẢI PHÁT ĐÚNG: isolation: isolate trên <main>
-               ── Tạo một stacking context CÔ LẬT cho toàn bộ page content ──
-               • Mọi stacking context bên trong main (filter, transform, z-index
-                 bất kỳ) đều bị "nhốt" hoàn toàn trong hộp này
-               • Hộp này ở z-index: 0 trong root
-               • Navbar ở z-index: 1050 → LUÔN trên main → dropdown KHÔNG BAO
-                 GIỜ bị che nữa, dù page có bao nhiêu filter/transform đi nữa
-            ══════════════════════════════════════════════════════════════ */
-
-        /* ── 1a. NHỐT tất cả page stacking contexts vào isolated box ── */
         main[role="main"],
         main.pb-3 {
             position: relative !important;
@@ -79,21 +32,18 @@
             isolation: isolate !important;
         }
 
-        /* ── 1b. Navbar: sticky, luôn trên main (0) ── */
         .navbar, nav.navbar, header > nav, header nav.navbar {
             position: sticky !important;
             top: 0 !important;
             z-index: 1050 !important;
         }
 
-            /* ── 1c. Dropdown: cao nhất trong navbar's stacking context ── */
             .dropdown-menu,
             .navbar .dropdown-menu,
             .navbar-nav .dropdown-menu {
                 z-index: 9999 !important;
             }
 
-        /* ── 1d. Header wrapper: safety net ── */
         body > header {
             position: relative !important;
             z-index: 1050 !important;
@@ -110,7 +60,6 @@
             padding-bottom: 10px !important;
         }
 
-        /* Brand */
         .navbar-brand {
             background: var(--nav-g) !important;
             -webkit-background-clip: text !important;
@@ -130,7 +79,6 @@
                 color: #4f46e5 !important;
             }
 
-        /* Nav links */
         .navbar-nav .nav-link {
             font-weight: 600 !important;
             font-size: 14px !important;
@@ -176,7 +124,7 @@
                 transform: translateY(-1px) !important;
                 color: #fff !important;
             }
-        /* Arrow rotate when open */
+
         .navbar-nav .nav-item.show > .dropdown-toggle::after {
             transform: rotate(180deg) !important;
         }
@@ -192,14 +140,12 @@
             backdrop-filter: blur(24px) saturate(180%) !important;
             -webkit-backdrop-filter: blur(24px) saturate(180%) !important;
             overflow: hidden !important;
-            /* ✅ KHÔNG dùng display:block trick — Bootstrap JS tự quản lý show/hide */
-            /* Animation chỉ apply khi Bootstrap thêm class .show */
         }
 
-            /* ✅ Animation: chạy đúng lúc Bootstrap thêm .show — không can thiệp toggle */
             .navbar-nav .dropdown-menu.show {
                 animation: navDropIn .22s cubic-bezier(.34,1.56,.64,1) forwards !important;
             }
+
         @@keyframes navDropIn {
             from
 
@@ -215,12 +161,6 @@
 
         }
 
-        /* Remove old show rules — no longer needed */
-        .navbar-nav .nav-item.show > .dropdown-menu {
-            /* intentionally empty — Popper+fixed strategy handles positioning */
-        }
-
-        /* Panel — gradient header bar */
         .navbar-nav .dropdown-menu::before {
             content: '' !important;
             display: block !important;
@@ -229,7 +169,6 @@
             border-radius: var(--nav-r) var(--nav-r) 0 0 !important;
         }
 
-        /* Inner padding */
         .navbar-nav .dropdown-menu li:not(:first-child) {
             padding: 0 8px !important;
         }
@@ -259,7 +198,7 @@
                 color: var(--nav-accent) !important;
                 transform: translateX(3px) !important;
             }
-            /* Dot accent */
+
             .navbar-nav .dropdown-item::before {
                 content: '' !important;
                 width: 6px !important;
@@ -276,15 +215,13 @@
                 opacity: 1 !important;
             }
 
-        /* ── 6. Divider ── */
+        /* ── 6. Divider & Logout ── */
         .navbar-nav .dropdown-divider {
             margin: 6px 16px !important;
             border-color: rgba(124,58,237,.12) !important;
             border-top-width: 1.5px !important;
-            opacity: 1 !important;
         }
 
-        /* ── 7. Logout button ── */
         .navbar-nav .dropdown-menu form button.dropdown-item {
             width: 100% !important;
             text-align: left !important;
@@ -298,12 +235,6 @@
                 color: #dc2626 !important;
             }
 
-                .navbar-nav .dropdown-menu form button.dropdown-item:hover::before {
-                    background: #ef4444 !important;
-                    opacity: 1 !important;
-                }
-
-        /* ── 8. Spacing ── */
         .navbar-nav .dropdown-menu > li:last-child {
             padding-bottom: 8px !important;
         }
@@ -312,7 +243,7 @@
             padding-top: 6px !important;
         }
 
-        /* ── 9. Wishlist badge ── */
+        /* ── 7. Wishlist badge ── */
         #wishlistBadge {
             font-size: 0.6em !important;
             padding: 2px 5px !important;
@@ -321,7 +252,7 @@
             box-shadow: 0 2px 6px rgba(220,38,38,.35) !important;
         }
 
-        /* ── 10. Mobile ── */
+        /* ── 8. Mobile ── */
         @@media (max-width: 991px) {
             .navbar-nav .dropdown-toggle
 
@@ -336,11 +267,10 @@
         .navbar-nav .dropdown-menu {
             box-shadow: 0 4px 16px rgba(79,70,229,.12) !important;
             margin-top: 4px !important;
-            /* no transform override needed — .show animation handles it */
         }
 
             .navbar-nav .dropdown-menu.show {
-                animation: none !important; /* no animation on mobile collapse */
+                animation: none !important;
             }
 
         }
@@ -385,14 +315,9 @@
 
                             @* ✅ WISHLIST *@
                             <li class="nav-item position-relative">
-                                <a class="nav-link position-relative"
-                                   id="wishlistLink"
-                                   asp-page="/Wishlist/Index">
+                                <a class="nav-link position-relative" id="wishlistLink" asp-page="/Wishlist/Index">
                                     Wishlist
-                                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger ms-1"
-                                          style="font-size: 0.65em; display: none;" id="wishlistBadge">
-                                        0
-                                    </span>
+                                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger ms-1" style="font-size: 0.65em; display: none;" id="wishlistBadge">0</span>
                                 </a>
                             </li>
 
@@ -412,7 +337,6 @@
                                 </li>
                             }
                         </ul>
-
                         <partial name="_LoginPartial" />
                     </div>
                 </div>
@@ -429,9 +353,7 @@
                     <div class="row g-4">
                         <div class="col-lg-4 col-md-6">
                             <div class="footer-brand">
-                                <h3 class="footer-logo">
-                                    <i class="bi bi-shop"></i> E-Shop
-                                </h3>
+                                <h3 class="footer-logo"><i class="bi bi-shop"></i> E-Shop</h3>
                                 <p class="footer-description">
                                     Nền tảng mua sắm trực tuyến hàng đầu Việt Nam.
                                     Hàng ngàn sản phẩm chính hãng, giá tốt nhất thị trường.
@@ -514,8 +436,8 @@
             </div>
         </footer>
 
-        @* ✅ MODAL YÊU CẦU ĐĂNG NHẬP (dùng cho Wishlist) *@
-        <div class="modal fade" id="loginRequiredModal" tabindex="-1" aria-labelledby="loginRequiredModalLabel" aria-hidden="true">
+        @* ✅ MODAL YÊU CẦU ĐĂNG NHẬP *@
+        <div class="modal fade" id="loginRequiredModal" tabindex="-1" aria-hidden="true">
             <div class="modal-dialog modal-dialog-centered">
                 <div class="modal-content border-0 shadow-lg">
                     <div class="modal-header border-0 pb-0">
@@ -529,17 +451,13 @@
                             <i class="bi bi-lock-fill text-primary" style="font-size: 4rem; opacity: 0.3;"></i>
                         </div>
                         <h5 class="fw-bold mb-3" id="loginModalTitleText">Bạn cần đăng nhập để sử dụng tính năng này</h5>
-                        <p class="text-muted mb-0">
-                            Đăng nhập để trải nghiệm đầy đủ các dịch vụ của E-Shop
-                        </p>
+                        <p class="text-muted mb-0">Đăng nhập để trải nghiệm đầy đủ các dịch vụ của E-Shop</p>
                     </div>
                     <div class="modal-footer border-0 justify-content-center pt-0 pb-4">
                         <a href="/Account/Login?returnUrl=@Uri.EscapeDataString(Context.Request.Path + Context.Request.QueryString.ToString())" id="goLoginBtn" class="btn btn-primary px-4 py-2">
                             <i class="bi bi-box-arrow-in-right"></i> Đăng nhập ngay
                         </a>
-                        <button type="button" class="btn btn-outline-secondary px-4 py-2" data-bs-dismiss="modal">
-                            Để sau
-                        </button>
+                        <button type="button" class="btn btn-outline-secondary px-4 py-2" data-bs-dismiss="modal">Để sau</button>
                     </div>
                 </div>
             </div>
@@ -552,38 +470,71 @@
         </div>
     }
 
-    @*
-    ══ NOTE: Modal thứ 2 (loginRequiredModal) ở gốc trước đã bị duplicate —
-    đã xóa bản trùng ở đây. Chỉ giữ bản đầy đủ ở trong khối if ở trên.
-    ══
-    *@
+    <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 1050">
+        <div class="card shadow-lg border-0 d-none" id="chatBox" style="width: 340px; height: 500px; border-radius: 12px 12px 0 0; overflow: hidden; display: flex; flex-direction: column;">
+            <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center flex-shrink-0" style="border-radius: 12px 12px 0 0;">
+                <h6 class="mb-0 fw-bold"><i class="bi bi-chat-dots-fill me-2"></i> Hỗ trợ trực tuyến</h6>
+                <button type="button" class="btn-close btn-close-white" onclick="toggleChat()"></button>
+            </div>
+
+            <div class="card-body p-2" id="chatMessages" style="flex-grow: 1; overflow-y: auto; background: #f8f9fa;">
+                <div class="text-center text-muted small my-2">Bắt đầu cuộc trò chuyện</div>
+            </div>
+
+            <div id="emojiPickerContainer" class="d-none border-top flex-shrink-0" style="height: 250px; background: #fff;"></div>
+
+            <div class="card-footer p-2 bg-white border-0 flex-shrink-0">
+                <div class="input-group bg-light rounded-pill border p-1 d-flex align-items-center">
+                    <button class="btn btn-sm btn-link text-secondary rounded-circle px-2" onclick="document.getElementById('chatFileInput').click()" title="Đính kèm ảnh/file">
+                        <i class="bi bi-paperclip fs-5"></i>
+                    </button>
+                    <input type="file" id="chatFileInput" class="d-none" accept="image/*, .pdf, .doc, .docx, .xls, .xlsx, .txt, .zip, .rar" onchange="handleChatFileUpload(event)">
+
+                    <input type="text" id="chatInput" class="form-control border-0 bg-transparent shadow-none" placeholder="Nhập tin nhắn..." onkeypress="handleEnterChat(event)">
+
+                    <button class="btn btn-sm btn-link text-warning rounded-circle px-2" id="emojiButton" title="Biểu tượng cảm xúc">
+                        <i class="bi bi-emoji-smile fs-5"></i>
+                    </button>
+
+                    <button class="btn btn-primary btn-sm rounded-pill px-3 ms-1" onclick="sendChatMessage()">
+                        <i class="bi bi-send-fill"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <button class="btn btn-primary rounded-circle shadow-lg mt-2 float-end d-flex align-items-center justify-content-center"
+                id="btnOpenChat" onclick="toggleChat()"
+                style="width: 60px; height: 60px; transition: transform 0.2s;">
+            <i class="bi bi-chat-dots-fill fs-3"></i>
+        </button>
+    </div>
+
+    <div class="position-fixed top-0 end-0 p-3" style="z-index: 9999">
+        <div id="wishlistToast" class="toast align-items-center text-white bg-danger border-0 shadow-lg" role="alert">
+            <div class="d-flex">
+                <div class="toast-body fw-bold">
+                    <i class="bi bi-heart-fill me-2"></i> Đã cập nhật Wishlist!
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+            </div>
+        </div>
+    </div>
 
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
 
-    @*
-    ══════════════════════════════════════════════════════════════════
-    ✅ DROPDOWN FIX: Popper.js strategy: 'fixed'
-    ══════════════════════════════════════════════════════════════════
-    Vấn đề gốc: filter:blur() aurora blobs và transform-style:preserve-3d
-    trong hero section tạo stacking contexts mới, khiến dropdown (dù
-    z-index:9999) vẫn bị che khi browser paint các element này SAU navbar.
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.12/signalr.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/picmo@5.7.6/dist/umd/index.js"></script>
 
-    Giải pháp: strategy:'fixed' yêu cầu Popper.js đặt dropdown với
-    position:FIXED thay vì position:absolute. Element fixed được định vị
-    theo VIEWPORT, hoàn toàn thoát khỏi mọi stacking context, overflow,
-    transform, filter của parent — KHÔNG GÌ có thể che được.
-    ══════════════════════════════════════════════════════════════════
-    *@
     <script>
         (function () {
           function initDropdownsFixed() {
             if (typeof bootstrap === 'undefined' || !bootstrap.Dropdown) return;
             document.querySelectorAll('[data-bs-toggle="dropdown"]').forEach(function (el) {
-              // Dispose existing instance to avoid double-binding
               var inst = bootstrap.Dropdown.getInstance(el);
               if (inst) inst.dispose();
-              // Re-init với strategy:'fixed' — dropdown float trên TẤT CẢ page content
               new bootstrap.Dropdown(el, {
                 popperConfig: function (defaultConfig) {
                   return Object.assign({}, defaultConfig, { strategy: 'fixed' });
@@ -599,17 +550,26 @@
         })();
     </script>
 
-    <script src="~/js/site.js" asp-append-version="true"></script>
-
-    @* ✅ Render page-specific scripts *@
-    @await RenderSectionAsync("Scripts", required: false)
-
-    @* ✅ WISHLIST COUNTER — chỉ chạy khi đã đăng nhập *@
     <script>
-        $(document).ready(function() {
-            const isAuthenticated = @Json.Serialize(User?.Identity?.IsAuthenticated ?? false);
+        const isAuthenticatedUser = @Json.Serialize(User?.Identity?.IsAuthenticated ?? false);
+    </script>
 
-            if (isAuthenticated) {
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const wishlistLink = document.getElementById("wishlistLink");
+            if (!wishlistLink) return;
+
+            wishlistLink.addEventListener("click", function (e) {
+                if (isAuthenticatedUser) return;
+                e.preventDefault();
+                document.getElementById('loginRequiredModalLabel').innerHTML = '<i class="bi bi-heart-fill text-danger"></i> Yêu cầu đăng nhập';
+                document.getElementById('loginModalTitleText').innerText = 'Bạn cần đăng nhập để sử dụng Wishlist';
+                bootstrap.Modal.getOrCreateInstance(document.getElementById("loginRequiredModal")).show();
+            });
+        });
+
+        $(document).ready(function() {
+            if (isAuthenticatedUser) {
                 updateWishlistCount();
                 setInterval(updateWishlistCount, 30000);
             }
@@ -619,7 +579,6 @@
             try {
                 const response = await fetch('/Wishlist/Count');
                 if (!response.ok) return;
-
                 const count = await response.json();
                 const badge = document.getElementById('wishlistBadge');
                 if (badge) {
@@ -631,10 +590,9 @@
     </script>
 
     <script>
-        const isAuthenticatedChat = @((User?.Identity?.IsAuthenticated ?? false).ToString().ToLowerInvariant());
         let chatConnection = null;
 
-        if (isAuthenticatedChat) {
+        if (isAuthenticatedUser) {
             chatConnection = new signalR.HubConnectionBuilder().withUrl("/appHub").build();
 
             chatConnection.on("ReceiveMessage", function (user, message) {
@@ -658,9 +616,7 @@
 
             chatConnection.start().catch(err => console.error("SignalR Chat Error: ", err.toString()));
 
-            // ==========================================
-            // LOGIC EMOJI INLINE (NẰM BÊN TRONG KHUNG CHAT)
-            // ==========================================
+            // KHỞI TẠO BẢNG EMOJI INLINE
             document.addEventListener('DOMContentLoaded', () => {
                 const emojiButton = document.getElementById('emojiButton');
                 const chatInput = document.getElementById('chatInput');
@@ -674,12 +630,13 @@
                         e.preventDefault();
                         e.stopPropagation();
 
-                        // Lần đầu bấm mới khởi tạo bảng
-                        if (!picker) {
+                        emojiPickerContainer.classList.toggle('d-none');
+
+                        if (!picker && !emojiPickerContainer.classList.contains('d-none')) {
                             picker = picmo.createPicker({
-                                rootElement: emojiPickerContainer, // Chèn thẳng vào thẻ div đã chuẩn bị
-                                showSearch: true,
-                                autoFocusSearch: false
+                                rootElement: emojiPickerContainer,
+                                showSearch: false,
+                                visibleRows: 4
                             });
 
                             picker.addEventListener('emoji:select', selection => {
@@ -688,9 +645,6 @@
                             });
                         }
 
-                        // Ẩn/Hiện vùng chứa emoji
-                        emojiPickerContainer.classList.toggle('d-none');
-                        // Tự động đẩy khung chat xuống dưới cùng
                         chatMessages.scrollTop = chatMessages.scrollHeight;
                     });
                 }
@@ -698,14 +652,13 @@
         }
 
         function sendChatMessage() {
-            if (!isAuthenticatedChat) return;
+            if (!isAuthenticatedUser) return;
             const input = document.getElementById("chatInput");
             const message = input.value.trim();
             if (message && chatConnection) {
                 chatConnection.invoke("SendMessageToSupport", message).catch(err => console.error(err.toString()));
                 input.value = "";
 
-                // Gửi xong tự động giấu bảng emoji đi cho gọn (nếu đang mở)
                 const emojiContainer = document.getElementById('emojiPickerContainer');
                 if(emojiContainer && !emojiContainer.classList.contains('d-none')) {
                     emojiContainer.classList.add('d-none');
@@ -718,7 +671,7 @@
         }
 
         function toggleChat() {
-            if (!isAuthenticatedChat) {
+            if (!isAuthenticatedUser) {
                 document.getElementById('loginRequiredModalLabel').innerHTML = '<i class="bi bi-chat-dots-fill text-primary"></i> Hỗ trợ trực tuyến';
                 document.getElementById('loginModalTitleText').innerText = 'Vui lòng đăng nhập để Chat với CSKH';
                 bootstrap.Modal.getOrCreateInstance(document.getElementById("loginRequiredModal")).show();
@@ -734,11 +687,8 @@
             }
         }
 
-        // ==========================================
-        // XỬ LÝ GỬI FILE VÀ ẢNH QUA BASE64
-        // ==========================================
         function handleChatFileUpload(event) {
-            if (!isAuthenticatedChat || !chatConnection) return;
+            if (!isAuthenticatedUser || !chatConnection) return;
 
             const file = event.target.files[0];
             if (!file) return;
@@ -775,15 +725,7 @@
         }
     </script>
 
-    <div class="position-fixed top-0 end-0 p-3" style="z-index: 9999">
-        <div id="wishlistToast" class="toast align-items-center text-white bg-danger border-0 shadow-lg" role="alert">
-            <div class="d-flex">
-                <div class="toast-body fw-bold">
-                    <i class="bi bi-heart-fill me-2"></i> Đã cập nhật Wishlist!
-                </div>
-                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
-            </div>
-        </div>
-    </div>
+    @await RenderSectionAsync("Scripts", required: false)
+
 </body>
 </html>
