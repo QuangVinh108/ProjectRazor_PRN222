@@ -24,5 +24,6 @@ namespace DAL.IRepository
             int pageSize);
 
         Task<int> GetQuantityAsync(int productId);
+        Task<bool> AdjustQuantityAsync(int productId, int delta);
     }
 }

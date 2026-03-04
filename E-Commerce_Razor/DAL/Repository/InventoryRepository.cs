@@ -16,6 +16,21 @@ namespace DAL.Repository
         {
             _context = context;
         }
+
+        public async Task<bool> AdjustQuantityAsync(int productId, int delta)
+        {
+            var inventory = await _context.Inventories
+                .FirstOrDefaultAsync(i => i.ProductId == productId);
+
+            if (inventory == null)
+                return false;
+
+            inventory.Quantity += delta;
+
+            await _context.SaveChangesAsync();
+
+            return true;
+        }
         public async Task<Inventory?> GetByProductIdAsync(int productId)
         {
             return await _context.Inventories

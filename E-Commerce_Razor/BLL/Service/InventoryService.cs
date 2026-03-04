@@ -274,36 +274,26 @@ namespace BLL.Service
 
         public async Task<GenericResult<bool>> DeductInventoryAsync(int orderId)
         {
-            try
+            var orderItems = await _orderItemRepo.GetByOrderIdAsync(orderId);
+
+            if (orderItems == null || !orderItems.Any())
+                return GenericResult<bool>.Failure("No order items");
+
+            foreach (var item in orderItems)
             {
-                var orderItems = await _orderItemRepo.GetByOrderIdAsync(orderId);
-                if (orderItems == null || !orderItems.Any())
-                    return GenericResult<bool>.Failure("No order items");
+                var currentQty = await _inventoryRepo.GetQuantityAsync(item.ProductId);
 
-                foreach (var item in orderItems)
-                {
-                    var inventory = await _inventoryRepo.GetByProductIdAsync(item.ProductId);
-                    if (inventory == null)
-                        continue; // hoặc Failure("Inventory not found") tùy business
+                if (currentQty < item.Quantity)
+                    return GenericResult<bool>.Failure("Insufficient inventory");
 
-                    var newQty = inventory.Quantity - item.Quantity;
-                    if (newQty < 0)
-                        return GenericResult<bool>.Failure("Insufficient inventory");
-
-                    // Giống ProcessPaymentInventoryAsync: update theo productId + newQty
-                    await _inventoryRepo.UpdateQuantityAsync(item.ProductId, newQty);
-
-                    // Nếu repo của bạn không có UpdateQuantityAsync thì dùng:
-                    // inventory.Quantity = newQty;
-                    // await _inventoryRepo.UpdateAsync(inventory);
-                }
-
-                return GenericResult<bool>.Success(true);
+                // 🔥 TRỪ kho
+                await _inventoryRepo.AdjustQuantityAsync(
+                    item.ProductId,
+                    -item.Quantity
+                );
             }
-            catch (Exception ex)
-            {
-                return GenericResult<bool>.Failure(ex.Message);
-            }
+
+            return GenericResult<bool>.Success(true);
         }
 
 
@@ -314,9 +304,10 @@ namespace BLL.Service
 
             foreach (var item in order.OrderItems)
             {
-                await _inventoryRepo.UpdateQuantityAsync(
+                // 🔥 CỘNG kho
+                await _inventoryRepo.AdjustQuantityAsync(
                     item.ProductId,
-                    item.Quantity // cộng lại trong repo
+                    item.Quantity
                 );
             }
         }
