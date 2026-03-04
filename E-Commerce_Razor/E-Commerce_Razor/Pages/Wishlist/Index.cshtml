@@ -1,7 +1,20 @@
-﻿@page
+@page
 @model E_Commerce_Razor.Pages.Wishlist.IndexModel
 @{
     ViewData["Title"] = "Wishlist";
+}
+
+@section Styles {
+    <style>
+        /* Đảm bảo modal confirm luôn nằm trên cùng, không bị overlay khác chặn click */
+        #confirmModal {
+            z-index: 20000;
+        }
+
+        .modal-backdrop.show {
+            z-index: 19990;
+        }
+    </style>
 }
 
 <div class="container py-4">
@@ -66,6 +79,7 @@
                                 <form method="post"
                                       asp-page-handler="Remove"
                                       class="delete-form">
+                                    @Html.AntiForgeryToken()
 
                                     <input type="hidden"
                                            name="wishlistProductId"
@@ -95,6 +109,7 @@
             <form method="post"
                   asp-page-handler="Clear"
                   id="clearAllForm">
+                @Html.AntiForgeryToken()
 
                 <button type="button"
                         class="btn btn-danger rounded-pill px-4"
@@ -108,7 +123,7 @@
 
 
 <!-- 🔥 CONFIRM MODAL -->
-<div class="modal fade" id="confirmModal" tabindex="-1">
+<div class="modal fade" id="confirmModal" tabindex="-1" aria-hidden="true" role="dialog">
     <div class="modal-dialog">
         <div class="modal-content">
 
@@ -152,6 +167,10 @@
             let formToSubmit = null;
 
             const modalElement = document.getElementById('confirmModal');
+            // Đưa modal ra thẳng body để tránh bị ảnh hưởng bởi các container có z-index
+            if (modalElement && modalElement.parentElement !== document.body) {
+                document.body.appendChild(modalElement);
+            }
             const modal = new bootstrap.Modal(modalElement);
             const confirmBtn = document.getElementById('confirmBtn');
             const confirmMessage = document.getElementById('confirmMessage');
@@ -177,8 +196,14 @@
             // Confirm button
             confirmBtn.addEventListener('click', function () {
                 if (formToSubmit) {
+                    modal.hide();
                     formToSubmit.submit();
                 }
+            });
+
+            // Reset state khi modal đóng
+            modalElement?.addEventListener('hidden.bs.modal', function () {
+                formToSubmit = null;
             });
 
         });

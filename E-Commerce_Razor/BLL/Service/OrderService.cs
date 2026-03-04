@@ -1,4 +1,4 @@
-﻿using BLL.DTOs;
+using BLL.DTOs;
 using BLL.IService;
 using DAL.Entities;
 using DAL.IRepository;
@@ -16,11 +16,11 @@ namespace BLL.Service
         private readonly ICartRepository _cartRepo;
         private readonly IInventoryService _inventoryService;
 
-        public OrderService(IOrderRepository orderRepo, ICartRepository cartRepo, IInventoryService _inventoryService)
+        public OrderService(IOrderRepository orderRepo, ICartRepository cartRepo, IInventoryService inventoryService)
         {
             _orderRepo = orderRepo;
             _cartRepo = cartRepo;
-            _inventoryService = _inventoryService;
+            _inventoryService = inventoryService;
         }
 
         public async Task<OrderDto?> GetOrderByIdAsync(int orderId, int userId)
@@ -149,22 +149,35 @@ namespace BLL.Service
 
         public async Task<bool> CancelOrderAsync(int orderId, int userId)
         {
-            var order = await _orderRepo.GetByIdAsync(orderId);
+            // Lấy đầy đủ chi tiết để kiểm tra Shipping/Payment
+            var order = await _orderRepo.GetByIdAsync(orderId, includeDetails: true);
             if (order == null || order.UserId != userId) return false;
 
-            // Chỉ cho hủy khi Pending hoặc Paid
-            if (order.Status != "Pending" && order.Status != "Paid")
-                throw new Exception("Không thể hủy đơn hàng này.");
+            var isPending = order.Status == "Pending";
+            var isPaid    = order.Payment?.Status == "Paid";
+            var notShipped = order.Shipping == null || !order.Shipping.ShippedDate.HasValue;
 
-            var oldStatus = order.Status;
+            // Chỉ cho hủy nếu:
+            // - Đơn đang Pending
+            // - HOẶC đã thanh toán (Paid) nhưng CHƯA giao hàng
+            if (!isPending && !(isPaid && notShipped))
+                throw new Exception("Đơn hàng đã được xử lý, không thể hủy.");
+
+            var wasPaid = isPaid;
+
             order.Status = "Cancelled"; // Hardcode string
-            await _orderRepo.UpdateAsync(order);
 
-            // Hoàn kho nếu đã thanh toán
-            if (oldStatus == "Paid")
+            // Nếu đã thanh toán → hoàn kho và đánh dấu payment đã hoàn tiền
+            if (wasPaid)
             {
-                await _inventoryService.RestoreInventoryAsync(orderId);
+                await _inventoryService.RestoreInventoryAsync(order);
+                if (order.Payment != null)
+                {
+                    order.Payment.Status = "Refunded"; // ghi nhận đã hoàn tiền
+                }
             }
+
+            await _orderRepo.UpdateAsync(order);
             return true;
         }
 

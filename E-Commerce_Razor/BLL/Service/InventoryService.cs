@@ -307,19 +307,17 @@ namespace BLL.Service
         }
 
 
-        public async Task RestoreInventoryAsync(int orderId)
+        public async Task RestoreInventoryAsync(Order order)
         {
-            var items = await _orderItemRepo.GetByOrderIdAsync(orderId);
+            if (order.OrderItems == null || !order.OrderItems.Any())
+                return;
 
-
-            foreach (var item in items)
+            foreach (var item in order.OrderItems)
             {
-                var inventory = await _inventoryRepo.GetByProductIdAsync(item.ProductId);
-                if (inventory == null) continue;
-
-
-                inventory.Quantity += item.Quantity;
-                await _inventoryRepo.UpdateAsync(inventory);
+                await _inventoryRepo.UpdateQuantityAsync(
+                    item.ProductId,
+                    item.Quantity // cộng lại trong repo
+                );
             }
         }
     }

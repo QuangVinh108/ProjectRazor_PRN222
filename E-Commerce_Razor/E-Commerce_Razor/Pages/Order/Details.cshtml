@@ -119,11 +119,16 @@
                         </div>
 
                         <!-- Cancel + Pay Buttons -->
-                        @if (Model.Order.Status == "Pending")
+                        @{
+                            var canCancel = Model.Order.Status == "Pending"
+                                || (Model.Order.Payment?.Status == "Paid"
+                                    && (Model.Order.Shipping == null || !Model.Order.Shipping.ShippedDate.HasValue));
+                        }
+                        @if (canCancel)
                         {
                             <div class="d-flex gap-2 mt-3">
                                 <form method="post" asp-page-handler="Cancel" asp-route-id="@Model.Order.OrderId"
-                                      onsubmit="return confirm('Bạn có chắc muốn hủy đơn hàng này?')">
+                                      onsubmit="return confirm('Bạn có chắc muốn hủy đơn hàng này? Đối với đơn đã thanh toán, số tiền sẽ được hoàn lại theo chính sách của hệ thống.')">
                                     @Html.AntiForgeryToken()
                                     <button type="submit" class="btn btn-danger">
                                         <i class="bi bi-x-circle"></i> Hủy đơn hàng

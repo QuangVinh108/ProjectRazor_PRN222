@@ -21,6 +21,6 @@ namespace BLL.IService
         Task<GenericResult<int>> GetAvailableStockAsync(int productId);
         Task<GenericResult<bool>> ProcessPaymentInventoryAsync(int orderId, string paymentStatus);
         Task<GenericResult<bool>> DeductInventoryAsync(int orderId); // khi Paid
-        Task RestoreInventoryAsync(int orderId); // khi Cancelled + Paid
+        Task RestoreInventoryAsync(Order order); // khi Cancelled + Paid
     }
 }
