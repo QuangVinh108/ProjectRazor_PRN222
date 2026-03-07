@@ -151,17 +151,18 @@ namespace BLL.Service
 
                 if (vnp_ResponseCode == "00") // Thành công
                 {
-                    if (order.Payment?.Status == "Paid")
-                    {
-                        return (true, "Đơn hàng đã được thanh toán trước đó.", orderId);
-                    }
+                    //if (order.Payment?.Status == "Paid")
+                    //{
+                    //    return (true, "Đơn hàng đã được thanh toán trước đó.", orderId);
+                    //}
 
-                    var deductResult = await _inventoryService.DeductInventoryAsync(orderId);
+                    //var deductResult = await _inventoryService.DeductInventoryAsync(orderId);
 
-                    if (!deductResult.IsSuccess)
-                    {
-                        return (false, deductResult.Message, orderId);
-                    }
+                    //if (!deductResult.IsSuccess)
+                    //{
+                    //    return (false, deductResult.Message, orderId);
+                    //}
+                    await _inventoryService.DeductInventoryAsync(orderId);
 
                     order.Status = "Hoàn thành";
                     if (order.Payment != null)
