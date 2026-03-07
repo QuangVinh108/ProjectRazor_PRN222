@@ -1,0 +1,136 @@
+﻿@page
+@model E_Commerce_Razor.Pages.User.IndexModel
+@{
+    ViewData["Title"] = "Quản lý người dùng";
+    Layout = "_AdminLayout";
+}
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2><i class="bi bi-people-fill"></i> Danh sách người dùng</h2>
+        <a asp-page="./Create" class="btn btn-success shadow-sm">
+            <i class="bi bi-plus-lg"></i> Thêm mới
+        </a>
+    </div>
+
+    @if (Model.Users != null && Model.Users.Any())
+    {
+        <div class="table-responsive shadow-sm rounded">
+            <table class="table table-hover table-bordered align-middle">
+                <thead class="table-dark text-nowrap">
+                    <tr>
+                        <th class="text-center">STT</th>
+                        <th>Họ và Tên</th>
+                        <th>Email</th>
+                        <th>Vai trò</th>
+                        <th class="text-center">Trạng thái</th>
+                        <th class="text-center" style="width: 150px;">Hành động</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var user in Model.Users)
+                    {
+                        <tr>
+                            <td class="text-center">@user.UserId</td>
+                            <td class="fw-bold">@user.FullName</td>
+                            <td>@user.Email</td>
+                            <td>
+                                @if (user.Role != null && user.Role.RoleName == "Admin")
+                                {
+                                    <span class="badge bg-danger">Admin</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-primary">
+                                        @(user.Role != null ? user.Role.RoleName : "User")
+                                    </span>
+                                }
+                            </td>
+
+                            <td class="text-center">
+                                @if (user.IsActive)
+                                {
+                                    <span class="badge bg-success">
+                                        <i class="bi bi-check-circle"></i> Hoạt động
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-secondary">
+                                        <i class="bi bi-lock-fill"></i> Đã khóa
+                                    </span>
+                                }
+                            </td>
+
+                            <td class="text-center">
+                                <div class="btn-group" role="group">
+                                    <a asp-page="./Edit" asp-route-id="@user.UserId"
+                                       class="btn btn-primary btn-sm" title="Sửa thông tin">
+                                        <i class="bi bi-pencil-square"></i>
+                                    </a>
+
+                                    @if (user.IsActive)
+                                    {
+                                        <form method="post" asp-page-handler="Delete" asp-route-id="@user.UserId"
+                                              class="delete-form" style="display:inline;">
+                                            <button type="button" class="btn btn-warning btn-sm ms-1 btn-delete" title="Khóa tài khoản">
+                                                <i class="bi bi-lock"></i>
+                                            </button>
+                                        </form>
+                                    }
+                                    else
+                                    {
+                                        <button class="btn btn-secondary btn-sm ms-1" disabled title="Đã khóa">
+                                            <i class="bi bi-slash-circle"></i>
+                                        </button>
+                                    }
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+    else
+    {
+        <div class="alert alert-info text-center">
+            Chưa có người dùng nào trong hệ thống.
+        </div>
+    }
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // Lấy tất cả các nút có class 'btn-delete'
+            const deleteButtons = document.querySelectorAll('.btn-delete');
+
+            deleteButtons.forEach(button => {
+                button.addEventListener('click', function () {
+                    // Tìm form chứa nút vừa bấm
+                    const form = this.closest('.delete-form');
+
+                    // Hiển thị popup xác nhận bằng SweetAlert2
+                    Swal.fire({
+                        title: 'Khóa tài khoản?',
+                        text: "Bạn có chắc chắn muốn khóa người dùng này không?",
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonColor: '#ffc107', // Màu vàng tương đồng với nút
+                        cancelButtonColor: '#6c757d', // Màu xám
+                        confirmButtonText: '<i class="bi bi-lock"></i> Đồng ý, khóa!',
+                        cancelButtonText: 'Hủy bỏ'
+                    }).then((result) => {
+                        // Nếu người dùng bấm "Đồng ý"
+                        if (result.isConfirmed) {
+                            form.submit(); // Thực hiện submit form
+                        }
+                    });
+                });
+            });
+        });
+    </script>
+}

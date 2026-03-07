@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace DAL.Repository
 {
-    internal class ReviewRepository
+    public class ReviewRepository
     {
     }
 }

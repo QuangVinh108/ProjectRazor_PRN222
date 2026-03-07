@@ -1,6 +1,10 @@
-﻿using BLL.IService;
+using BLL.Helper;
+using BLL.IService;
 using BLL.Service;
 using DAL.Entities;
+using DAL.IRepository;
+using DAL.Repository;
+using DotNetEnv;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -8,33 +12,56 @@ using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
+Env.Load();
+
+builder.Configuration.AddEnvironmentVariables();
+
 // Add services to the container.
 builder.Services.AddRazorPages();
+
+builder.Services.AddHttpClient();
+builder.Services.AddScoped<GeminiHelper>();
+builder.Services.AddSignalR(options =>
+{
+    options.MaximumReceiveMessageSize = 5 * 1024 * 1024; // 5 MB
+});
 
 // DbContext
 builder.Services.AddDbContext<ShopDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-// Register Services
-builder.Services.AddScoped<IAuthService, AuthService>();
-builder.Services.AddScoped<ICartService, CartService>();
-builder.Services.AddScoped<ICartItemService, CartItemService>();
-builder.Services.AddScoped<ICategoryService, CategoryService>();
-builder.Services.AddScoped<IDashboardService, DashboardService>();
-builder.Services.AddScoped<IEmailService, EmailService>();
-builder.Services.AddScoped<IEmailVerificationService, EmailVerificationService>();
-builder.Services.AddScoped<IGoogleAuthService, GoogleAuthService>();
-builder.Services.AddScoped<IInventoryService, InventoryService>();
+// Repositories
+builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<IWishlistRepository, WishlistRepository>();
+builder.Services.AddScoped<IRoleRepository, RoleRepository>();
+builder.Services.AddScoped<ICartRepository, CartRepository>();
+builder.Services.AddScoped<IOrderRepository, OrderRepository>();
+builder.Services.AddScoped<IOrderItemRepository, OrderItemRepository>();
+builder.Services.AddScoped<IProductRepository, ProductRepository>();
+builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
+builder.Services.AddScoped<IInventoryRepository, InventoryRepository>();
+builder.Services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
+builder.Services.AddScoped<IEmailVerificationTokenRepository, EmailVerificationTokenRepository>();
+builder.Services.AddScoped<IPaymentRepository, PaymentRepository>();
+
+// Services
 builder.Services.AddScoped<IJwtService, JwtService>();
-builder.Services.AddScoped<IOrderService, OrderService>();
-builder.Services.AddScoped<IOrderItemService, OrderItemService>();
-builder.Services.AddScoped<IPaymentService, PaymentService>();
-builder.Services.AddScoped<IProductService, ProductService>();
-builder.Services.AddScoped<IReviewService, ReviewService>();
-builder.Services.AddScoped<IRoleService, RoleService>();
-builder.Services.AddScoped<IShippingService, ShippingService>();
-builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IWishlistService, WishlistService>();
+builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<IRoleService, RoleService>();
+builder.Services.AddScoped<ICartService, CartService>();
+builder.Services.AddScoped<IOrderService, OrderService>();
+builder.Services.AddScoped<IProductService, ProductService>();
+builder.Services.AddScoped<ICategoryService, CategoryService>();
+builder.Services.AddScoped<IInventoryService, InventoryService>();
+//builder.Services.AddScoped<IGoogleAuthService, GoogleAuthService>();
+builder.Services.AddScoped<IEmailVerificationService, EmailVerificationService>();
+builder.Services.AddScoped<IEmailService, EmailService>();
+builder.Services.AddScoped<IDashboardService, DashboardService>();
+builder.Services.AddScoped<IPaymentService, PaymentService>();
+
+builder.Services.AddHttpContextAccessor();
 
 // JWT Authentication
 builder.Services.AddAuthentication(options =>
@@ -82,11 +109,20 @@ if (!app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();
-
+app.Use(async (context, next) =>
+{
+    // Mở khóa để popup của Google có thể gửi dữ liệu về trang web
+    context.Response.Headers["Cross-Origin-Opener-Policy"] = "same-origin-allow-popups";
+    await next();
+});
 app.UseRouting();
+
+app.UseAuthentication();
 
 app.UseAuthorization();
 
 app.MapRazorPages();
+
+app.MapHub<E_Commerce_Razor.Hubs.AppHub>("/appHub");
 
 app.Run();

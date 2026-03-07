@@ -1,0 +1,887 @@
+﻿@page
+@model E_Commerce_Razor.Pages.Account.ProfileModel
+@{
+    ViewData["Title"] = "Thông tin cá nhân";
+}
+
+<!-- ══ AURORA BACKGROUND ══ -->
+<div class="pf-aurora" aria-hidden="true">
+    <div class="pf-blob pf-blob-1"></div>
+    <div class="pf-blob pf-blob-2"></div>
+    <div class="pf-blob pf-blob-3"></div>
+</div>
+
+<!-- ══ HERO BANNER ══ -->
+<section class="pf-hero">
+    <div class="pf-hero-inner container">
+
+        <!-- Avatar ring -->
+        <div class="pf-avatar-wrap pf-tilt" id="pfTilt">
+            <div class="pf-avatar-ring"></div>
+            <div class="pf-avatar">
+                <span class="pf-avatar-initials" id="pfInitials">
+                    @(string.IsNullOrEmpty(Model.UserProfile.FullName)
+                                        ? "U"
+                                        : Model.UserProfile.FullName.Trim().Substring(0, 1).ToUpper())
+                </span>
+                <i class="bi bi-person-fill pf-avatar-icon"></i>
+            </div>
+            @if (Model.UserProfile.IsIdentityVerified)
+            {
+                <div class="pf-verified-badge" title="Tài khoản đã xác thực">
+                    <i class="bi bi-patch-check-fill"></i>
+                </div>
+            }
+        </div>
+
+        <!-- Name & meta -->
+        <div class="pf-hero-text">
+            <h1 class="pf-name" id="pfName">@Model.UserProfile.FullName</h1>
+            <p class="pf-email-hero">
+                <i class="bi bi-envelope-fill me-1"></i>@Model.UserProfile.Email
+            </p>
+            <div class="pf-hero-badges">
+                @if (Model.UserProfile.IsIdentityVerified)
+                {
+                    <span class="pf-hbadge pf-hbadge-verified">
+                        <i class="bi bi-shield-fill-check me-1"></i>Đã xác thực danh tính
+                    </span>
+                }
+                else
+                {
+                    <span class="pf-hbadge pf-hbadge-pending">
+                        <i class="bi bi-shield-exclamation me-1"></i>Chưa xác thực
+                    </span>
+                }
+                <span class="pf-hbadge pf-hbadge-member">
+                    <i class="bi bi-star-fill me-1"></i>Thành viên
+                </span>
+            </div>
+        </div>
+
+    </div>
+    <!-- Wave divider -->
+    <div class="pf-wave" aria-hidden="true">
+        <svg viewBox="0 0 1440 60" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M0,30 C360,60 1080,0 1440,30 L1440,60 L0,60 Z" fill="#f8fafc" />
+        </svg>
+    </div>
+</section>
+
+<!-- ══ MAIN CONTENT ══ -->
+<div class="pf-page container">
+    <div class="row justify-content-center">
+        <div class="col-lg-8 col-xl-7">
+
+            <!-- ── Profile card ── -->
+            <div class="pf-card pf-reveal">
+                <div class="pf-card-header">
+                    <div class="pf-card-title">
+                        <span class="pf-card-icon"><i class="bi bi-person-lines-fill"></i></span>
+                        <span>Thông tin cá nhân</span>
+                    </div>
+                    <a asp-page="./EditProfile" class="pf-edit-btn">
+                        <i class="bi bi-pencil-square me-1"></i>Cập nhật
+                    </a>
+                </div>
+
+                <div class="pf-card-body">
+
+                    <!-- Full name -->
+                    <div class="pf-field pf-reveal">
+                        <div class="pf-field-icon pf-fi-blue">
+                            <i class="bi bi-person-fill"></i>
+                        </div>
+                        <div class="pf-field-content">
+                            <span class="pf-field-label">Họ và tên</span>
+                            <span class="pf-field-value pf-val-name">
+                                @Model.UserProfile.FullName
+                                @if (Model.UserProfile.IsIdentityVerified)
+                                {
+                                    <i class="bi bi-check-circle-fill pf-check-icon" title="Đã xác thực"></i>
+                                }
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Email -->
+                    <div class="pf-field pf-reveal">
+                        <div class="pf-field-icon pf-fi-violet">
+                            <i class="bi bi-envelope-fill"></i>
+                        </div>
+                        <div class="pf-field-content">
+                            <span class="pf-field-label">Email</span>
+                            <span class="pf-field-value">@Model.UserProfile.Email</span>
+                        </div>
+                    </div>
+
+                    <!-- Phone -->
+                    <div class="pf-field pf-reveal">
+                        <div class="pf-field-icon pf-fi-em">
+                            <i class="bi bi-telephone-fill"></i>
+                        </div>
+                        <div class="pf-field-content">
+                            <span class="pf-field-label">Số điện thoại</span>
+                            <span class="pf-field-value @(Model.UserProfile.Phone == null ? "pf-empty" : "")">
+                                @(Model.UserProfile.Phone ?? "Chưa cập nhật")
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Address -->
+                    <div class="pf-field pf-reveal">
+                        <div class="pf-field-icon pf-fi-amb">
+                            <i class="bi bi-geo-alt-fill"></i>
+                        </div>
+                        <div class="pf-field-content">
+                            <span class="pf-field-label">Địa chỉ</span>
+                            <span class="pf-field-value @(Model.UserProfile.Address == null ? "pf-empty" : "")"
+                                  style="white-space:pre-line;">
+                                @(Model.UserProfile.Address ?? "Chưa cập nhật")
+                            </span>
+                        </div>
+                    </div>
+
+                    @if (Model.UserProfile.IsIdentityVerified)
+                    {
+                        <!-- Divider — Identity section -->
+                        <div class="pf-section-divider pf-reveal">
+                            <span><i class="bi bi-shield-lock-fill me-2"></i>Thông tin định danh</span>
+                        </div>
+
+                        <!-- CCCD -->
+                        <div class="pf-field pf-reveal">
+                            <div class="pf-field-icon pf-fi-pink">
+                                <i class="bi bi-credit-card-2-front-fill"></i>
+                            </div>
+                            <div class="pf-field-content">
+                                <span class="pf-field-label">Số CCCD</span>
+                                <span class="pf-field-value pf-val-cccd">
+                                    @Model.UserProfile.CccdNumber
+                                </span>
+                            </div>
+                        </div>
+
+                        <!-- DoB -->
+                        <div class="pf-field pf-reveal">
+                            <div class="pf-field-icon pf-fi-teal">
+                                <i class="bi bi-calendar-heart-fill"></i>
+                            </div>
+                            <div class="pf-field-content">
+                                <span class="pf-field-label">Ngày sinh</span>
+                                <span class="pf-field-value">
+                                    @(Model.UserProfile.DateOfBirth?.ToString("dd/MM/yyyy") ?? "N/A")
+                                </span>
+                            </div>
+                        </div>
+                    }
+
+                </div><!-- /pf-card-body -->
+            </div><!-- /pf-card -->
+            <!-- ── Action buttons ── -->
+            <div class="pf-actions pf-reveal">
+                <a asp-page="/Index" class="pf-btn-back">
+                    <i class="bi bi-arrow-left-circle me-2"></i>Quay lại trang chủ
+                </a>
+                <a asp-page="./EditProfile" class="pf-btn-edit">
+                    <i class="bi bi-pencil-fill me-2"></i>Chỉnh sửa hồ sơ
+                </a>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<!-- ══ SPACER ══ -->
+<div style="height:60px;"></div>
+
+
+@section Styles {
+    <style>
+        /* ══════════════════════════════════════════
+           PROFILE PAGE — modern redesign
+           Giữ nguyên toàn bộ Razor logic, chỉ nâng cấp UI
+        ══════════════════════════════════════════ */
+
+        /* ── Variables ── */
+        :root {
+            --pf-blue: #3b82f6;
+            --pf-blue-lt: #eff6ff;
+            --pf-violet: #7c3aed;
+            --pf-violet-lt: #f5f3ff;
+            --pf-em: #10b981;
+            --pf-em-lt: #ecfdf5;
+            --pf-amb: #f59e0b;
+            --pf-amb-lt: #fffbeb;
+            --pf-pink: #ec4899;
+            --pf-pink-lt: #fdf2f8;
+            --pf-teal: #06b6d4;
+            --pf-teal-lt: #ecfeff;
+            --pf-dark: #0f172a;
+            --pf-text: #334155;
+            --pf-muted: #64748b;
+            --pf-border: #e2e8f0;
+            --pf-bg: #f8fafc;
+            --pf-w: #ffffff;
+            --pf-g: linear-gradient(135deg, #4f46e5 0%, #7c3aed 50%, #ec4899 100%);
+            --pf-shadow: 0 4px 24px rgba(0,0,0,.08), 0 1px 4px rgba(0,0,0,.05);
+            --pf-shadow-lg: 0 12px 48px rgba(79,70,229,.18), 0 4px 12px rgba(0,0,0,.08);
+            --pf-r: 18px;
+        }
+
+        /* ── Page bg ── */
+        body {
+            background: var(--pf-bg);
+        }
+
+        /* ══ AURORA ══ */
+        .pf-aurora {
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            pointer-events: none;
+            overflow: hidden;
+        }
+
+        .pf-blob {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(80px);
+            opacity: .35;
+            animation: pf-float 14s ease-in-out infinite;
+        }
+
+        .pf-blob-1 {
+            width: 520px;
+            height: 520px;
+            background: radial-gradient(circle, #7c3aed, #4f46e5);
+            top: -180px;
+            left: -120px;
+            animation-delay: 0s;
+        }
+
+        .pf-blob-2 {
+            width: 420px;
+            height: 420px;
+            background: radial-gradient(circle, #ec4899, #f59e0b);
+            bottom: 5%;
+            right: -100px;
+            animation-delay: -5s;
+        }
+
+        .pf-blob-3 {
+            width: 300px;
+            height: 300px;
+            background: radial-gradient(circle, #10b981, #06b6d4);
+            top: 40%;
+            left: 55%;
+            animation-delay: -9s;
+        }
+        @@keyframes pf-float {
+            0%,100%
+
+        {
+            transform: translateY(0) scale(1);
+        }
+
+        50% {
+            transform: translateY(-30px) scale(1.06);
+        }
+
+        }
+
+        /* ══ HERO ══ */
+        .pf-hero {
+            position: relative;
+            z-index: 1;
+            background: var(--pf-g);
+            padding: 60px 0 0;
+            overflow: hidden;
+        }
+
+            .pf-hero::before {
+                content: '';
+                position: absolute;
+                inset: 0;
+                background: radial-gradient(circle at 20% 50%, rgba(255,255,255,.07) 0%, transparent 50%), radial-gradient(circle at 80% 20%, rgba(255,255,255,.05) 0%, transparent 40%);
+                pointer-events: none;
+            }
+
+        .pf-hero-inner {
+            position: relative;
+            z-index: 2;
+            display: flex;
+            align-items: center;
+            gap: 32px;
+            padding-bottom: 52px;
+        }
+        @@media (max-width: 576px) {
+            .pf-hero-inner
+
+        {
+            flex-direction: column;
+            text-align: center;
+            gap: 20px;
+            padding-bottom: 44px;
+        }
+
+        }
+
+        /* Avatar */
+        .pf-avatar-wrap {
+            position: relative;
+            flex-shrink: 0;
+        }
+
+        .pf-avatar {
+            width: 96px;
+            height: 96px;
+            border-radius: 50%;
+            background: rgba(255,255,255,.15);
+            backdrop-filter: blur(12px);
+            border: 3px solid rgba(255,255,255,.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 8px 32px rgba(0,0,0,.2);
+            position: relative;
+            z-index: 2;
+            overflow: hidden;
+        }
+
+        .pf-avatar-initials {
+            font-size: 2.4rem;
+            color: #fff;
+            font-weight: 800;
+            line-height: 1;
+            text-shadow: 0 2px 8px rgba(0,0,0,.2);
+            position: relative;
+            z-index: 2;
+        }
+
+        .pf-avatar-icon {
+            display: none;
+        }
+
+        /* spinning ring */
+        .pf-avatar-ring {
+            position: absolute;
+            inset: -6px;
+            border-radius: 50%;
+            z-index: 1;
+            background: conic-gradient( rgba(255,255,255,.7) 0%, rgba(255,255,255,.05) 40%, rgba(255,255,255,.7) 80%, rgba(255,255,255,.05) 100% );
+            animation: pf-ring-spin 4s linear infinite;
+        }
+        @@keyframes pf-ring-spin {
+            from
+
+        {
+            transform: rotate(0deg);
+        }
+
+        to {
+            transform: rotate(360deg);
+        }
+
+        }
+
+        /* Verified badge on avatar */
+        .pf-verified-badge {
+            position: absolute;
+            bottom: 2px;
+            right: 2px;
+            z-index: 3;
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #10b981, #06b6d4);
+            border: 2px solid #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-size: 12px;
+            box-shadow: 0 2px 8px rgba(16,185,129,.4);
+        }
+
+        /* Hero text */
+        .pf-hero-text {
+            flex: 1;
+        }
+
+        .pf-name {
+            color: #fff;
+            margin: 0 0 6px;
+            text-shadow: 0 2px 12px rgba(0,0,0,.15);
+            font-size: clamp(1.5rem, 4vw, 2rem);
+        }
+
+        .pf-email-hero {
+            color: rgba(255,255,255,.78);
+            margin: 0 0 12px;
+            font-size: 14px;
+        }
+
+        .pf-hero-badges {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        @@media (max-width: 576px) {
+            .pf-hero-badges
+
+        {
+            justify-content: center;
+        }
+
+        }
+
+        .pf-hbadge {
+            display: inline-flex;
+            align-items: center;
+            padding: 5px 12px;
+            border-radius: 50px;
+            font-size: 12px;
+            font-weight: 700;
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255,255,255,.25);
+        }
+
+        .pf-hbadge-verified {
+            background: rgba(16,185,129,.25);
+            color: #d1fae5;
+            border-color: rgba(16,185,129,.35);
+        }
+
+        .pf-hbadge-pending {
+            background: rgba(245,158,11,.25);
+            color: #fef3c7;
+            border-color: rgba(245,158,11,.35);
+        }
+
+        .pf-hbadge-member {
+            background: rgba(255,255,255,.15);
+            color: rgba(255,255,255,.9);
+        }
+
+        /* Wave */
+        .pf-wave {
+            line-height: 0;
+        }
+
+            .pf-wave svg {
+                display: block;
+                width: 100%;
+                height: 50px;
+            }
+
+        /* ══ 3D TILT ══ */
+        .pf-tilt {
+            transition: transform .12s ease;
+            transform-style: preserve-3d;
+        }
+
+        /* ══ PAGE WRAPPER ══ */
+        .pf-page {
+            position: relative;
+            z-index: 1;
+            margin-top: -8px;
+            padding-top: 32px;
+            padding-bottom: 16px;
+        }
+
+        /* ══ CARD ══ */
+        .pf-card {
+            background: #fff;
+            border-radius: var(--pf-r);
+            box-shadow: var(--pf-shadow);
+            overflow: hidden;
+            border: 1px solid var(--pf-border);
+            margin-bottom: 20px;
+        }
+
+        /* Card header */
+        .pf-card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 18px 24px;
+            border-bottom: 1px solid var(--pf-border);
+            background: linear-gradient(135deg, #fafaff 0%, #f5f3ff 100%);
+        }
+
+        .pf-card-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--pf-dark);
+        }
+
+        .pf-card-icon {
+            width: 34px;
+            height: 34px;
+            border-radius: 9px;
+            background: var(--pf-g);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-size: 15px;
+            box-shadow: 0 4px 12px rgba(79,70,229,.3);
+        }
+
+        /* Edit button */
+        .pf-edit-btn {
+            display: inline-flex;
+            align-items: center;
+            padding: 7px 16px;
+            border-radius: 50px;
+            font-size: 13px;
+            font-weight: 700;
+            background: var(--pf-g);
+            color: #fff;
+            text-decoration: none;
+            box-shadow: 0 4px 14px rgba(79,70,229,.3);
+            transition: all .25s;
+        }
+
+            .pf-edit-btn:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 8px 22px rgba(79,70,229,.4);
+                color: #fff;
+            }
+
+        /* Card body */
+        .pf-card-body {
+            padding: 8px 0;
+        }
+
+        /* ══ FIELD ROWS ══ */
+        .pf-field {
+            display: flex;
+            align-items: flex-start;
+            gap: 16px;
+            padding: 16px 24px;
+            border-bottom: 1px solid var(--pf-border);
+            transition: background .2s;
+        }
+
+            .pf-field:last-child {
+                border-bottom: none;
+            }
+
+            .pf-field:hover {
+                background: #fafbff;
+            }
+
+        /* field icon */
+        .pf-field-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 17px;
+            flex-shrink: 0;
+            transition: transform .25s;
+        }
+
+        .pf-field:hover .pf-field-icon {
+            transform: scale(1.1);
+        }
+
+        .pf-fi-blue {
+            background: var(--pf-blue-lt);
+            color: var(--pf-blue);
+        }
+
+        .pf-fi-violet {
+            background: var(--pf-violet-lt);
+            color: var(--pf-violet);
+        }
+
+        .pf-fi-em {
+            background: var(--pf-em-lt);
+            color: var(--pf-em);
+        }
+
+        .pf-fi-amb {
+            background: var(--pf-amb-lt);
+            color: var(--pf-amb);
+        }
+
+        .pf-fi-pink {
+            background: var(--pf-pink-lt);
+            color: var(--pf-pink);
+        }
+
+        .pf-fi-teal {
+            background: var(--pf-teal-lt);
+            color: var(--pf-teal);
+        }
+
+        /* field content */
+        .pf-field-content {
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+            flex: 1;
+            min-width: 0;
+        }
+
+        .pf-field-label {
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            color: var(--pf-muted);
+        }
+
+        .pf-field-value {
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--pf-dark);
+            word-break: break-word;
+        }
+
+        .pf-val-name {
+            font-size: 16px;
+        }
+
+        .pf-val-cccd {
+            font-family: 'Courier New', monospace;
+            letter-spacing: 2px;
+        }
+
+        .pf-check-icon {
+            color: #10b981;
+            font-size: 15px;
+            margin-left: 6px;
+            vertical-align: middle;
+        }
+
+        .pf-empty {
+            color: var(--pf-muted) !important;
+            font-style: italic;
+            font-weight: 400 !important;
+        }
+
+        /* ── Section divider (identity block) ── */
+        .pf-section-divider {
+            display: flex;
+            align-items: center;
+            padding: 10px 24px;
+            background: linear-gradient(135deg, #fdf2f8, #f5f3ff);
+            border-top: 1px solid var(--pf-border);
+            border-bottom: 1px solid var(--pf-border);
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: .5px;
+            color: var(--pf-pink);
+            text-transform: uppercase;
+        }
+
+        /* ══ ACTION BUTTONS ══ */
+        .pf-actions {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-bottom: 8px;
+        }
+
+        .pf-btn-back {
+            display: inline-flex;
+            align-items: center;
+            padding: 10px 20px;
+            border-radius: 50px;
+            font-size: 14px;
+            font-weight: 600;
+            background: #fff;
+            color: var(--pf-text);
+            border: 1.5px solid var(--pf-border);
+            text-decoration: none;
+            transition: all .25s;
+            box-shadow: 0 2px 8px rgba(0,0,0,.06);
+        }
+
+            .pf-btn-back:hover {
+                border-color: var(--pf-violet);
+                color: var(--pf-violet);
+                transform: translateX(-3px);
+                box-shadow: 0 4px 16px rgba(124,58,237,.15);
+            }
+
+        .pf-btn-edit {
+            display: inline-flex;
+            align-items: center;
+            padding: 10px 24px;
+            border-radius: 50px;
+            font-size: 14px;
+            font-weight: 700;
+            background: var(--pf-g);
+            color: #fff;
+            text-decoration: none;
+            transition: all .25s;
+            box-shadow: 0 4px 16px rgba(79,70,229,.3);
+        }
+
+            .pf-btn-edit:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 8px 24px rgba(79,70,229,.4);
+                color: #fff;
+            }
+
+        /* ══ SCROLL REVEAL ══ */
+        .pf-reveal {
+            opacity: 0;
+            transform: translateY(22px);
+            transition: opacity .55s ease, transform .55s ease;
+        }
+
+            .pf-reveal.pf-visible {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        /* stagger for fields */
+        .pf-field.pf-reveal:nth-child(1) {
+            transition-delay: .05s;
+        }
+
+        .pf-field.pf-reveal:nth-child(2) {
+            transition-delay: .10s;
+        }
+
+        .pf-field.pf-reveal:nth-child(3) {
+            transition-delay: .15s;
+        }
+
+        .pf-field.pf-reveal:nth-child(4) {
+            transition-delay: .20s;
+        }
+
+        .pf-field.pf-reveal:nth-child(5) {
+            transition-delay: .25s;
+        }
+
+        .pf-field.pf-reveal:nth-child(6) {
+            transition-delay: .30s;
+        }
+
+        .pf-field.pf-reveal:nth-child(7) {
+            transition-delay: .35s;
+        }
+
+        /* ══ RESPONSIVE ══ */
+        @@media (max-width: 575px) {
+            .pf-card-header {
+                flex-direction: column;
+                gap: 12px;
+                align-items: flex-start;
+            }
+
+            .pf-field {
+                padding: 14px 16px;
+                gap: 12px;
+            }
+
+            .pf-field-icon {
+                width: 36px;
+                height: 36px;
+                font-size: 15px;
+            }
+
+            .pf-actions {
+                flex-direction: column-reverse;
+            }
+
+            .pf-btn-back, .pf-btn-edit {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .pf-hero {
+                padding-top: 36px;
+            }
+
+            .pf-avatar {
+                width: 80px;
+                height: 80px;
+            }
+
+            .pf-avatar-initials {
+                font-size: 2rem;
+            }
+        }
+    </style>
+}
+
+@section Scripts {
+    <script>
+        (function () {
+          /* ── 1. Scroll reveal ── */
+          const reveals = document.querySelectorAll('.pf-reveal');
+          const io = new IntersectionObserver((entries) => {
+            entries.forEach(e => {
+              if (e.isIntersecting) {
+                e.target.classList.add('pf-visible');
+                io.unobserve(e.target);
+              }
+            });
+          }, { threshold: 0.12 });
+          reveals.forEach(el => io.observe(el));
+
+          /* ── 2. 3D Tilt on avatar ── */
+          const tilt = document.getElementById('pfTilt');
+          if (tilt) {
+            tilt.addEventListener('mousemove', e => {
+              const r = tilt.getBoundingClientRect();
+              const cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+              const rx = ((e.clientY - cy) / (r.height / 2)) * -14;
+              const ry = ((e.clientX - cx) / (r.width  / 2)) *  14;
+              tilt.style.transform = `perspective(600px) rotateX(${rx}deg) rotateY(${ry}deg) scale(1.06)`;
+            });
+            tilt.addEventListener('mouseleave', () => {
+              tilt.style.transform = 'perspective(600px) rotateX(0) rotateY(0) scale(1)';
+            });
+          }
+
+          /* ── 3. Typewriter trên tên ── */
+          const nameEl = document.getElementById('pfName');
+          if (nameEl) {
+            const fullText = nameEl.textContent.trim();
+            nameEl.textContent = '';
+            nameEl.style.borderRight = '2px solid rgba(255,255,255,.7)';
+            nameEl.style.display = 'inline-block';
+            let i = 0;
+            const type = () => {
+              if (i <= fullText.length) {
+                nameEl.textContent = fullText.slice(0, i);
+                i++;
+                setTimeout(type, 55);
+              } else {
+                // blink rồi tắt cursor
+                setTimeout(() => { nameEl.style.borderRight = 'none'; }, 900);
+              }
+            };
+            type();
+          }
+
+          /* ── 4. Avatar initials gradient shimmer ── */
+          const avatar = document.querySelector('.pf-avatar');
+          if (avatar) {
+            let hue = 260;
+            setInterval(() => {
+              hue = (hue + 0.5) % 360;
+              avatar.style.background = `linear-gradient(135deg,
+                hsl(${hue},70%,45%),
+                hsl(${(hue+40)%360},75%,55%))`;
+            }, 50);
+          }
+        })();
+    </script>
+}

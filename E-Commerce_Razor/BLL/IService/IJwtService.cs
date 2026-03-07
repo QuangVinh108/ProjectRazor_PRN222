@@ -10,6 +10,10 @@ namespace BLL.IService
 {
     public interface IJwtService
     {
-        
+        string GenerateAccessToken(User user);
+        string GenerateRefreshToken();
+        bool ValidateAccessToken(string token);
+        ClaimsPrincipal? GetPrincipalFromToken(string token);
+        RefreshToken? CreateRefreshToken(User user, string refreshToken);
     }
 }

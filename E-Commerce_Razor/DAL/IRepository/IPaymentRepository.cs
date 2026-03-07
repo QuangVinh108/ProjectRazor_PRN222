@@ -6,7 +6,8 @@ using System.Threading.Tasks;
 
 namespace DAL.IRepository
 {
-    internal interface IPaymentRepository
+    public interface IPaymentRepository
     {
+        Task<int> UpdateStatusAsync(int orderId, string status, DateTime? padiAt);
     }
 }

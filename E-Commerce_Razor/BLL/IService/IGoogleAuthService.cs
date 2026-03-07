@@ -1,3 +1,4 @@
+using BLL.DTOs;
 using DAL.Entities;
 using System;
 using System.Collections.Generic;
@@ -9,6 +10,7 @@ namespace BLL.IService
 {
     public interface IGoogleAuthService
     {
-        
+        //Task<GoogleUserInfo?> VerifyGoogleTokenAsync(string idToken);
+        //Task<GoogleAuthResult> HandleGoogleLoginAsync(GoogleUserInfo googleUser);
     }
 }

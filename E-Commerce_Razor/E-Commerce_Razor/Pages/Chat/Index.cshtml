@@ -1,0 +1,240 @@
+﻿@page
+@{
+    ViewData["Title"] = "Quản lý Chat Hỗ trợ";
+    Layout = "_AdminLayout";
+}
+
+<div class="container-fluid mt-4">
+    <h3 class="mb-4"><i class="bi bi-chat-square-text-fill text-primary"></i> Hỗ trợ Khách hàng</h3>
+
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-dark text-white">
+                    <h6 class="mb-0">Khách đang chờ (<span id="userCount">0</span>)</h6>
+                </div>
+                <div class="card-body p-0">
+                    <div class="list-group list-group-flush" id="customerList" style="max-height: 600px; overflow-y: auto;">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-8">
+            <div class="card shadow-sm h-100 d-none" id="adminChatArea" style="display: flex; flex-direction: column;">
+                <div class="card-header bg-primary text-white d-flex justify-content-between flex-shrink-0">
+                    <h6 class="mb-0">Đang chat với: <strong id="currentCustomerName">...</strong></h6>
+                    <small id="currentCustomerId" class="d-none"></small>
+                </div>
+
+                <div class="card-body" id="adminChatMessages" style="height: 450px; overflow-y: auto; background: #f8f9fa;">
+                </div>
+
+                <div id="adminEmojiPickerContainer" class="d-none border-top flex-shrink-0" style="height: 250px; overflow-y: auto; background-color: white;"></div>
+
+                <div class="card-footer bg-white border-0 py-3 flex-shrink-0">
+                    <div class="input-group bg-light rounded-pill border p-1 d-flex align-items-center">
+
+                        <button class="btn btn-sm btn-link text-secondary rounded-circle px-2" onclick="document.getElementById('adminChatFileInput').click()" title="Gửi ảnh/file">
+                            <i class="bi bi-paperclip fs-5"></i>
+                        </button>
+                        <input type="file" id="adminChatFileInput" class="d-none" accept="image/*, .pdf, .doc, .docx, .xls, .xlsx, .txt, .zip, .rar" onchange="handleAdminFileUpload(event)">
+
+                        <input type="text" id="adminChatInput" class="form-control border-0 bg-transparent shadow-none" placeholder="Nhập câu trả lời..." onkeypress="handleAdminEnter(event)">
+
+                        <button class="btn btn-sm btn-link text-warning rounded-circle px-2" id="adminEmojiBtn" title="Biểu tượng cảm xúc">
+                            <i class="bi bi-emoji-smile fs-5"></i>
+                        </button>
+
+                        <button class="btn btn-primary btn-sm rounded-pill px-4 ms-1 fw-bold" onclick="sendReply()">
+                            <i class="bi bi-send-fill me-1"></i> Gửi
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card shadow-sm h-100 d-flex justify-content-center align-items-center text-muted" id="emptyChatArea" style="min-height: 500px;">
+                <div class="text-center">
+                    <i class="bi bi-chat-dots" style="font-size: 4rem; opacity: 0.3;"></i>
+                    <p class="mt-2">Chọn một khách hàng bên trái để bắt đầu chat</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.12/signalr.min.js"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/picmo@5.7.6/dist/umd/index.js"></script>
+
+    <script>
+        const adminConnection = new signalR.HubConnectionBuilder().withUrl("/appHub").build();
+        let chatSessions = {};
+        let activeCustomerId = null;
+
+        // 1. NHẬN TIN NHẮN TỪ KHÁCH
+        adminConnection.on("ReceiveMessageFromCustomer", function (customerId, customerName, message) {
+            if (!chatSessions[customerId]) {
+                chatSessions[customerId] = { name: customerName, messages: [] };
+                renderCustomerList();
+            }
+            chatSessions[customerId].messages.push({ sender: customerName, msg: message, isMe: false });
+
+            if (activeCustomerId === customerId) {
+                renderMessages();
+            } else {
+                document.getElementById('btn-cust-' + customerId).classList.add('fw-bold', 'text-primary');
+            }
+        });
+
+        // 2. NHẬN LẠI TIN NHẮN CỦA CHÍNH MÌNH (ECHO)
+        adminConnection.on("ReceiveReplyEcho", function (customerId, sender, message) {
+            chatSessions[customerId].messages.push({ sender: sender, msg: message, isMe: true });
+            if (activeCustomerId === customerId) renderMessages();
+        });
+
+        adminConnection.start().catch(err => console.error(err));
+
+        function renderCustomerList() {
+            const list = document.getElementById('customerList');
+            list.innerHTML = '';
+            let count = 0;
+            for (let id in chatSessions) {
+                count++;
+                list.innerHTML += `
+                    <button id="btn-cust-${id}" class="list-group-item list-group-item-action py-3 d-flex align-items-center" onclick="openChat('${id}')">
+                        <i class="bi bi-person-circle fs-3 text-secondary me-3"></i>
+                        <span class="fw-semibold">${chatSessions[id].name}</span>
+                    </button>
+                `;
+            }
+            document.getElementById('userCount').innerText = count;
+        }
+
+        function openChat(customerId) {
+            activeCustomerId = customerId;
+            document.getElementById('emptyChatArea').classList.add('d-none');
+            document.getElementById('adminChatArea').classList.remove('d-none');
+            document.getElementById('currentCustomerName').innerText = chatSessions[customerId].name;
+            document.getElementById('btn-cust-' + customerId).classList.remove('fw-bold', 'text-primary');
+
+            renderMessages();
+            document.getElementById('adminChatInput').focus();
+        }
+
+        function renderMessages() {
+            const msgBox = document.getElementById('adminChatMessages');
+            msgBox.innerHTML = '';
+            const msgs = chatSessions[activeCustomerId].messages;
+
+            msgs.forEach(m => {
+                const align = m.isMe ? 'text-end' : 'text-start';
+                const bg = m.isMe ? 'bg-primary text-white' : 'bg-white border shadow-sm';
+                msgBox.innerHTML += `
+                    <div class="mb-3 ${align}">
+                        <small class="text-muted d-block mb-1" style="font-size: 11px;">${m.sender}</small>
+                        <div class="d-inline-block p-2 rounded-3 ${bg}" style="max-width: 75%; text-align: left; word-break: break-word;">
+                            ${m.msg}
+                        </div>
+                    </div>
+                `;
+            });
+            msgBox.scrollTop = msgBox.scrollHeight;
+        }
+
+        function sendReply() {
+            const input = document.getElementById('adminChatInput');
+            const msg = input.value.trim();
+            if (msg && activeCustomerId) {
+                adminConnection.invoke("ReplyToCustomer", activeCustomerId, msg).catch(err => console.error(err));
+                input.value = '';
+            }
+        }
+
+        function handleAdminEnter(e) {
+            if (e.key === 'Enter') sendReply();
+        }
+
+        // ==========================================
+        // EMOJI INLINE CHO ADMIN (SỬ DỤNG PICMO)
+        // ==========================================
+        document.addEventListener('DOMContentLoaded', () => {
+            const emojiBtn = document.getElementById('adminEmojiBtn');
+            const chatInput = document.getElementById('adminChatInput');
+            const emojiContainer = document.getElementById('adminEmojiPickerContainer');
+            const chatMessages = document.getElementById('adminChatMessages');
+
+            let picker = null;
+
+            if (emojiBtn && typeof picmo !== 'undefined') {
+                emojiBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+
+                    // Khởi tạo bảng Emoji nhúng thẳng vào HTML
+                    if (!picker) {
+                        picker = picmo.createPicker({
+                            rootElement: emojiContainer,
+                            showSearch: true,
+                            autoFocusSearch: false
+                        });
+
+                        picker.addEventListener('emoji:select', selection => {
+                            chatInput.value += selection.emoji;
+                            chatInput.focus();
+                        });
+                    }
+
+                    // Ẩn/hiện container
+                    emojiContainer.classList.toggle('d-none');
+                    // Cuộn chat xuống cuối để không bị che
+                    chatMessages.scrollTop = chatMessages.scrollHeight;
+                });
+            }
+        });
+
+        // ==========================================
+        // UPLOAD FILE & ẢNH CHO ADMIN
+        // ==========================================
+        function handleAdminFileUpload(event) {
+            if (!activeCustomerId) {
+                alert("Vui lòng chọn khách hàng để gửi file!");
+                return;
+            }
+
+            const file = event.target.files[0];
+            if (!file) return;
+
+            // Chặn file > 5MB
+            if (file.size > 5 * 1024 * 1024) {
+                alert("File quá lớn. Vui lòng chọn file dưới 5MB.");
+                event.target.value = '';
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const base64Data = e.target.result;
+                let htmlMessage = "";
+
+                if (file.type.startsWith("image/")) {
+                    htmlMessage = `<img src="${base64Data}" style="max-width: 100%; border-radius: 8px; cursor: pointer; max-height: 150px; object-fit: contain;" onclick="window.open(this.src, '_blank')" alt="Hình ảnh" />`;
+                } else {
+                    htmlMessage = `
+                        <a href="${base64Data}" download="${file.name}" class="d-inline-flex align-items-center text-decoration-none text-dark bg-white border p-2 rounded shadow-sm">
+                            <i class="bi bi-file-earmark-arrow-down-fill text-primary fs-4 me-2"></i>
+                            <div class="text-truncate" style="max-width: 150px; font-size: 0.85rem;">
+                                <strong class="d-block text-truncate">${file.name}</strong>
+                                <span class="text-muted small">${(file.size / 1024).toFixed(1)} KB</span>
+                            </div>
+                        </a>`;
+                }
+
+                adminConnection.invoke("ReplyToCustomer", activeCustomerId, htmlMessage).catch(err => console.error(err));
+            };
+            reader.readAsDataURL(file);
+            event.target.value = '';
+        }
+    </script>
+}

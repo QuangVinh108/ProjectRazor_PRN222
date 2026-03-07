@@ -1,51 +1,735 @@
-﻿<!DOCTYPE html>
-<html lang="en">
+<!DOCTYPE html>
+<html lang="vi">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - E_Commerce_Razor</title>
+    <title>@ViewData["Title"] - E-Commerce</title>
+
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/E_Commerce_Razor.styles.css" asp-append-version="true" />
+
+    @* ✅ Render page-specific styles *@
+    @await RenderSectionAsync("Styles", required: false)
+
+    <style>
+        /* ══════════════════════════════════════════════════════════════
+                       GLOBAL NAVBAR + DROPDOWN UI OVERHAUL
+                    ══════════════════════════════════════════════════════════════ */
+        :root {
+            --nav-g: linear-gradient(135deg, #4f46e5 0%, #7c3aed 60%, #ec4899 100%);
+            --nav-g-soft: linear-gradient(135deg, rgba(79,70,229,.08) 0%, rgba(124,58,237,.06) 100%);
+            --nav-accent: #7c3aed;
+            --nav-shadow: 0 20px 60px rgba(79,70,229,.18), 0 4px 16px rgba(0,0,0,.10);
+            --nav-r: 16px;
+        }
+
+        /* ── 1. Z-index fix (always wins over page CSS) ── */
+        main[role="main"],
+        main.pb-3 {
+            position: relative !important;
+            z-index: 0 !important;
+            isolation: isolate !important;
+        }
+
+        .navbar, nav.navbar, header > nav, header nav.navbar {
+            position: sticky !important;
+            top: 0 !important;
+            z-index: 1050 !important;
+        }
+
+            .dropdown-menu,
+            .navbar .dropdown-menu,
+            .navbar-nav .dropdown-menu {
+                z-index: 9999 !important;
+            }
+
+        body > header {
+            position: relative !important;
+            z-index: 1050 !important;
+        }
+
+        /* ── 2. Navbar bar polish ── */
+        nav.navbar {
+            background: rgba(255,255,255,.92) !important;
+            backdrop-filter: blur(16px) saturate(180%) !important;
+            -webkit-backdrop-filter: blur(16px) saturate(180%) !important;
+            border-bottom: 1px solid rgba(124,58,237,.12) !important;
+            box-shadow: 0 1px 24px rgba(79,70,229,.08), 0 1px 4px rgba(0,0,0,.04) !important;
+            padding-top: 10px !important;
+            padding-bottom: 10px !important;
+        }
+
+        .navbar-brand {
+            background: var(--nav-g) !important;
+            -webkit-background-clip: text !important;
+            -webkit-text-fill-color: transparent !important;
+            background-clip: text !important;
+            font-weight: 900 !important;
+            letter-spacing: -.5px !important;
+            transition: opacity .2s !important;
+        }
+
+            .navbar-brand:hover {
+                opacity: .8 !important;
+            }
+
+            .navbar-brand i {
+                -webkit-text-fill-color: #4f46e5 !important;
+                color: #4f46e5 !important;
+            }
+
+        .navbar-nav .nav-link {
+            font-weight: 600 !important;
+            font-size: 14px !important;
+            color: #334155 !important;
+            padding: 8px 14px !important;
+            border-radius: 10px !important;
+            transition: background .2s, color .2s !important;
+            position: relative !important;
+        }
+
+            .navbar-nav .nav-link:hover,
+            .navbar-nav .nav-link:focus {
+                color: var(--nav-accent) !important;
+                background: var(--nav-g-soft) !important;
+            }
+
+        /* ── 3. Dropdown TOGGLE button ── */
+        .navbar-nav .dropdown-toggle {
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 8px !important;
+            background: var(--nav-g) !important;
+            color: #fff !important;
+            border-radius: 50px !important;
+            padding: 8px 18px !important;
+            font-weight: 700 !important;
+            font-size: 13.5px !important;
+            border: none !important;
+            box-shadow: 0 4px 14px rgba(79,70,229,.28) !important;
+            transition: all .25s !important;
+            letter-spacing: .1px !important;
+        }
+
+            .navbar-nav .dropdown-toggle::after {
+                margin-left: 4px !important;
+                border-top-color: rgba(255,255,255,.8) !important;
+                transition: transform .3s !important;
+            }
+
+            .navbar-nav .dropdown-toggle:hover,
+            .navbar-nav .dropdown-toggle:focus {
+                box-shadow: 0 8px 22px rgba(79,70,229,.40) !important;
+                transform: translateY(-1px) !important;
+                color: #fff !important;
+            }
+
+        .navbar-nav .nav-item.show > .dropdown-toggle::after {
+            transform: rotate(180deg) !important;
+        }
+
+        /* ── 4. Dropdown PANEL ── */
+        .navbar-nav .dropdown-menu {
+            min-width: 220px !important;
+            padding: 0 !important;
+            border: none !important;
+            border-radius: var(--nav-r) !important;
+            box-shadow: var(--nav-shadow) !important;
+            background: rgba(255,255,255,.97) !important;
+            backdrop-filter: blur(24px) saturate(180%) !important;
+            -webkit-backdrop-filter: blur(24px) saturate(180%) !important;
+            overflow: hidden !important;
+        }
+
+            .navbar-nav .dropdown-menu.show {
+                animation: navDropIn .22s cubic-bezier(.34,1.56,.64,1) forwards !important;
+            }
+
+        @@keyframes navDropIn {
+            from
+
+        {
+            opacity: 0;
+            transform: translateY(-10px) scale(.96);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+
+        }
+
+        .navbar-nav .dropdown-menu::before {
+            content: '' !important;
+            display: block !important;
+            height: 4px !important;
+            background: var(--nav-g) !important;
+            border-radius: var(--nav-r) var(--nav-r) 0 0 !important;
+        }
+
+        .navbar-nav .dropdown-menu li:not(:first-child) {
+            padding: 0 8px !important;
+        }
+
+        .navbar-nav .dropdown-menu li:first-child {
+            padding: 0 !important;
+        }
+
+        /* ── 5. Dropdown ITEMS ── */
+        .navbar-nav .dropdown-item {
+            display: flex !important;
+            align-items: center !important;
+            gap: 10px !important;
+            padding: 10px 16px !important;
+            font-size: 13.5px !important;
+            font-weight: 600 !important;
+            color: #334155 !important;
+            border-radius: 10px !important;
+            margin: 2px 0 !important;
+            transition: background .18s, color .18s, transform .18s !important;
+            position: relative !important;
+        }
+
+            .navbar-nav .dropdown-item:hover,
+            .navbar-nav .dropdown-item:focus {
+                background: var(--nav-g-soft) !important;
+                color: var(--nav-accent) !important;
+                transform: translateX(3px) !important;
+            }
+
+            .navbar-nav .dropdown-item::before {
+                content: '' !important;
+                width: 6px !important;
+                height: 6px !important;
+                border-radius: 50% !important;
+                background: var(--nav-g) !important;
+                opacity: 0 !important;
+                flex-shrink: 0 !important;
+                transition: opacity .18s !important;
+            }
+
+            .navbar-nav .dropdown-item:hover::before,
+            .navbar-nav .dropdown-item:focus::before {
+                opacity: 1 !important;
+            }
+
+        /* ── 6. Divider & Logout ── */
+        .navbar-nav .dropdown-divider {
+            margin: 6px 16px !important;
+            border-color: rgba(124,58,237,.12) !important;
+            border-top-width: 1.5px !important;
+        }
+
+        .navbar-nav .dropdown-menu form button.dropdown-item {
+            width: 100% !important;
+            text-align: left !important;
+            background: none !important;
+            border: none !important;
+            cursor: pointer !important;
+        }
+
+            .navbar-nav .dropdown-menu form button.dropdown-item:hover {
+                background: linear-gradient(135deg, rgba(239,68,68,.08), rgba(251,113,133,.05)) !important;
+                color: #dc2626 !important;
+            }
+
+        .navbar-nav .dropdown-menu > li:last-child {
+            padding-bottom: 8px !important;
+        }
+
+        .navbar-nav .dropdown-menu > li:nth-child(2) {
+            padding-top: 6px !important;
+        }
+
+        /* ── 7. Wishlist badge ── */
+        #wishlistBadge {
+            font-size: 0.6em !important;
+            padding: 2px 5px !important;
+            min-width: 18px !important;
+            line-height: 1.4 !important;
+            box-shadow: 0 2px 6px rgba(220,38,38,.35) !important;
+        }
+
+        /* ── 8. Mobile ── */
+        @@media (max-width: 991px) {
+            .navbar-nav .dropdown-toggle
+
+        {
+            width: 100% !important;
+            border-radius: 10px !important;
+            justify-content: space-between !important;
+            box-shadow: none !important;
+            margin-bottom: 4px !important;
+        }
+
+        .navbar-nav .dropdown-menu {
+            box-shadow: 0 4px 16px rgba(79,70,229,.12) !important;
+            margin-top: 4px !important;
+        }
+
+            .navbar-nav .dropdown-menu.show {
+                animation: none !important;
+            }
+
+        }
+    </style>
 </head>
+
 <body>
-    <header>
-        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
-            <div class="container">
-                <a class="navbar-brand" asp-area="" asp-page="/Index">E_Commerce_Razor</a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
-                        aria-expanded="false" aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
-                    <ul class="navbar-nav flex-grow-1">
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-page="/Index">Home</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-page="/Privacy">Privacy</a>
-                        </li>
-                    </ul>
+    <button class="scroll-top" id="scrollTop">
+        <i class="bi bi-arrow-up"></i>
+    </button>
+
+    @* Navbar chỉ hiện KHÔNG phải Login/Register *@
+    @if (!(ViewContext.RouteData.Values["page"]?.ToString() ?? "").StartsWith("/Account"))
+    {
+        <header>
+            <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm sticky-top">
+                <div class="container-fluid px-4">
+                    <a class="navbar-brand fw-bold fs-3" asp-page="/Index">
+                        <i class="bi bi-shop text-primary"></i> E-Shop
+                    </a>
+                    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                        <span class="navbar-toggler-icon"></span>
+                    </button>
+                    <div class="collapse navbar-collapse" id="navbarNav">
+                        <ul class="navbar-nav me-auto">
+                            <li class="nav-item">
+                                <a class="nav-link" asp-page="/Index">Trang chủ</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" asp-page="/Shop/Index">Sản phẩm</a>
+                            </li>
+
+                            @* Orders: visible only to authenticated users *@
+                            @if (User?.Identity?.IsAuthenticated == true)
+                            {
+                                <li class="nav-item">
+                                    <a class="nav-link" asp-page="/Order/Index">
+                                        Đơn hàng
+                                    </a>
+                                </li>
+                            }
+
+                            @* ✅ WISHLIST *@
+                            <li class="nav-item position-relative">
+                                <a class="nav-link position-relative" id="wishlistLink" asp-page="/Wishlist/Index">
+                                    Wishlist
+                                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger ms-1" style="font-size: 0.65em; display: none;" id="wishlistBadge">0</span>
+                                </a>
+                            </li>
+
+                            @if (User.IsInRole("Admin"))
+                            {
+                                <li class="nav-item dropdown">
+                                    <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">Quản lý</a>
+                                    <ul class="dropdown-menu">
+                                        <li><a class="dropdown-item" asp-page="/Admin/User/Index">Quản lý User</a></li>
+                                        <li><a class="dropdown-item" asp-page="/Admin/Product/Index">Quản lý Sản phẩm</a></li>
+                                        <li>
+                                            <a class="dropdown-item" asp-page="/Admin/Inventory/Index">
+                                                <i class="bi bi-box-seam"></i> Quản lý Kho hàng
+                                            </a>
+                                        </li>
+                                    </ul>
+                                </li>
+                            }
+                        </ul>
+                        <partial name="_LoginPartial" />
+                    </div>
                 </div>
-            </div>
-        </nav>
-    </header>
-    <div class="container">
+            </nav>
+        </header>
+
         <main role="main" class="pb-3">
             @RenderBody()
         </main>
+
+        <footer class="modern-footer">
+            <div class="footer-main">
+                <div class="container-fluid px-4 px-lg-5">
+                    <div class="row g-4">
+                        <div class="col-lg-4 col-md-6">
+                            <div class="footer-brand">
+                                <h3 class="footer-logo"><i class="bi bi-shop"></i> E-Shop</h3>
+                                <p class="footer-description">
+                                    Nền tảng mua sắm trực tuyến hàng đầu Việt Nam.
+                                    Hàng ngàn sản phẩm chính hãng, giá tốt nhất thị trường.
+                                </p>
+                                <div class="footer-social">
+                                    <a href="#" class="social-link" title="Facebook"><i class="bi bi-facebook"></i></a>
+                                    <a href="#" class="social-link" title="Instagram"><i class="bi bi-instagram"></i></a>
+                                    <a href="#" class="social-link" title="Twitter"><i class="bi bi-twitter"></i></a>
+                                    <a href="#" class="social-link" title="YouTube"><i class="bi bi-youtube"></i></a>
+                                    <a href="#" class="social-link" title="TikTok"><i class="bi bi-tiktok"></i></a>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-lg-2 col-md-6 col-6">
+                            <h5 class="footer-title">Mua sắm</h5>
+                            <ul class="footer-links">
+                                <li><a asp-page="/Product/Index">Sản phẩm</a></li>
+                                <li><a asp-page="/Shop/Index">Cửa hàng</a></li>
+                                <li><a href="#deals">Khuyến mãi</a></li>
+                                <li><a href="#bestseller">Bán chạy</a></li>
+                                <li><a href="#newproducts">Sản phẩm mới</a></li>
+                            </ul>
+                        </div>
+
+                        <div class="col-lg-2 col-md-6 col-6">
+                            <h5 class="footer-title">Hỗ trợ</h5>
+                            <ul class="footer-links">
+                                <li><a href="#faq">Câu hỏi thường gặp</a></li>
+                                <li><a href="#shipping">Chính sách vận chuyển</a></li>
+                                <li><a href="#returns">Đổi trả hàng</a></li>
+                                <li><a href="#warranty">Bảo hành</a></li>
+                                <li><a href="#contact">Liên hệ</a></li>
+                            </ul>
+                        </div>
+
+                        <div class="col-lg-2 col-md-6 col-6">
+                            <h5 class="footer-title">Chính sách</h5>
+                            <ul class="footer-links">
+                                <li><a asp-page="/Privacy">Bảo mật</a></li>
+                                <li><a href="#terms">Điều khoản dịch vụ</a></li>
+                                <li><a href="#payment">Thanh toán</a></li>
+                                <li><a href="#security">Bảo mật thông tin</a></li>
+                                <li><a href="#complaint">Giải quyết khiếu nại</a></li>
+                            </ul>
+                        </div>
+
+                        <div class="col-lg-2 col-md-6 col-6">
+                            <h5 class="footer-title">Liên hệ</h5>
+                            <ul class="footer-contact">
+                                <li><i class="bi bi-telephone"></i><span>1900-xxxx</span></li>
+                                <li><i class="bi bi-envelope"></i><span>support@eshop.vn</span></li>
+                                <li><i class="bi bi-geo-alt"></i><span>Hà Nội, Việt Nam</span></li>
+                                <li><i class="bi bi-clock"></i><span>24/7 hỗ trợ</span></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="footer-bottom">
+                <div class="container-fluid px-4 px-lg-5">
+                    <div class="row align-items-center">
+                        <div class="col-md-6 text-center text-md-start mb-2 mb-md-0">
+                            <p class="footer-copyright">
+                                &copy; 2026 <strong>E-Shop</strong>. Bản quyền thuộc về E-Commerce Platform.
+                            </p>
+                        </div>
+                        <div class="col-md-6 text-center text-md-end">
+                            <div class="footer-payments">
+                                <span class="payment-label">Thanh toán:</span>
+                                <img src="https://img.icons8.com/color/48/visa.png" alt="Visa" class="payment-icon">
+                                <img src="https://img.icons8.com/color/48/mastercard.png" alt="Mastercard" class="payment-icon">
+                                <img src="https://img.icons8.com/color/48/paypal.png" alt="PayPal" class="payment-icon">
+                                <img src="https://img.icons8.com/color/48/momo.png" alt="Momo" class="payment-icon">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </footer>
+
+        @* ✅ MODAL YÊU CẦU ĐĂNG NHẬP *@
+        <div class="modal fade" id="loginRequiredModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content border-0 shadow-lg">
+                    <div class="modal-header border-0 pb-0">
+                        <h5 class="modal-title fw-bold" id="loginRequiredModalLabel">
+                            <i class="bi bi-heart-fill text-danger"></i> Yêu cầu đăng nhập
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body text-center py-4">
+                        <div class="mb-4">
+                            <i class="bi bi-lock-fill text-primary" style="font-size: 4rem; opacity: 0.3;"></i>
+                        </div>
+                        <h5 class="fw-bold mb-3" id="loginModalTitleText">Bạn cần đăng nhập để sử dụng tính năng này</h5>
+                        <p class="text-muted mb-0">Đăng nhập để trải nghiệm đầy đủ các dịch vụ của E-Shop</p>
+                    </div>
+                    <div class="modal-footer border-0 justify-content-center pt-0 pb-4">
+                        <a href="/Account/Login?returnUrl=@Uri.EscapeDataString(Context.Request.Path + Context.Request.QueryString.ToString())" id="goLoginBtn" class="btn btn-primary px-4 py-2">
+                            <i class="bi bi-box-arrow-in-right"></i> Đăng nhập ngay
+                        </a>
+                        <button type="button" class="btn btn-outline-secondary px-4 py-2" data-bs-dismiss="modal">Để sau</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="container py-5">
+            @RenderBody()
+        </div>
+    }
+
+    <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 1050">
+        <div class="card shadow-lg border-0 d-none" id="chatBox" style="width: 340px; height: 500px; border-radius: 12px 12px 0 0; overflow: hidden; display: flex; flex-direction: column;">
+            <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center flex-shrink-0" style="border-radius: 12px 12px 0 0;">
+                <h6 class="mb-0 fw-bold"><i class="bi bi-chat-dots-fill me-2"></i> Hỗ trợ trực tuyến</h6>
+                <button type="button" class="btn-close btn-close-white" onclick="toggleChat()"></button>
+            </div>
+
+            <div class="card-body p-2" id="chatMessages" style="flex-grow: 1; overflow-y: auto; background: #f8f9fa;">
+                <div class="text-center text-muted small my-2">Bắt đầu cuộc trò chuyện</div>
+            </div>
+
+            <div id="emojiPickerContainer" class="d-none border-top flex-shrink-0" style="height: 250px; background: #fff;"></div>
+
+            <div class="card-footer p-2 bg-white border-0 flex-shrink-0">
+                <div class="input-group bg-light rounded-pill border p-1 d-flex align-items-center">
+                    <button class="btn btn-sm btn-link text-secondary rounded-circle px-2" onclick="document.getElementById('chatFileInput').click()" title="Đính kèm ảnh/file">
+                        <i class="bi bi-paperclip fs-5"></i>
+                    </button>
+                    <input type="file" id="chatFileInput" class="d-none" accept="image/*, .pdf, .doc, .docx, .xls, .xlsx, .txt, .zip, .rar" onchange="handleChatFileUpload(event)">
+
+                    <input type="text" id="chatInput" class="form-control border-0 bg-transparent shadow-none" placeholder="Nhập tin nhắn..." onkeypress="handleEnterChat(event)">
+
+                    <button class="btn btn-sm btn-link text-warning rounded-circle px-2" id="emojiButton" title="Biểu tượng cảm xúc">
+                        <i class="bi bi-emoji-smile fs-5"></i>
+                    </button>
+
+                    <button class="btn btn-primary btn-sm rounded-pill px-3 ms-1" onclick="sendChatMessage()">
+                        <i class="bi bi-send-fill"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <button class="btn btn-primary rounded-circle shadow-lg mt-2 float-end d-flex align-items-center justify-content-center"
+                id="btnOpenChat" onclick="toggleChat()"
+                style="width: 60px; height: 60px; transition: transform 0.2s;">
+            <i class="bi bi-chat-dots-fill fs-3"></i>
+        </button>
     </div>
 
-    <footer class="border-top footer text-muted">
-        <div class="container">
-            &copy; 2026 - E_Commerce_Razor - <a asp-area="" asp-page="/Privacy">Privacy</a>
+    <div class="position-fixed top-0 end-0 p-3" style="z-index: 9999">
+        <div id="wishlistToast" class="toast align-items-center text-white bg-danger border-0 shadow-lg" role="alert">
+            <div class="d-flex">
+                <div class="toast-body fw-bold">
+                    <i class="bi bi-heart-fill me-2"></i> Đã cập nhật Wishlist!
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+            </div>
         </div>
-    </footer>
+    </div>
 
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.12/signalr.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/picmo@5.7.6/dist/umd/index.js"></script>
+
+    <script>
+        (function () {
+          function initDropdownsFixed() {
+            if (typeof bootstrap === 'undefined' || !bootstrap.Dropdown) return;
+            document.querySelectorAll('[data-bs-toggle="dropdown"]').forEach(function (el) {
+              var inst = bootstrap.Dropdown.getInstance(el);
+              if (inst) inst.dispose();
+              new bootstrap.Dropdown(el, {
+                popperConfig: function (defaultConfig) {
+                  return Object.assign({}, defaultConfig, { strategy: 'fixed' });
+                }
+              });
+            });
+          }
+          if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initDropdownsFixed);
+          } else {
+            initDropdownsFixed();
+          }
+        })();
+    </script>
+
+    <script>
+        const isAuthenticatedUser = @Json.Serialize(User?.Identity?.IsAuthenticated ?? false);
+    </script>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const wishlistLink = document.getElementById("wishlistLink");
+            if (!wishlistLink) return;
+
+            wishlistLink.addEventListener("click", function (e) {
+                if (isAuthenticatedUser) return;
+                e.preventDefault();
+                document.getElementById('loginRequiredModalLabel').innerHTML = '<i class="bi bi-heart-fill text-danger"></i> Yêu cầu đăng nhập';
+                document.getElementById('loginModalTitleText').innerText = 'Bạn cần đăng nhập để sử dụng Wishlist';
+                bootstrap.Modal.getOrCreateInstance(document.getElementById("loginRequiredModal")).show();
+            });
+        });
+
+        $(document).ready(function() {
+            if (isAuthenticatedUser) {
+                updateWishlistCount();
+                setInterval(updateWishlistCount, 30000);
+            }
+        });
+
+        async function updateWishlistCount() {
+            try {
+                // Razor Pages endpoint for Count handler
+                const response = await fetch('/Wishlist?handler=Count');
+                if (!response.ok) return;
+
+                const data = await response.json();
+                const count = typeof data === 'number' ? data : (data?.count ?? 0);
+
+                const badge = document.getElementById('wishlistBadge');
+                if (badge) {
+                    badge.textContent = count;
+                    badge.style.display = count > 0 ? 'block' : 'none';
+                }
+            } catch (e) { console.log('Failed to load wishlist count:', e); }
+        }
+    </script>
+
+    <script>
+        let chatConnection = null;
+
+        if (isAuthenticatedUser) {
+            chatConnection = new signalR.HubConnectionBuilder().withUrl("/appHub").build();
+
+            chatConnection.on("ReceiveMessage", function (user, message) {
+                const msgDiv = document.getElementById("chatMessages");
+                const isMyMsg = (user === "Bạn");
+                const alignClass = isMyMsg ? "text-end" : "text-start";
+                const bgClass = isMyMsg ? "bg-primary text-white" : "bg-white border border-success border-2 shadow-sm";
+
+                const msgHtml = `
+                    <div class="mb-2 ${alignClass}">
+                        <small class="d-block text-muted mb-1" style="font-size: 10px; font-weight: ${!isMyMsg ? 'bold' : 'normal'}">${user}</small>
+                        <div class="d-inline-block p-2 rounded-3 shadow-sm ${bgClass}" style="max-width: 85%; text-align: left; word-break: break-word; font-size: 0.9rem;">
+                            ${message}
+                        </div>
+                    </div>
+                `;
+
+                msgDiv.insertAdjacentHTML('beforeend', msgHtml);
+                msgDiv.scrollTop = msgDiv.scrollHeight;
+            });
+
+            chatConnection.start().catch(err => console.error("SignalR Chat Error: ", err.toString()));
+
+            // KHỞI TẠO BẢNG EMOJI INLINE
+            document.addEventListener('DOMContentLoaded', () => {
+                const emojiButton = document.getElementById('emojiButton');
+                const chatInput = document.getElementById('chatInput');
+                const emojiPickerContainer = document.getElementById('emojiPickerContainer');
+                const chatMessages = document.getElementById('chatMessages');
+
+                let picker = null;
+
+                if (emojiButton && typeof picmo !== 'undefined') {
+                    emojiButton.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+
+                        emojiPickerContainer.classList.toggle('d-none');
+
+                        if (!picker && !emojiPickerContainer.classList.contains('d-none')) {
+                            picker = picmo.createPicker({
+                                rootElement: emojiPickerContainer,
+                                showSearch: false,
+                                visibleRows: 4
+                            });
+
+                            picker.addEventListener('emoji:select', selection => {
+                                chatInput.value += selection.emoji;
+                                chatInput.focus();
+                            });
+                        }
+
+                        chatMessages.scrollTop = chatMessages.scrollHeight;
+                    });
+                }
+            });
+        }
+
+        function sendChatMessage() {
+            if (!isAuthenticatedUser) return;
+            const input = document.getElementById("chatInput");
+            const message = input.value.trim();
+            if (message && chatConnection) {
+                chatConnection.invoke("SendMessageToSupport", message).catch(err => console.error(err.toString()));
+                input.value = "";
+
+                const emojiContainer = document.getElementById('emojiPickerContainer');
+                if(emojiContainer && !emojiContainer.classList.contains('d-none')) {
+                    emojiContainer.classList.add('d-none');
+                }
+            }
+        }
+
+        function handleEnterChat(e) {
+            if (e.key === 'Enter') sendChatMessage();
+        }
+
+        function toggleChat() {
+            if (!isAuthenticatedUser) {
+                document.getElementById('loginRequiredModalLabel').innerHTML = '<i class="bi bi-chat-dots-fill text-primary"></i> Hỗ trợ trực tuyến';
+                document.getElementById('loginModalTitleText').innerText = 'Vui lòng đăng nhập để Chat với CSKH';
+                bootstrap.Modal.getOrCreateInstance(document.getElementById("loginRequiredModal")).show();
+                return;
+            }
+            const box = document.getElementById('chatBox');
+            const btn = document.getElementById('btnOpenChat');
+            box.classList.toggle('d-none');
+            btn.classList.toggle('d-none');
+
+            if (!box.classList.contains('d-none')) {
+                setTimeout(() => document.getElementById('chatInput').focus(), 100);
+            }
+        }
+
+        function handleChatFileUpload(event) {
+            if (!isAuthenticatedUser || !chatConnection) return;
+
+            const file = event.target.files[0];
+            if (!file) return;
+
+            if (file.size > 5 * 1024 * 1024) {
+                alert("Kích thước file quá lớn. Vui lòng chọn file dưới 5MB.");
+                event.target.value = '';
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const base64Data = e.target.result;
+                let htmlMessage = "";
+
+                if (file.type.startsWith("image/")) {
+                    htmlMessage = `<img src="${base64Data}" style="max-width: 100%; border-radius: 8px; cursor: pointer; max-height: 150px; object-fit: contain;" onclick="window.open(this.src, '_blank')" alt="Hình ảnh" />`;
+                } else {
+                    htmlMessage = `
+                        <a href="${base64Data}" download="${file.name}" class="d-inline-flex align-items-center text-decoration-none text-dark bg-white border p-2 rounded shadow-sm">
+                            <i class="bi bi-file-earmark-arrow-down-fill text-primary fs-4 me-2"></i>
+                            <div class="text-truncate" style="max-width: 150px; font-size: 0.85rem;">
+                                <strong class="d-block text-truncate">${file.name}</strong>
+                                <span class="text-muted small">${(file.size / 1024).toFixed(1)} KB</span>
+                            </div>
+                        </a>`;
+                }
+
+                chatConnection.invoke("SendMessageToSupport", htmlMessage).catch(err => console.error(err.toString()));
+            };
+
+            reader.readAsDataURL(file);
+            event.target.value = '';
+        }
+    </script>
+
     @await RenderSectionAsync("Scripts", required: false)
+
 </body>
 </html>

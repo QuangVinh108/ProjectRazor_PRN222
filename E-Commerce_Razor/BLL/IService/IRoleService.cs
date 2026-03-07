@@ -9,6 +9,6 @@ namespace BLL.IService
 {
     public interface IRoleService
     {
-        
+        IEnumerable<Role> GetAllRoles();
     }
 }
