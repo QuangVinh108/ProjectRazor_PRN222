@@ -255,6 +255,66 @@
         </div>
     </div>
 
+    <!-- Quick Actions – Order Management -->
+    <div class="row g-4 mb-4">
+        <div class="col-12">
+            <div class="modern-card" style="border-left: 5px solid #3b82f6;">
+                <div class="card-header-modern">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h5 class="card-title-modern">
+                                <span class="title-icon orders-icon">
+                                    <i class="bi bi-truck"></i>
+                                </span>
+                                Quản lý đơn hàng – Gán Shipper
+                            </h5>
+                            <p class="card-subtitle-modern">Xem và gán shipper cho các đơn đã thanh toán</p>
+                        </div>
+                        <a asp-page="/Admin/Orders/Index" class="btn btn-primary">
+                            <i class="bi bi-box-seam me-2"></i>Vào trang quản lý đơn hàng
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body-modern">
+                    <div class="row g-3">
+                        <div class="col-md-3">
+                            <a asp-page="/Admin/Orders/Index" asp-route-status="Paid"
+                               class="d-block text-decoration-none p-3 rounded-3 text-center border border-primary-subtle bg-primary-subtle">
+                                <i class="bi bi-credit-card fs-2 text-primary"></i>
+                                <div class="fw-bold text-primary mt-2">Đã thanh toán</div>
+                                <small class="text-muted">Cần gán Shipper</small>
+                            </a>
+                        </div>
+                        <div class="col-md-3">
+                            <a asp-page="/Admin/Orders/Index" asp-route-status="Shipped"
+                               class="d-block text-decoration-none p-3 rounded-3 text-center border border-info-subtle bg-info-subtle">
+                                <i class="bi bi-truck fs-2 text-info"></i>
+                                <div class="fw-bold text-info mt-2">Đang vận chuyển</div>
+                                <small class="text-muted">Shipper đang giao</small>
+                            </a>
+                        </div>
+                        <div class="col-md-3">
+                            <a asp-page="/Admin/Orders/Index" asp-route-status="Delivered"
+                               class="d-block text-decoration-none p-3 rounded-3 text-center border border-success-subtle bg-success-subtle">
+                                <i class="bi bi-house-check fs-2 text-success"></i>
+                                <div class="fw-bold text-success mt-2">Đã giao</div>
+                                <small class="text-muted">Giao thành công</small>
+                            </a>
+                        </div>
+                        <div class="col-md-3">
+                            <a asp-page="/Admin/Orders/Index" asp-route-status=""
+                               class="d-block text-decoration-none p-3 rounded-3 text-center border border-secondary-subtle bg-light">
+                                <i class="bi bi-list-ul fs-2 text-secondary"></i>
+                                <div class="fw-bold text-secondary mt-2">Tất cả đơn</div>
+                                <small class="text-muted">Xem tổng quan</small>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Additional Info Section -->
     <div class="row g-4">
         <div class="col-12">
@@ -294,7 +354,7 @@
             </div>
         </div>
     </div>
-</div>
+
 
 @section Scripts {
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
