@@ -56,4 +56,6 @@ public partial class User
     public virtual Role Role { get; set; } = null!;
 
     public virtual Wishlist? Wishlist { get; set; }
+
+    public virtual ICollection<Shipping> ShipperShippings { get; set; } = new List<Shipping>();
 }

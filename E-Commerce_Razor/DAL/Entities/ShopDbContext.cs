@@ -277,6 +277,12 @@ public partial class ShopDbContext : DbContext
                 .HasForeignKey<Shipping>(d => d.OrderId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_Shipping_Orders");
+
+            entity.HasOne(d => d.Shipper)
+                .WithMany(p => p.ShipperShippings)
+                .HasForeignKey(d => d.ShipperId)
+                .OnDelete(DeleteBehavior.SetNull)
+                .HasConstraintName("FK_Shipping_Shipper");
         });
 
         modelBuilder.Entity<User>(entity =>

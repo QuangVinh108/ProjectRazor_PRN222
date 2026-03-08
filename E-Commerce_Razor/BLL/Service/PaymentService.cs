@@ -153,7 +153,7 @@ namespace BLL.Service
                 {
                     await _inventoryService.DeductInventoryAsync(orderId);
 
-                    order.Status = "Hoàn thành";
+                    order.Status = "Paid";
                     if (order.Payment != null)
                     {
                         order.Payment.Status = "Paid";

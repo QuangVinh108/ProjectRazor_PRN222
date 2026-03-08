@@ -1,0 +1,75 @@
+@page "{id:int}"
+@model E_Commerce_Razor.Pages.Admin.Orders.AssignShipperModel
+@{
+    ViewData["Title"] = "Gán Shipper";
+}
+
+<div class="container py-4" style="max-width:700px">
+    <div class="d-flex align-items-center mb-4">
+        <a asp-page="/Admin/Orders/Index" class="btn btn-outline-secondary me-3"><i class="bi bi-arrow-left"></i></a>
+        <h2 class="fw-bold mb-0">Gán Shipper cho Đơn #@Model.Order?.OrderId</h2>
+    </div>
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger">@TempData["Error"]</div>
+    }
+
+    @if (Model.Order != null)
+    {
+        <!-- Thông tin đơn hàng -->
+        <div class="card mb-4">
+            <div class="card-header fw-bold">Thông tin đơn hàng</div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-6"><strong>Khách hàng:</strong> @Model.Order.FullName</div>
+                    <div class="col-6"><strong>Tổng tiền:</strong> <span class="text-danger fw-bold">@Model.Order.TotalAmount.ToString("N0") ₫</span></div>
+                    <div class="col-12 mt-2"><strong>Địa chỉ giao:</strong> @Model.Order.Shipping?.Address, @Model.Order.Shipping?.City</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Form gán shipper -->
+        <div class="card">
+            <div class="card-header fw-bold">Chọn Shipper</div>
+            <div class="card-body">
+                <form method="post">
+                    <input type="hidden" asp-for="OrderId" />
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Shipper phụ trách <span class="text-danger">*</span></label>
+                        <select asp-for="ShipperId" class="form-select" required>
+                            <option value="">-- Chọn Shipper --</option>
+                            @foreach (var s in Model.Shippers)
+                            {
+                                <option value="@s.UserId">@s.FullName (@s.UserName) - @s.Phone</option>
+                            }
+                        </select>
+                        @if (!Model.Shippers.Any())
+                        {
+                            <small class="text-danger">Chưa có tài khoản Shipper nào. Hãy tạo tài khoản shipper trước.</small>
+                        }
+                        <span asp-validation-for="ShipperId" class="text-danger"></span>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Đơn vị vận chuyển</label>
+                        <input asp-for="Carrier" class="form-control" placeholder="VD: GHN, GHTK, VN Post..." />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Mã vận đơn (Tracking Number)</label>
+                        <input asp-for="TrackingNumber" class="form-control" placeholder="VD: GHN123456789" />
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary" @(!Model.Shippers.Any() ? "disabled" : "")>
+                            <i class="bi bi-person-check me-1"></i>Xác nhận gán Shipper
+                        </button>
+                        <a asp-page="/Admin/Orders/Index" class="btn btn-outline-secondary">Hủy</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="alert alert-warning">Không tìm thấy đơn hàng hoặc đơn hàng không ở trạng thái Paid.</div>
+    }
+</div>

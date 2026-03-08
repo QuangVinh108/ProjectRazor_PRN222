@@ -21,9 +21,13 @@ public partial class Shipping
 
     public string? TrackingNumber { get; set; }
 
+    public int? ShipperId { get; set; }
+
     public DateTime? ShippedDate { get; set; }
 
     public DateTime? DeliveryDate { get; set; }
 
     public virtual Order Order { get; set; } = null!;
+
+    public virtual User? Shipper { get; set; }
 }

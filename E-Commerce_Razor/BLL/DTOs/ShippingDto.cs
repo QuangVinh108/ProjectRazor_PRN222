@@ -10,6 +10,8 @@ namespace BLL.DTOs
         public string? PostalCode { get; set; }
         public string? Carrier { get; set; }
         public string? TrackingNumber { get; set; }
+        public int? ShipperId { get; set; }
+        public string? ShipperName { get; set; }
         public DateTime? ShippedDate { get; set; }
         public DateTime? DeliveryDate { get; set; }
     }

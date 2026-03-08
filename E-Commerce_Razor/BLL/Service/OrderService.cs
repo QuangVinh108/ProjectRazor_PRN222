@@ -168,7 +168,51 @@ namespace BLL.Service
             return true;
         }
 
+        // ─── Shipper Flow ──────────────────────────────────────────────────────
 
+        public async Task<bool> AssignShipperAsync(int orderId, int shipperId, string? trackingNumber, string? carrier)
+        {
+            var order = await _orderRepo.GetByIdAsync(orderId, includeDetails: true);
+            if (order == null || order.Status != "Paid") return false;
+
+            if (order.Shipping == null) return false;
+
+            order.Shipping.ShipperId = shipperId;
+            order.Shipping.TrackingNumber = trackingNumber;
+            order.Shipping.Carrier = carrier;
+            order.Shipping.ShippedDate = DateTime.Now;
+            order.Status = "Shipped";
+
+            await _orderRepo.UpdateAsync(order);
+            return true;
+        }
+
+        public async Task<bool> MarkDeliveredAsync(int orderId, int shipperId)
+        {
+            var order = await _orderRepo.GetByIdAsync(orderId, includeDetails: true);
+            if (order == null || order.Status != "Shipped") return false;
+
+            // Kiểm tra đúng shipper phụ trách
+            if (order.Shipping == null || order.Shipping.ShipperId != shipperId) return false;
+
+            order.Shipping.DeliveryDate = DateTime.Now;
+            order.Status = "Delivered";
+
+            await _orderRepo.UpdateAsync(order);
+            return true;
+        }
+
+        public async Task<List<OrderDto>> GetShipperOrdersAsync(int shipperId)
+        {
+            var orders = await _orderRepo.GetByShipperIdAsync(shipperId);
+            return orders.Select(MapToOrderDto).ToList();
+        }
+
+        public async Task<OrderDto?> GetOrderByIdForAdminAsync(int orderId)
+        {
+            var order = await _orderRepo.GetByIdAsync(orderId, includeDetails: true);
+            return order == null ? null : MapToOrderDto(order);
+        }
 
         // Helper Map
         private OrderDto MapToOrderDto(Order order)
@@ -207,7 +251,13 @@ namespace BLL.Service
                     Address = order.Shipping.Address,
                     City = order.Shipping.City,
                     Country = order.Shipping.Country,
-                    PostalCode = order.Shipping.PostalCode
+                    PostalCode = order.Shipping.PostalCode,
+                    Carrier = order.Shipping.Carrier,
+                    TrackingNumber = order.Shipping.TrackingNumber,
+                    ShipperId = order.Shipping.ShipperId,
+                    ShipperName = order.Shipping.Shipper?.FullName ?? order.Shipping.Shipper?.UserName,
+                    ShippedDate = order.Shipping.ShippedDate,
+                    DeliveryDate = order.Shipping.DeliveryDate
                 } : null
             };
         }

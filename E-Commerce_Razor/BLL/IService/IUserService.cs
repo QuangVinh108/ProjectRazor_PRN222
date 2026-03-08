@@ -21,5 +21,6 @@ namespace BLL.IService
         Task<User> GetUserByUserName(string username);
         void UpdateProfile(int userId, UpdateProfileViewModel model);
         Task<(bool Success, string Message)> ChangePasswordAsync(int userId, string currentPassword, string newPassword);
+        Task<List<User>> GetShippersAsync();
     }
 }

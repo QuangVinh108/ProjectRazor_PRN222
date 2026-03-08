@@ -1,0 +1,129 @@
+@page "{id:int}"
+@model E_Commerce_Razor.Pages.Shipper.DeliveryDetailModel
+@{
+    ViewData["Title"] = $"Đơn hàng #{Model.Order?.OrderId}";
+}
+
+<div class="container py-4" style="max-width:800px">
+    <div class="d-flex align-items-center mb-4">
+        <a asp-page="/Shipper/Index" class="btn btn-outline-secondary me-3"><i class="bi bi-arrow-left"></i></a>
+        <h2 class="fw-bold mb-0">Chi tiết đơn #@Model.Order?.OrderId</h2>
+    </div>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success">@TempData["Success"]</div>
+    }
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger">@TempData["Error"]</div>
+    }
+
+    @if (Model.Order != null)
+    {
+        var order = Model.Order;
+
+        <!-- Trạng thái timeline -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <div class="d-flex justify-content-between text-center">
+                    <div class="flex-fill">
+                        <i class="bi bi-receipt fs-4 text-success"></i>
+                        <div class="small mt-1 fw-bold">Đã thanh toán</div>
+                        <div class="small text-muted">@order.OrderDate.ToString("dd/MM")</div>
+                    </div>
+                    <div class="align-self-center text-muted">→</div>
+                    <div class="flex-fill">
+                        <i class="bi bi-truck fs-4 @(order.Status is "Shipped" or "Delivered" ? "text-info" : "text-muted")"></i>
+                        <div class="small mt-1 fw-bold">Đang vận chuyển</div>
+                        <div class="small text-muted">@(order.Shipping?.ShippedDate?.ToString("dd/MM") ?? "-")</div>
+                    </div>
+                    <div class="align-self-center text-muted">→</div>
+                    <div class="flex-fill">
+                        <i class="bi bi-house-check fs-4 @(order.Status == "Delivered" ? "text-success" : "text-muted")"></i>
+                        <div class="small mt-1 fw-bold">Đã giao</div>
+                        <div class="small text-muted">@(order.Shipping?.DeliveryDate?.ToString("dd/MM") ?? "-")</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            <!-- Thông tin khách hàng -->
+            <div class="col-md-6">
+                <div class="card h-100">
+                    <div class="card-header fw-bold"><i class="bi bi-person me-2"></i>Thông tin khách hàng</div>
+                    <div class="card-body">
+                        <p><strong>Tên:</strong> @order.FullName</p>
+                        <p><strong>Địa chỉ:</strong> @order.Shipping?.Address</p>
+                        <p><strong>Thành phố:</strong> @order.Shipping?.City</p>
+                        <p class="mb-0"><strong>Ghi chú:</strong> @(order.Note ?? "Không có")</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Thông tin vận chuyển -->
+            <div class="col-md-6">
+                <div class="card h-100">
+                    <div class="card-header fw-bold"><i class="bi bi-box-seam me-2"></i>Thông tin vận chuyển</div>
+                    <div class="card-body">
+                        <p><strong>Đơn vị:</strong> @(order.Shipping?.Carrier ?? "Chưa có")</p>
+                        <p><strong>Tracking:</strong> @(order.Shipping?.TrackingNumber ?? "Chưa có")</p>
+                        <p><strong>Ngày lấy hàng:</strong> @(order.Shipping?.ShippedDate?.ToString("dd/MM/yyyy HH:mm") ?? "-")</p>
+                        <p class="mb-0"><strong>Ngày giao:</strong> @(order.Shipping?.DeliveryDate?.ToString("dd/MM/yyyy HH:mm") ?? "-")</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Danh sách sản phẩm -->
+        <div class="card mt-4">
+            <div class="card-header fw-bold"><i class="bi bi-list-ul me-2"></i>Sản phẩm (@order.OrderItems.Count)</div>
+            <div class="card-body p-0">
+                <table class="table mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Sản phẩm</th>
+                            <th class="text-center">SL</th>
+                            <th class="text-end">Đơn giá</th>
+                            <th class="text-end">Thành tiền</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in order.OrderItems)
+                        {
+                            <tr>
+                                <td>@item.ProductName</td>
+                                <td class="text-center">@item.Quantity</td>
+                                <td class="text-end">@item.UnitPrice.ToString("N0") ₫</td>
+                                <td class="text-end fw-bold">@((item.Quantity * item.UnitPrice).ToString("N0")) ₫</td>
+                            </tr>
+                        }
+                    </tbody>
+                    <tfoot class="table-light">
+                        <tr>
+                            <td colspan="3" class="text-end fw-bold">Tổng cộng:</td>
+                            <td class="text-end fw-bold text-danger fs-5">@order.TotalAmount.ToString("N0") ₫</td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+
+        @if (order.Status == "Shipped")
+        {
+            <div class="card mt-4 border-success">
+                <div class="card-body text-center">
+                    <p class="mb-3">Xác nhận đã giao hàng thành công cho khách?</p>
+                    <form method="post" asp-page-handler="Delivered">
+                        <input type="hidden" name="orderId" value="@order.OrderId" />
+                        <button type="submit" class="btn btn-success btn-lg px-5"
+                                onclick="return confirm('Xác nhận đã giao hàng thành công?')">
+                            <i class="bi bi-check-circle me-2"></i>Xác nhận đã giao thành công
+                        </button>
+                    </form>
+                </div>
+            </div>
+        }
+    }
+</div>

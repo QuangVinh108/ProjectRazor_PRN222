@@ -29,10 +29,25 @@ namespace DAL.Repository
                         .ThenInclude(oi => oi.Product)
                     .Include(o => o.Payment)
                     .Include(o => o.Shipping)
+                        .ThenInclude(s => s.Shipper)
                     .Include(o => o.User);
             }
 
             return await query.FirstOrDefaultAsync(o => o.OrderId == orderId);
+        }
+
+        public async Task<List<Order>> GetByShipperIdAsync(int shipperId)
+        {
+            return await _context.Orders
+                .Include(o => o.OrderItems)
+                    .ThenInclude(oi => oi.Product)
+                .Include(o => o.Payment)
+                .Include(o => o.Shipping)
+                    .ThenInclude(s => s.Shipper)
+                .Include(o => o.User)
+                .Where(o => o.Shipping != null && o.Shipping.ShipperId == shipperId)
+                .OrderByDescending(o => o.OrderDate)
+                .ToListAsync();
         }
 
         public async Task<List<Order>> GetByUserIdAsync(int userId)
