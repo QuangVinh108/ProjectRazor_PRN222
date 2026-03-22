@@ -25,6 +25,7 @@
         <li class="nav-item"><a class="nav-link @(Model.StatusFilter == "Paid" ? "active" : "")" asp-page="/Admin/Orders/Index" asp-route-status="Paid">Đã TT</a></li>
         <li class="nav-item"><a class="nav-link @(Model.StatusFilter == "Shipped" ? "active" : "")" asp-page="/Admin/Orders/Index" asp-route-status="Shipped">Đang giao</a></li>
         <li class="nav-item"><a class="nav-link @(Model.StatusFilter == "Delivered" ? "active" : "")" asp-page="/Admin/Orders/Index" asp-route-status="Delivered">Đã giao</a></li>
+        <li class="nav-item"><a class="nav-link @(Model.StatusFilter == "Hoàn thành" ? "active" : "")" asp-page="/Admin/Orders/Index" asp-route-status="Hoàn thành">Hoàn thành</a></li>
         <li class="nav-item"><a class="nav-link @(Model.StatusFilter == "Cancelled" ? "active" : "")" asp-page="/Admin/Orders/Index" asp-route-status="Cancelled">Đã hủy</a></li>
     </ul>
 
@@ -61,6 +62,7 @@
                                         "Paid" => "bg-primary",
                                         "Shipped" => "bg-info",
                                         "Delivered" => "bg-success",
+                                        "Hoàn thành" => "bg-success",
                                         "Cancelled" => "bg-danger",
                                         _ => "bg-secondary"
                                     };

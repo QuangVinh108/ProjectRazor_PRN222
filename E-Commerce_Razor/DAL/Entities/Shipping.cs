@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 
 namespace DAL.Entities;
@@ -26,6 +26,11 @@ public partial class Shipping
     public DateTime? ShippedDate { get; set; }
 
     public DateTime? DeliveryDate { get; set; }
+
+    /// <summary>Khách hàng báo chưa nhận hàng → cảnh báo shipper</summary>
+    public bool IsDisputed { get; set; }
+
+    public DateTime? DisputeReportedAt { get; set; }
 
     public virtual Order Order { get; set; } = null!;
 

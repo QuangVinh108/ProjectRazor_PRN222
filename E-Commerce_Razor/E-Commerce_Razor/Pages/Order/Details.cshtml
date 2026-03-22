@@ -237,6 +237,24 @@
                                     <div class="text-muted" style="font-size:12px">
                                         @(Model.Order.Shipping.DeliveryDate?.ToString("dd/MM/yyyy HH:mm") ?? "Chờ giao hàng")
                                     </div>
+                                    @if (Model.Order.Status == "Delivered")
+                                    {
+                                        <div class="d-flex gap-2 mt-2">
+                                            <form method="post" asp-page-handler="ConfirmReceived" asp-route-id="@Model.Order.OrderId" class="d-inline">
+                                                @Html.AntiForgeryToken()
+                                                <button type="submit" class="btn btn-sm btn-success">
+                                                    <i class="bi bi-check-circle me-1"></i>Xác nhận đã nhận hàng
+                                                </button>
+                                            </form>
+                                            <form method="post" asp-page-handler="ReportNotReceived" asp-route-id="@Model.Order.OrderId" class="d-inline"
+                                                  onsubmit="return confirm('Bạn chắc chắn chưa nhận được hàng? Đơn hàng sẽ được hoàn tiền và shipper sẽ bị cảnh báo.');">
+                                                @Html.AntiForgeryToken()
+                                                <button type="submit" class="btn btn-sm btn-outline-danger">
+                                                    <i class="bi bi-exclamation-triangle me-1"></i>Chưa nhận hàng
+                                                </button>
+                                            </form>
+                                        </div>
+                                    }
                                 </div>
                             </div>
 
@@ -265,6 +283,10 @@
                                 @if (Model.Order.Payment.Status == "Paid")
                                 {
                                     <span class="badge bg-success">Đã thanh toán</span>
+                                }
+                                else if (Model.Order.Payment.Status == "Refunded")
+                                {
+                                    <span class="badge bg-info">Đã hoàn tiền</span>
                                 }
                                 else
                                 {

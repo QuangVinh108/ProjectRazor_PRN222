@@ -1,4 +1,4 @@
-﻿using DAL.Entities;
+using DAL.Entities;
 using DAL.IRepository;
 using Microsoft.EntityFrameworkCore;
 using System;
@@ -70,6 +70,7 @@ namespace DAL.Repository
                 .Include(o => o.User)
                 .Include(o => o.Payment)
                 .Include(o => o.Shipping)
+                    .ThenInclude(s => s.Shipper)
                 .OrderByDescending(o => o.OrderDate)
                 .ToListAsync();
         }

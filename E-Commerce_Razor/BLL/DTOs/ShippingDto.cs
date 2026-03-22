@@ -14,5 +14,7 @@ namespace BLL.DTOs
         public string? ShipperName { get; set; }
         public DateTime? ShippedDate { get; set; }
         public DateTime? DeliveryDate { get; set; }
+        public bool IsDisputed { get; set; }
+        public DateTime? DisputeReportedAt { get; set; }
     }
 }

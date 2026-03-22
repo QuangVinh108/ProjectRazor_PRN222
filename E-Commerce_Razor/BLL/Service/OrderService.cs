@@ -99,7 +99,7 @@ namespace BLL.Service
             if (order == null) return false;
 
             // Validate status transitions
-            var validStatuses = new[] { "Pending", "Paid", "Shipped", "Delivered", "Cancelled" };
+            var validStatuses = new[] { "Pending", "Paid", "Shipped", "Delivered", "Hoàn thành", "Cancelled" };
             if (!validStatuses.Contains(newStatus))
                 throw new Exception("Trạng thái không hợp lệ");
 
@@ -227,6 +227,42 @@ namespace BLL.Service
             return order == null ? null : MapToOrderDto(order);
         }
 
+        /// <summary>Khách hàng xác nhận đã nhận hàng → cập nhật trạng thái Hoàn thành</summary>
+        public async Task<bool> ConfirmReceivedByCustomerAsync(int orderId, int userId)
+        {
+            var order = await _orderRepo.GetByIdAsync(orderId, includeDetails: true);
+            if (order == null || order.UserId != userId || order.Status != "Delivered") return false;
+
+            order.Status = "Hoàn thành";
+            await _orderRepo.UpdateAsync(order);
+            return true;
+        }
+
+        /// <summary>Khách hàng báo chưa nhận hàng → hoàn tiền + cảnh báo shipper</summary>
+        public async Task<bool> ReportNotReceivedByCustomerAsync(int orderId, int userId)
+        {
+            var order = await _orderRepo.GetByIdAsync(orderId, includeDetails: true);
+            if (order == null || order.UserId != userId || order.Status != "Delivered") return false;
+
+            // Hoàn kho
+            await _inventoryService.RestoreInventoryAsync(order);
+
+            // Đánh dấu đã hoàn tiền
+            if (order.Payment != null)
+                order.Payment.Status = "Refunded";
+
+            // Cảnh báo shipper
+            if (order.Shipping != null)
+            {
+                order.Shipping.IsDisputed = true;
+                order.Shipping.DisputeReportedAt = DateTime.UtcNow;
+            }
+
+            order.Status = "Cancelled";
+            await _orderRepo.UpdateAsync(order);
+            return true;
+        }
+
         // Helper Map
         private OrderDto MapToOrderDto(Order order)
         {
@@ -270,7 +306,9 @@ namespace BLL.Service
                     ShipperId = order.Shipping.ShipperId,
                     ShipperName = order.Shipping.Shipper?.FullName ?? order.Shipping.Shipper?.UserName,
                     ShippedDate = order.Shipping.ShippedDate,
-                    DeliveryDate = order.Shipping.DeliveryDate
+                    DeliveryDate = order.Shipping.DeliveryDate,
+                    IsDisputed = order.Shipping.IsDisputed,
+                    DisputeReportedAt = order.Shipping.DisputeReportedAt
                 } : null
             };
         }

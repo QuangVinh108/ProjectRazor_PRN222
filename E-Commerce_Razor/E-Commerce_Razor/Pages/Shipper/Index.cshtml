@@ -18,6 +18,20 @@
         <div class="alert alert-danger alert-dismissible fade show">@TempData["Error"]<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
     }
 
+    @{
+        var disputedCount = Model.Orders.Count(o => o.Shipping?.IsDisputed == true);
+    }
+    @if (disputedCount > 0)
+    {
+        <div class="alert alert-warning border-warning alert-dismissible fade show d-flex align-items-center" role="alert">
+            <i class="bi bi-exclamation-triangle-fill fs-4 me-2"></i>
+            <div>
+                <strong>Cảnh báo:</strong> Có @disputedCount đơn hàng khách báo chưa nhận được. Vui lòng kiểm tra lại quy trình giao hàng.
+            </div>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
     <!-- Stats summary -->
     <div class="row g-3 mb-4">
         <div class="col-md-4">
@@ -57,8 +71,15 @@
                 <tbody>
                     @foreach (var order in Model.Orders)
                     {
-                        <tr>
-                            <td><strong>#@order.OrderId</strong></td>
+                        var isDisputed = order.Shipping?.IsDisputed == true;
+                        <tr class="@(isDisputed ? "table-warning" : "")">
+                            <td>
+                                <strong>#@order.OrderId</strong>
+                                @if (isDisputed)
+                                {
+                                    <span class="badge bg-warning text-dark ms-1" title="Khách báo chưa nhận hàng">Cảnh báo</span>
+                                }
+                            </td>
                             <td>
                                 <div>@order.FullName</div>
                                 <small class="text-muted">@(order.Shipping?.City ?? "")</small>

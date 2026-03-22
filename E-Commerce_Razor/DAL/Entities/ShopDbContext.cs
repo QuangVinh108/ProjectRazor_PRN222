@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using System;
 using System.Collections.Generic;
@@ -272,6 +272,7 @@ public partial class ShopDbContext : DbContext
             entity.Property(e => e.Country).HasMaxLength(100);
             entity.Property(e => e.PostalCode).HasMaxLength(20);
             entity.Property(e => e.TrackingNumber).HasMaxLength(100);
+            entity.Property(e => e.IsDisputed).HasDefaultValue(false);
 
             entity.HasOne(d => d.Order).WithOne(p => p.Shipping)
                 .HasForeignKey<Shipping>(d => d.OrderId)
