@@ -110,9 +110,9 @@ namespace BLL.Helper
             }
         }
 
-        public async Task<GeminiIdCardDto> AnalyzeIdCardAsync(IFormFile imageFile)
+        // Thêm tham số liveFaceBase64
+        public async Task<GeminiIdCardDto> AnalyzeIdCardAsync(IFormFile imageFile, string liveFaceBase64)
         {
-            // Check API Key
             if (string.IsNullOrEmpty(_apiKey) || _apiKey.Contains("YOUR_ACTUAL"))
             {
                 Console.WriteLine("❌ LỖI: API Key chưa cấu hình.");
@@ -121,34 +121,38 @@ namespace BLL.Helper
 
             try
             {
-                // 1. Resize và Convert ảnh sang Base64
-                // (Lưu ý: Nếu ảnh CCCD gốc từ điện thoại quá nặng > 4MB, Google sẽ timeout. 
-                // Tốt nhất nên resize ảnh xuống chiều ngang khoảng 1024px trước khi gửi - Ở đây tôi làm đơn giản là gửi luôn)
+                // 1. Chuyển ảnh CCCD sang Base64
                 using var ms = new MemoryStream();
                 await imageFile.CopyToAsync(ms);
-                var base64Image = Convert.ToBase64String(ms.ToArray());
+                var cccdBase64 = Convert.ToBase64String(ms.ToArray());
 
-                // 2. Prompt "Thép" - Ép AI trả về đúng định dạng
-                var prompt = @"Bạn là một hệ thống OCR (Nhận dạng ký tự quang học) chuyên nghiệp.
-                                Nhiệm vụ: Trích xuất thông tin từ hình ảnh Căn cước công dân (CCCD) Việt Nam.
+                // 2. Chẩn hóa chuỗi base64 của LiveFace (bỏ phần data:image/jpeg;base64,)
+                if (!string.IsNullOrEmpty(liveFaceBase64) && liveFaceBase64.Contains(","))
+                {
+                    liveFaceBase64 = liveFaceBase64.Split(',')[1];
+                }
 
-                                Yêu cầu output:
-                                Chỉ trả về duy nhất một chuỗi JSON thuần túy (Raw JSON), không được bao bọc bởi markdown (```json ... ```).
-                                JSON phải có cấu trúc sau:
-                                {
-                                    ""isValid"": true, (chỉ true nếu nhìn rõ số, tên, ngày sinh, ảnh không bị che, không phải photocopy)
-                                    ""reason"": ""null nếu hợp lệ, ghi lý do ngắn gọn nếu không hợp lệ"",
-                                    ""data"": {
-                                        ""idNumber"": ""Số CCCD (dãy số)"",
-                                        ""fullName"": ""Họ và tên (viết IN HOA)"",
-                                        ""dob"": ""Ngày sinh (định dạng dd/MM/yyyy)"",
-                                        ""address"": ""Nơi thường trú (ghi đầy đủ)""
-                                    }
-                                }
+                // 3. Prompt yêu cầu cả OCR và so khớp khuôn mặt
+                var prompt = @"Bạn là hệ thống eKYC (Nhận diện khuôn mặt và trích xuất CCCD).
+                        Nhiệm vụ:
+                        1. Trích xuất thông tin từ Hình 1 (Căn cước công dân - CCCD).
+                        2. So sánh khuôn mặt người trong Hình 1 (CCCD) và Hình 2 (Ảnh chụp trực tiếp).
 
-                                Nếu ảnh quá mờ, bị mất góc, hoặc không phải thẻ CCCD, hãy trả về isValid: false.";
+                        Yêu cầu output chỉ trả về RAW JSON thuần túy (Không markdown, không code block).
+                        Cấu trúc JSON bắt buộc:
+                        {
+                            ""isValid"": true, (kiểm tra Hình 1 có phải là CCCD hợp lệ, rõ nét không)
+                            ""isFaceMatch"": true, (trả về true nếu khuôn mặt ở Hình 1 và Hình 2 là của cùng CÙNG MỘT NGƯỜI, false nếu khác người)
+                            ""reason"": ""null nếu hợp lệ, nếu isValid=false hoặc isFaceMatch=false hãy ghi ngắn gọn lý do tại sao"",
+                            ""data"": {
+                                ""idNumber"": ""Số thẻ"",
+                                ""fullName"": ""Họ và tên (IN HOA)"",
+                                ""dob"": ""Ngày sinh (dd/MM/yyyy)"",
+                                ""address"": ""Nơi thường trú""
+                            }
+                        }
+                        Nếu hình mờ hoặc không nhận diện được, hãy đánh dấu isValid: false hoặc isFaceMatch: false và ghi rõ lý do.";
 
-                // 3. Cấu hình Request (THÊM SAFETY SETTINGS ĐỂ KHÔNG BỊ CHẶN)
                 var requestBody = new
                 {
                     contents = new[]
@@ -158,11 +162,13 @@ namespace BLL.Helper
                     parts = new object[]
                     {
                         new { text = prompt },
-                        new { inline_data = new { mime_type = imageFile.ContentType, data = base64Image } }
+                        // Hình 1: CCCD
+                        new { inline_data = new { mime_type = imageFile.ContentType, data = cccdBase64 } },
+                        // Hình 2: Live selfie Camera
+                        new { inline_data = new { mime_type = "image/jpeg", data = liveFaceBase64 } }
                     }
                 }
             },
-                    // 🔥 QUAN TRỌNG: Tắt bộ lọc an toàn để AI chịu đọc CCCD
                     safetySettings = new[]
                     {
                 new { category = "HARM_CATEGORY_HARASSMENT", threshold = "BLOCK_NONE" },
@@ -175,37 +181,20 @@ namespace BLL.Helper
                 var jsonContent = new StringContent(JsonSerializer.Serialize(requestBody), Encoding.UTF8, "application/json");
                 var url = $"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key={_apiKey}";
 
-                // 4. Gọi API
                 var response = await _httpClient.PostAsync(url, jsonContent);
                 var responseString = await response.Content.ReadAsStringAsync();
 
                 if (!response.IsSuccessStatusCode)
-                {
-                    Console.WriteLine($"❌ API ERROR: {response.StatusCode} - {responseString}");
                     return null;
-                }
 
-                // 5. Parse JSON (Xử lý kỹ hơn)
                 using var doc = JsonDocument.Parse(responseString);
-
-                // Kiểm tra xem có candidate nào không (Nếu bị chặn, candidates sẽ rỗng và có promptFeedback.blockReason)
                 if (!doc.RootElement.TryGetProperty("candidates", out var candidates) || candidates.GetArrayLength() == 0)
-                {
-                    Console.WriteLine("❌ Lỗi: Google đã chặn ảnh này hoặc không nhận diện được.");
-                    // In ra lý do chặn để debug
-                    if (doc.RootElement.TryGetProperty("promptFeedback", out var feedback))
-                    {
-                        Console.WriteLine($"Feedback: {feedback}");
-                    }
                     return null;
-                }
 
                 var text = candidates[0].GetProperty("content").GetProperty("parts")[0].GetProperty("text").GetString();
 
-                // Clean chuỗi JSON (Xóa ```json và khoảng trắng thừa)
+                // Xử lý dọn chuỗi JSON
                 text = text.Replace("```json", "").Replace("```", "").Trim();
-
-                // Tìm điểm bắt đầu và kết thúc của JSON để cắt bỏ rác nếu có
                 int startIndex = text.IndexOf('{');
                 int endIndex = text.LastIndexOf('}');
                 if (startIndex >= 0 && endIndex > startIndex)
@@ -218,7 +207,7 @@ namespace BLL.Helper
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"❌ EXCEPTION: {ex.Message}");
+                Console.WriteLine($"EX: {ex.Message}");
                 return null;
             }
         }
