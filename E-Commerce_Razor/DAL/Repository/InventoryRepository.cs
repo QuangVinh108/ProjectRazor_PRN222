@@ -16,6 +16,21 @@ namespace DAL.Repository
         {
             _context = context;
         }
+
+        public async Task<bool> AdjustQuantityAsync(int productId, int delta)
+        {
+            var inventory = await _context.Inventories
+                .FirstOrDefaultAsync(i => i.ProductId == productId);
+
+            if (inventory == null)
+                return false;
+
+            inventory.Quantity += delta;
+
+            await _context.SaveChangesAsync();
+
+            return true;
+        }
         public async Task<Inventory?> GetByProductIdAsync(int productId)
         {
             return await _context.Inventories
@@ -32,12 +47,13 @@ namespace DAL.Repository
 
         public async Task<bool> UpdateQuantityAsync(int productId, int quantity)
         {
-            var inventory = await _context.Inventories.FirstOrDefaultAsync(i => i.ProductId == productId);
-            if (inventory == null || quantity < 0)
-                return false;
+            var inventory = await _context.Inventories
+                .FirstOrDefaultAsync(i => i.ProductId == productId);
 
-            inventory.Quantity = quantity;
-            inventory.UpdatedAt = DateTime.UtcNow;
+            if (inventory == null) return false;
+
+            inventory.Quantity += quantity;
+
             await _context.SaveChangesAsync();
             return true;
         }

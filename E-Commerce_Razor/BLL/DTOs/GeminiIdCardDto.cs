@@ -8,8 +8,9 @@ namespace BLL.DTOs
 {
     public class GeminiIdCardDto
     {
-        public bool IsValid { get; set; } // Ảnh có hợp lệ không
-        public string Reason { get; set; } // Lý do nếu không hợp lệ
+        public bool IsValid { get; set; } // Ảnh CCCD có hợp lệ không
+        public bool IsFaceMatch { get; set; } // Khuôn mặt trên thẻ và Live camera có khớp nhau không
+        public string Reason { get; set; } // Lý do (nếu lỗi)
         public IdCardData Data { get; set; } // Dữ liệu bóc tách
     }
     public class IdCardData

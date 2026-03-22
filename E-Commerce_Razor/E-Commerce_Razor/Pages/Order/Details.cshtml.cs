@@ -37,12 +37,30 @@ namespace E_Commerce_Razor.Pages.Order
             try
             {
                 var userId = GetCurrentUserId();
+                // Lấy thông tin đơn trước khi hủy để biết trạng thái thanh toán
+                var orderBefore = await _orderService.GetOrderByIdAsync(id, userId);
+                var wasPaid = orderBefore?.Payment?.Status == "Paid";
+                var paymentMethod = orderBefore?.Payment?.PaymentMethod ?? "phương thức thanh toán đã sử dụng";
+                var amount = orderBefore?.Payment?.Amount ?? orderBefore?.TotalAmount ?? 0m;
+
                 var result = await _orderService.CancelOrderAsync(id, userId);
 
                 if (result)
-                    TempData["Success"] = "Hủy đơn hàng thành công";
+                {
+                    if (wasPaid)
+                    {
+                        TempData["Success"] =
+                            $"Đơn hàng đã được hủy thành công. Số tiền {amount:N0} ₫ sẽ được hoàn lại về {paymentMethod} của bạn trong vòng 3–5 ngày làm việc.";
+                    }
+                    else
+                    {
+                        TempData["Success"] = "Hủy đơn hàng thành công.";
+                    }
+                }
                 else
-                    TempData["Error"] = "Không thể hủy đơn hàng";
+                {
+                    TempData["Error"] = "Không thể hủy đơn hàng.";
+                }
             }
             catch (Exception ex)
             {
