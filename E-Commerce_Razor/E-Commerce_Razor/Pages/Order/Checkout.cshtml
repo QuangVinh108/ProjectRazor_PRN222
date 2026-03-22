@@ -91,6 +91,39 @@
                             <span asp-validation-for="Input.Note" class="text-danger"></span>
                         </div>
 
+                        <!-- ── MÃ GIẢM GIÁ / VOUCHER ── -->
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">🏷️ Mã giảm giá</label>
+
+                            @if (Model.AvailableVouchers.Any())
+                            {
+                                <select class="form-select mb-2" id="availableVouchersSelect">
+                                    <option value="">-- Chọn mã giảm giá khả dụng --</option>
+                                    @foreach (var v in Model.AvailableVouchers)
+                                    {
+                                        var discountText = v.DiscountType == "Percent" ? $"{v.DiscountValue:0}%" : $"{v.DiscountValue:N0}đ";
+                                        var maxDiscountText = v.MaxDiscount.HasValue ? $" (Tối đa {v.MaxDiscount.Value:N0}đ)" : "";
+                                        <option value="@v.Code">
+                                            [@v.Code] Giảm @discountText @maxDiscountText - @v.Description
+                                        </option>
+                                    }
+                                </select>
+                            }
+
+                            <div class="input-group">
+                                <input asp-for="Input.VoucherCode"
+                                       id="voucherCodeInput"
+                                       class="form-control text-uppercase"
+                                       placeholder="Hoặc nhập mã giảm giá khác..."
+                                       style="letter-spacing:1px;" />
+                                <button type="button" class="btn btn-outline-primary" id="applyVoucherBtn">
+                                    <i class="bi bi-tag-fill"></i> Áp dụng
+                                </button>
+                            </div>
+                            <div id="voucherMessage" class="mt-2"></div>
+                        </div>
+                        <!-- ───────────────────────────── -->
+
                         <div class="d-grid gap-2">
                             <button type="submit" class="btn btn-success btn-lg">
                                 <i class="bi bi-check-circle"></i> Đặt hàng
@@ -293,5 +326,61 @@
             const wName = wardSelect.options[wardSelect.selectedIndex]?.dataset.name || '';
             cityHidden.value = [wName, pName].filter(Boolean).join(', ');
         }
+
+        // ── VOUCHER AJAX CHECK ─────────────────────────────────────────────
+        document.getElementById('applyVoucherBtn')?.addEventListener('click', async function () {
+            const code = document.getElementById('voucherCodeInput').value.trim();
+            const msgBox = document.getElementById('voucherMessage');
+
+            if (!code) {
+                msgBox.innerHTML = '<div class="alert alert-warning py-1 mb-0">Vui lòng nhập mã giảm giá.</div>';
+                return;
+            }
+
+            this.disabled = true;
+            this.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Đang kiểm tra...';
+
+            try {
+                const token = document.querySelector('input[name="__RequestVerificationToken"]').value;
+                const resp  = await fetch('?handler=ValidateVoucher', {
+                    method : 'POST',
+                    headers: { 'Content-Type': 'application/json', 'RequestVerificationToken': token },
+                    body   : JSON.stringify(code)
+                });
+                const result = await resp.json();
+
+                if (result.isSuccess) {
+                    msgBox.innerHTML = `
+                        <div class="alert alert-success py-2 mb-0">
+                            ✅ <strong>${result.voucher.code}</strong>: ${result.voucher.description ?? 'Mã hợp lệ'}
+                            <br>💰 Giảm: <strong class="text-danger">${result.discountAmount.toLocaleString('vi-VN')}đ</strong>
+                            &nbsp;|&nbsp; 🧾 Còn lại: <strong>${result.finalAmount.toLocaleString('vi-VN')}đ</strong>
+                        </div>`;
+                } else {
+                    msgBox.innerHTML = `<div class="alert alert-danger py-2 mb-0">❌ ${result.errorMessage}</div>`;
+                }
+            } catch (e) {
+                msgBox.innerHTML = '<div class="alert alert-danger py-2 mb-0">Lỗi kết nối. Vui lòng thử lại.</div>';
+            }
+
+            this.disabled = false;
+            this.innerHTML = '<i class="bi bi-tag-fill"></i> Áp dụng';
+        });
+
+        // Tự động điền code và check khi người dùng chọn từ dropdown
+        document.getElementById('availableVouchersSelect')?.addEventListener('change', function() {
+            const inputField = document.getElementById('voucherCodeInput');
+            const msgBox = document.getElementById('voucherMessage');
+
+            // Nếu người dùng chọn "-- Chọn mã --" (value rỗng)
+            if (!this.value) {
+                inputField.value = '';
+                msgBox.innerHTML = '';
+                return;
+            }
+
+            inputField.value = this.value;
+            document.getElementById('applyVoucherBtn').click();
+        });
     </script>
 }

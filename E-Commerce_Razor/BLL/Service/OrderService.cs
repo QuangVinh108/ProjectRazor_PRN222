@@ -15,12 +15,14 @@ namespace BLL.Service
         private readonly IOrderRepository _orderRepo;
         private readonly ICartRepository _cartRepo;
         private readonly IInventoryService _inventoryService;
+        private readonly IVoucherRepository _voucherRepo;
 
-        public OrderService(IOrderRepository orderRepo, ICartRepository cartRepo, IInventoryService inventoryService)
+        public OrderService(IOrderRepository orderRepo, ICartRepository cartRepo, IInventoryService inventoryService, IVoucherRepository voucherRepo)
         {
             _orderRepo = orderRepo;
             _cartRepo = cartRepo;
             _inventoryService = inventoryService;
+            _voucherRepo = voucherRepo;
         }
 
         public async Task<OrderDto?> GetOrderByIdAsync(int orderId, int userId)
@@ -50,32 +52,89 @@ namespace BLL.Service
 
             decimal totalAmount = cart.CartItems.Sum(ci => ci.Quantity * ci.UnitPrice);
 
+            // ─── Xử lý Voucher ──────────────────────────────────────────────
+            decimal discountAmount = 0;
+            int? voucherId = null;
+
+            if (!string.IsNullOrWhiteSpace(dto.VoucherCode))
+            {
+                var voucher = await _voucherRepo.GetByCodeAsync(dto.VoucherCode);
+                if (voucher == null)
+                    throw new Exception("Mã giảm giá không tồn tại.");
+
+                // --- KIỂM TRA QUYỀN TRÊN VÍ CÁ NHÂN ---
+                var userVoucher = await _voucherRepo.GetUserVoucherAsync(dto.UserId, voucher.VoucherId);
+                if (userVoucher == null) throw new Exception("Bạn chưa lưu mã giảm giá này vào ví.");
+                if (userVoucher.IsUsed) throw new Exception("Bạn đã sử dụng mã giảm giá này rồi.");
+
+                if (!voucher.IsActive)
+                    throw new Exception("Mã giảm giá đã bị vô hiệu hóa.");
+
+                var now = DateTime.Now;
+                if (now < voucher.StartDate || now > voucher.EndDate)
+                    throw new Exception("Mã giảm giá đã hết hạn hoặc chưa đến ngày sử dụng.");
+
+                if (voucher.UsedCount >= voucher.UsageLimit)
+                    throw new Exception("Mã giảm giá đã được sử dụng hết trên hệ thống.");
+
+                if (totalAmount < voucher.MinOrderValue)
+                    throw new Exception($"Đơn hàng tối thiểu phải từ {voucher.MinOrderValue:N0}đ để dùng mã này.");
+
+                // Tính số tiền được giảm
+                if (voucher.DiscountType == "Percent")
+                {
+                    discountAmount = totalAmount * (voucher.DiscountValue / 100m);
+                    if (voucher.MaxDiscount.HasValue)
+                        discountAmount = Math.Min(discountAmount, voucher.MaxDiscount.Value);
+                }
+                else
+                {
+                    discountAmount = voucher.DiscountValue;
+                }
+                discountAmount = Math.Min(discountAmount, totalAmount);
+
+                // Cập nhật UsedCount toàn cục
+                voucher.UsedCount++;
+                await _voucherRepo.UpdateAsync(voucher);
+
+                // Cập nhật thẻ trong ví User
+                userVoucher.IsUsed = true;
+                userVoucher.UsedAt = DateTime.Now;
+                await _voucherRepo.UpdateUserVoucherAsync(userVoucher);
+
+                voucherId = voucher.VoucherId;
+            }
+            // ─────────────────────────────────────────────────────────────────
+
+            decimal finalAmount = totalAmount - discountAmount;
+
             var order = new Order
             {
-                UserId = dto.UserId,
-                OrderDate = DateTime.Now,
-                Status = "Pending", // Hardcode string
-                TotalAmount = totalAmount,
-                Note = dto.Note,
-                IsActive = true,
-                OrderItems = cart.CartItems.Select(ci => new OrderItem
+                UserId         = dto.UserId,
+                OrderDate      = DateTime.Now,
+                Status         = "Pending",
+                TotalAmount    = finalAmount,
+                DiscountAmount = discountAmount,
+                VoucherId      = voucherId,
+                Note           = dto.Note,
+                IsActive       = true,
+                OrderItems     = cart.CartItems.Select(ci => new OrderItem
                 {
                     ProductId = ci.ProductId,
-                    Quantity = ci.Quantity,
+                    Quantity  = ci.Quantity,
                     UnitPrice = ci.UnitPrice,
-                    // Image = ci.Product.Image
                 }).ToList(),
                 Payment = new Payment
                 {
                     PaymentMethod = dto.PaymentMethod,
-                    Amount = totalAmount,
-                    Status = "Pending" // Hardcode string
+                    Amount        = finalAmount,
+                    Status        = "Pending"
                 },
                 Shipping = new Shipping
                 {
-                    Address = dto.ShippingAddress,
-                    City = dto.City,
-                    Country = dto.Country,
+                    Address    = dto.ShippingAddress,
+                    City       = dto.City,
+                    Country    = dto.Country,
                     PostalCode = dto.PostalCode
                 }
             };

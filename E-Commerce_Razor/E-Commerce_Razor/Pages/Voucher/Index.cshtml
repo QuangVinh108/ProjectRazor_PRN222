@@ -1,0 +1,345 @@
+@page
+@model E_Commerce_Razor.Pages.Voucher.IndexModel
+@{
+    ViewData["Title"] = "Kho Voucher của tôi";
+}
+
+@section Styles {
+    <style>
+        :root {
+            --ts-w: #fff;
+            --ts-bg: #f8fafc;
+            --ts-border: #e2e8f0;
+            --ts-dark: #0f172a;
+            --ts-text: #334155;
+            --ts-muted: #64748b;
+            --ts-blue: #3b82f6;
+            --ts-violet: #7c3aed;
+            --ts-em: #10b981;
+            --ts-amb: #f59e0b;
+            --ts-pink: #ec4899;
+            --ts-g: linear-gradient(135deg, #4f46e5 0%, #7c3aed 55%, #ec4899 100%);
+        }
+
+        /* Hero Background with Blobs */
+        .voucher-hero {
+            position: relative;
+            overflow: hidden;
+            background: #fff;
+            padding: 60px 0 80px;
+            min-height: 80vh;
+        }
+
+        .ts-blob {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(90px);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .ts-b1 {
+            width: 500px;
+            height: 500px;
+            top: -100px;
+            left: -150px;
+            background: radial-gradient(circle, rgba(79,70,229,.12) 0%, transparent 70%);
+            animation: ts-blob-move 10s ease-in-out infinite;
+        }
+
+        .ts-b2 {
+            width: 450px;
+            height: 450px;
+            bottom: -50px;
+            right: -100px;
+            background: radial-gradient(circle, rgba(236,72,153,.1) 0%, transparent 70%);
+            animation: ts-blob-move 12s ease-in-out infinite reverse;
+        }
+
+        @@keyframes ts-blob-move {
+            0%, 100% { transform: translate(0,0) scale(1); }
+            33% { transform: translate(30px,-20px) scale(1.05); }
+            66% { transform: translate(-20px,25px) scale(0.95); }
+        }
+
+        .voucher-container {
+            position: relative;
+            z-index: 2;
+        }
+
+        .voucher-header h1 {
+            font-weight: 900;
+            font-size: 2.8rem;
+            letter-spacing: -1px;
+            margin-bottom: 10px;
+            background: var(--ts-g);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        /* Ticket Card Design */
+        .ticket-card {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.06);
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+
+        .ticket-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 16px 50px rgba(79,70,229,0.15);
+        }
+
+        .ticket-top {
+            background: var(--ts-g);
+            padding: 20px;
+            color: white;
+            position: relative;
+            border-bottom: 2px dashed rgba(255,255,255,0.4);
+        }
+
+        .ticket-top::before, .ticket-top::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            width: 20px;
+            height: 20px;
+            background: #fff;
+            border-radius: 50%;
+            z-index: 10;
+        }
+
+        .ticket-top::before { left: -10px; box-shadow: inset -2px 0 5px rgba(0,0,0,0.05); }
+        .ticket-top::after { right: -10px; box-shadow: inset 2px 0 5px rgba(0,0,0,0.05); }
+
+        .ticket-badge {
+            display: inline-block;
+            background: rgba(255,255,255,0.2);
+            padding: 4px 12px;
+            border-radius: 50px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            backdrop-filter: blur(4px);
+            margin-bottom: 15px;
+            border: 1px solid rgba(255,255,255,0.3);
+        }
+
+        .ticket-value {
+            font-size: 2rem;
+            font-weight: 900;
+            line-height: 1.1;
+            margin: 0;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .ticket-body {
+            padding: 24px;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .condition-list {
+            list-style: none;
+            padding: 0;
+            margin: 0 0 20px 0;
+            font-size: 0.9rem;
+            color: var(--ts-text);
+        }
+
+        .condition-list li {
+            margin-bottom: 8px;
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+        }
+        .condition-list li i {
+            color: var(--ts-violet);
+            margin-top: 2px;
+        }
+
+        .ticket-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: auto;
+            border-top: 1px solid var(--ts-border);
+            padding-top: 16px;
+        }
+
+        .btn-save-vc {
+            background: var(--ts-g);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            padding: 8px 20px;
+            font-weight: 600;
+            transition: all 0.2s;
+            box-shadow: 0 4px 12px rgba(79,70,229,0.3);
+        }
+
+        .btn-save-vc:hover {
+            transform: scale(1.05);
+            color: white;
+            box-shadow: 0 6px 16px rgba(79,70,229,0.4);
+        }
+
+        .btn-saved {
+            background: #e2e8f0;
+            color: #64748b;
+            border: none;
+            border-radius: 50px;
+            padding: 8px 20px;
+            font-weight: 600;
+            box-shadow: none;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 80px 20px;
+            background: rgba(255,255,255,0.6);
+            backdrop-filter: blur(10px);
+            border-radius: 30px;
+            border: 1px dashed #cbd5e1;
+        }
+    </style>
+}
+
+<div class="voucher-hero">
+    <div class="ts-blob ts-b1"></div>
+    <div class="ts-blob ts-b2"></div>
+
+    <div class="container-xl px-4 voucher-container">
+        <div class="voucher-header text-center mb-5">
+            <h1>Săn Kho Voucher</h1>
+            <p class="text-muted fs-5">Lưu ngay các ưu đãi đặc quyền và dùng khi thanh toán nhé!</p>
+        </div>
+
+        @if (!Model.Vouchers.Any())
+        {
+            <div class="empty-state shadow-sm">
+                <i class="bi bi-inbox" style="font-size: 5rem; background: var(--ts-g); -webkit-background-clip: text; color: transparent;"></i>
+                <h3 class="mt-4 fw-bold">Hiện chưa có voucher nào khả dụng</h3>
+                <p class="text-muted fs-5">Hãy quay lại sau hoặc tham gia các chương trình khuyến mãi nhen!</p>
+                <a asp-page="/Shop/Index" class="btn btn-save-vc mt-3 btn-lg px-4 py-2">Tiếp tục mua sắm <i class="bi bi-arrow-right"></i></a>
+            </div>
+        }
+        else
+        {
+            <div class="row row-cols-1 row-cols-md-2 row-cols-xl-3 g-5">
+                @foreach (var item in Model.Vouchers)
+                {
+                    var voucher = item.Voucher;
+                    var discountText = voucher.DiscountType == "Percent" 
+                        ? $"{voucher.DiscountValue:0}%" 
+                        : $"{voucher.DiscountValue:N0}đ";
+                    var maxDiscountText = voucher.MaxDiscount.HasValue 
+                        ? $"Giảm tối đa {voucher.MaxDiscount.Value:N0}đ" 
+                        : "Không giới hạn";
+
+                    <div class="col">
+                        <div class="ticket-card">
+                            <div class="ticket-top">
+                                <span class="ticket-badge"><i class="bi bi-tag-fill me-1"></i> @voucher.Code</span>
+                                <div class="ticket-value">Giảm @discountText</div>
+                                <div class="mt-2 text-truncate" style="font-size:0.9rem; opacity: 0.9;">@maxDiscountText</div>
+                            </div>
+                            
+                            <div class="ticket-body">
+                                <ul class="condition-list">
+                                    <li><i class="bi bi-check-circle-fill"></i> Nhanh tay! Đã có @voucher.UsedCount / @voucher.UsageLimit lượt dùng</li>
+                                    <li><i class="bi bi-bag-check-fill"></i> Đơn tối thiểu: <strong>@voucher.MinOrderValue.ToString("N0")đ</strong></li>
+                                    <li><i class="bi bi-clock-fill"></i> HSD: @voucher.EndDate.ToString("dd/MM/yyyy HH:mm")</li>
+                                    @if (!string.IsNullOrEmpty(voucher.Description))
+                                    {
+                                        <li><i class="bi bi-info-circle-fill"></i> @voucher.Description</li>
+                                    }
+                                </ul>
+                                
+                                <div class="ticket-meta justify-content-end">
+                                    @Html.AntiForgeryToken()
+                                    @if(item.IsSaved)
+                                    {
+                                        <button class="btn-saved" disabled>
+                                            <i class="bi bi-check2-circle"></i> Đã lưu
+                                        </button>
+                                    }
+                                    else
+                                    {
+                                        <button class="btn-save-vc" onclick="saveVoucher(this, @voucher.VoucherId)">
+                                            <i class="bi bi-download"></i> Lưu ngay
+                                        </button>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        async function saveVoucher(btnElement, voucherId) {
+            btnElement.disabled = true;
+            btnElement.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> LƯU...';
+
+            const token = document.querySelector('input[name="__RequestVerificationToken"]').value;
+
+            try {
+                const res = await fetch('?handler=Save', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'RequestVerificationToken': token
+                    },
+                    body: JSON.stringify(voucherId)
+                });
+
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data.isSuccess) {
+                        btnElement.className = 'btn-saved';
+                        btnElement.innerHTML = '<i class="bi bi-check2-circle"></i> Đã lưu';
+                        // Update Navbar badge
+                        const badge = document.getElementById('myVouchersBadge');
+                        if (badge) {
+                            badge.style.display = 'inline-block';
+                            badge.innerText = parseInt(badge.innerText || '0') + 1;
+                        }
+                    } else {
+                        // Nếu backend báo đã lưu rồi (trường hợp click lưu xong click lặp lại nhiều lần)
+                        if (data.errorMessage && data.errorMessage.includes('lưu mã này rồi')) {
+                            btnElement.className = 'btn-saved';
+                            btnElement.innerHTML = '<i class="bi bi-check2-circle"></i> Đã lưu';
+                        } else {
+                            alert(data.errorMessage || 'Có lỗi xảy ra khi lưu mã.');
+                            btnElement.disabled = false;
+                            btnElement.innerHTML = '<i class="bi bi-download"></i> Lưu ngay';
+                        }
+                    }
+                } else {
+                    alert('Lỗi kết nối đến máy chủ.');
+                    btnElement.disabled = false;
+                    btnElement.innerHTML = '<i class="bi bi-download"></i> Lưu ngay';
+                }
+            } catch (err) {
+                console.error(err);
+                alert('Có lỗi mạng xảy ra.');
+                btnElement.disabled = false;
+                btnElement.innerHTML = '<i class="bi bi-download"></i> Lưu ngay';
+            }
+        }
+    </script>
+}

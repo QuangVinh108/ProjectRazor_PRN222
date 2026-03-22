@@ -12,59 +12,101 @@ namespace E_Commerce_Razor.Pages.Order
     {
         private readonly IOrderService _orderService;
         private readonly IPaymentService _paymentService;
+        private readonly IVoucherService _voucherService;
+        private readonly ICartService _cartService;
         private readonly ILogger<CheckoutModel> _logger;
 
-        public CheckoutModel(IOrderService orderService, IPaymentService paymentService, ILogger<CheckoutModel> logger)
+        public CheckoutModel(IOrderService orderService, IPaymentService paymentService,
+                             IVoucherService voucherService, ICartService cartService, ILogger<CheckoutModel> logger)
         {
-            _orderService = orderService;
+            _orderService   = orderService;
             _paymentService = paymentService;
-            _logger = logger;
+            _voucherService = voucherService;
+            _cartService    = cartService;
+            _logger         = logger;
         }
 
         [BindProperty]
         public CreateOrderDto Input { get; set; } = new CreateOrderDto
         {
             PaymentMethod = "COD",
-            Country = "Vietnam"
+            Country       = "Vietnam"
         };
 
-        public void OnGet() { }
+        public List<VoucherDto> AvailableVouchers { get; set; } = new();
+
+        public async Task OnGetAsync()
+        {
+            var userId = GetCurrentUserId();
+            var cart = _cartService.GetCart(userId);
+            if (cart != null && cart.CartItems.Any())
+            {
+                var totalAmount = cart.CartItems.Sum(c => c.Quantity * c.UnitPrice);
+                AvailableVouchers = await _voucherService.GetApplicableVouchersAsync(userId, totalAmount);
+            }
+        }
+
+        /// <summary>
+        /// AJAX handler: Preview số tiền giảm khi người dùng nhập/chọn mã voucher.
+        /// POST /Order/Checkout?handler=ValidateVoucher  (body: "MÃCODE")
+        /// </summary>
+        public async Task<IActionResult> OnPostValidateVoucherAsync([FromBody] string code)
+        {
+            try
+            {
+                var userId = GetCurrentUserId();
+                var cart = _cartService.GetCart(userId);
+                
+                if (cart == null || !cart.CartItems.Any()) 
+                    return new JsonResult(new { isSuccess = false, errorMessage = "Giỏ hàng trống" });
+
+                var totalAmount = cart.CartItems.Sum(c => c.Quantity * c.UnitPrice);
+                var result = await _voucherService.ApplyVoucherAsync(userId, code, totalAmount);
+                return new JsonResult(result);
+            }
+            catch (Exception ex)
+            {
+                return new JsonResult(new { isSuccess = false, errorMessage = "Lỗi xác thực: " + ex.Message });
+            }
+        }
 
         public async Task<IActionResult> OnPostCreateAsync()
         {
             if (!ModelState.IsValid)
+            {
+                await OnGetAsync(); // Load lại dropdown nếu lỗi
                 return Page();
+            }
 
             try
             {
                 Input.UserId = GetCurrentUserId();
 
-                // Validate địa chỉ giao hàng
                 if (string.IsNullOrWhiteSpace(Input.ShippingAddress))
                 {
                     ModelState.AddModelError("Input.ShippingAddress", "Vui lòng nhập địa chỉ giao hàng");
+                    await OnGetAsync();
                     return Page();
                 }
 
-                // Tạo đơn hàng + Payment(Pending) + Shipping + xóa giỏ → đều vào DB
                 var order = await _orderService.CreateOrderAsync(Input);
-                _logger.LogInformation("Order #{OrderId} created, Method={Method}", order.OrderId, Input.PaymentMethod);
+                _logger.LogInformation("Order #{OrderId} created, Method={Method}, Voucher={Voucher}",
+                    order.OrderId, Input.PaymentMethod, Input.VoucherCode ?? "none");
 
                 if (Input.PaymentMethod == "VNPAY")
                 {
-                    // OrderService đã tạo Payment(Pending). Chỉ cần tạo URL và redirect.
                     var paymentDto = new PaymentDto { OrderId = order.OrderId, Amount = order.TotalAmount };
-                    var vnpayUrl = _paymentService.CreateVnPayUrl(paymentDto, HttpContext);
+                    var vnpayUrl   = _paymentService.CreateVnPayUrl(paymentDto, HttpContext);
                     return Redirect(vnpayUrl);
                 }
 
-                // COD / BankTransfer → xem chi tiết đơn hàng
                 return RedirectToPage("./Details", new { id = order.OrderId });
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Checkout error");
                 TempData["Error"] = ex.Message;
+                await OnGetAsync();
                 return Page();
             }
         }

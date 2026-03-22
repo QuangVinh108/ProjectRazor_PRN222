@@ -48,6 +48,10 @@ public partial class ShopDbContext : DbContext
 
     public virtual DbSet<WishlistProduct> WishlistProducts { get; set; }
 
+    public virtual DbSet<Voucher> Vouchers { get; set; }
+
+    public virtual DbSet<UserVoucher> UserVouchers { get; set; }
+
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
 #warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see https://go.microsoft.com/fwlink/?LinkId=723263.
         => optionsBuilder.UseSqlServer(GetConnectionString());
@@ -154,11 +158,17 @@ public partial class ShopDbContext : DbContext
             entity.Property(e => e.OrderDate).HasDefaultValueSql("(sysdatetime())");
             entity.Property(e => e.Status).HasMaxLength(30);
             entity.Property(e => e.TotalAmount).HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.DiscountAmount).HasColumnType("decimal(18, 2)").HasDefaultValue(0m);
 
             entity.HasOne(d => d.User).WithMany(p => p.Orders)
                 .HasForeignKey(d => d.UserId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_Orders_Users");
+
+            entity.HasOne(d => d.Voucher).WithMany(p => p.Orders)
+                .HasForeignKey(d => d.VoucherId)
+                .OnDelete(DeleteBehavior.SetNull)
+                .HasConstraintName("FK_Orders_Vouchers");
         });
 
         modelBuilder.Entity<OrderItem>(entity =>
@@ -355,7 +365,39 @@ public partial class ShopDbContext : DbContext
                 .HasConstraintName("FK_WishlistProduct_Wishlist");
         });
 
+        modelBuilder.Entity<UserVoucher>(entity =>
+        {
+            entity.HasKey(e => new { e.UserId, e.VoucherId });
+            entity.ToTable("UserVouchers");
+
+            entity.HasOne(d => d.User).WithMany(p => p.UserVouchers)
+                .HasForeignKey(d => d.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(d => d.Voucher).WithMany(p => p.UserVouchers)
+                .HasForeignKey(d => d.VoucherId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
         OnModelCreatingPartial(modelBuilder);
+
+        modelBuilder.Entity<Voucher>(entity =>
+        {
+            entity.HasKey(e => e.VoucherId);
+
+            entity.HasIndex(e => e.Code).IsUnique().HasDatabaseName("UQ_Voucher_Code");
+
+            entity.Property(e => e.Code).HasMaxLength(50).IsRequired();
+            entity.Property(e => e.Description).HasMaxLength(255);
+            entity.Property(e => e.DiscountType).HasMaxLength(20).HasDefaultValue("Fixed");
+            entity.Property(e => e.DiscountValue).HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.MinOrderValue).HasColumnType("decimal(18, 2)").HasDefaultValue(0m);
+            entity.Property(e => e.MaxDiscount).HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.UsageLimit).HasDefaultValue(1);
+            entity.Property(e => e.UsedCount).HasDefaultValue(0);
+            entity.Property(e => e.IsActive).HasDefaultValue(true);
+            entity.Property(e => e.CreatedAt).HasDefaultValueSql("(sysdatetime())");
+        });
     }
 
     partial void OnModelCreatingPartial(ModelBuilder modelBuilder);

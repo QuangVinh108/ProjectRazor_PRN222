@@ -24,5 +24,9 @@ namespace BLL.DTOs
 
         [StringLength(255, ErrorMessage = "Ghi chú không được vượt quá 255 ký tự")]
         public string? Note { get; set; }
+
+        /// <summary>Mã giảm giá (tùy chọn - để trống nếu không dùng)</summary>
+        [StringLength(50)]
+        public string? VoucherCode { get; set; }
     }
 }

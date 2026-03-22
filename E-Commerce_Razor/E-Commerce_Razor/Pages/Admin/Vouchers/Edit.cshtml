@@ -1,0 +1,120 @@
+@page "{id:int}"
+@model E_Commerce_Razor.Pages.Admin.Vouchers.EditModel
+@{
+    ViewData["Title"] = "Chỉnh sửa mã giảm giá";
+}
+
+<div class="container mt-4" style="max-width:700px;">
+    <div class="d-flex align-items-center mb-3 gap-2">
+        <a asp-page="./Index" class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-arrow-left"></i>
+        </a>
+        <h2 class="mb-0"><i class="bi bi-pencil-fill text-primary"></i> Chỉnh sửa mã giảm giá</h2>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <form method="post" asp-route-id="@Model.VoucherId">
+                @Html.AntiForgeryToken()
+                <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label asp-for="Input.Code" class="form-label fw-semibold">Mã Voucher <span class="text-danger">*</span></label>
+                        <input asp-for="Input.Code" class="form-control text-uppercase" style="letter-spacing:1px;" />
+                        <span asp-validation-for="Input.Code" class="text-danger small"></span>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label asp-for="Input.DiscountType" class="form-label fw-semibold">Loại giảm giá <span class="text-danger">*</span></label>
+                        <select asp-for="Input.DiscountType" class="form-select" id="discountTypeSelect">
+                            <option value="Fixed">💰 Giảm tiền mặt (Fixed)</option>
+                            <option value="Percent">% Giảm theo phần trăm (Percent)</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label asp-for="Input.DiscountValue" class="form-label fw-semibold">Giá trị giảm <span class="text-danger">*</span></label>
+                        <div class="input-group">
+                            <input asp-for="Input.DiscountValue" class="form-control" type="number" min="1" step="0.01" />
+                            <span class="input-group-text" id="discountUnit">đ</span>
+                        </div>
+                        <span asp-validation-for="Input.DiscountValue" class="text-danger small"></span>
+                    </div>
+
+                    <div class="col-md-6" id="maxDiscountRow">
+                        <label asp-for="Input.MaxDiscount" class="form-label fw-semibold">Giảm tối đa</label>
+                        <div class="input-group">
+                            <input asp-for="Input.MaxDiscount" class="form-control" type="number" min="0" step="1000" placeholder="Không giới hạn" />
+                            <span class="input-group-text">đ</span>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label asp-for="Input.MinOrderValue" class="form-label fw-semibold">Đơn hàng tối thiểu</label>
+                        <div class="input-group">
+                            <input asp-for="Input.MinOrderValue" class="form-control" type="number" min="0" step="1000" />
+                            <span class="input-group-text">đ</span>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label asp-for="Input.UsageLimit" class="form-label fw-semibold">Số lượt dùng tối đa <span class="text-danger">*</span></label>
+                        <input asp-for="Input.UsageLimit" class="form-control" type="number" min="1" />
+                        <span asp-validation-for="Input.UsageLimit" class="text-danger small"></span>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label asp-for="Input.StartDate" class="form-label fw-semibold">Ngày bắt đầu <span class="text-danger">*</span></label>
+                        <input asp-for="Input.StartDate" class="form-control" type="date" />
+                        <span asp-validation-for="Input.StartDate" class="text-danger small"></span>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label asp-for="Input.EndDate" class="form-label fw-semibold">Ngày kết thúc <span class="text-danger">*</span></label>
+                        <input asp-for="Input.EndDate" class="form-control" type="date" />
+                        <span asp-validation-for="Input.EndDate" class="text-danger small"></span>
+                    </div>
+
+                    <div class="col-12">
+                        <label asp-for="Input.Description" class="form-label fw-semibold">Mô tả</label>
+                        <input asp-for="Input.Description" class="form-control" />
+                    </div>
+
+                    <div class="col-12">
+                        <div class="form-check form-switch">
+                            <input asp-for="Input.IsActive" class="form-check-input" type="checkbox" role="switch" />
+                            <label asp-for="Input.IsActive" class="form-check-label fw-semibold">Kích hoạt</label>
+                        </div>
+                    </div>
+                </div>
+
+                <hr />
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-save"></i> Lưu thay đổi
+                    </button>
+                    <a asp-page="./Index" class="btn btn-outline-secondary">Hủy</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        const select = document.getElementById('discountTypeSelect');
+        const unit   = document.getElementById('discountUnit');
+        const maxRow = document.getElementById('maxDiscountRow');
+
+        function updateUI() {
+            const isPercent = select.value === 'Percent';
+            unit.textContent = isPercent ? '%' : 'đ';
+            maxRow.style.display = isPercent ? '' : 'none';
+        }
+
+        select.addEventListener('change', updateUI);
+        updateUI();
+    </script>
+}

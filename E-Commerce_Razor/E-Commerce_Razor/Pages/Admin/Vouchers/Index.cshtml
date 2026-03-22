@@ -1,0 +1,124 @@
+@page
+@model E_Commerce_Razor.Pages.Admin.Vouchers.IndexModel
+@{
+    ViewData["Title"] = "Quản lý Mã Giảm Giá";
+}
+
+<div class="container-fluid mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2><i class="bi bi-tag-fill text-primary"></i> Quản lý Mã Giảm Giá</h2>
+        <a asp-page="./Create" class="btn btn-success">
+            <i class="bi bi-plus-circle"></i> Tạo mã mới
+        </a>
+    </div>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show">
+            @TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show">
+            @TempData["ErrorMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <div class="card shadow-sm">
+        <div class="card-body p-0">
+            <table class="table table-hover table-striped mb-0">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Mã</th>
+                        <th>Mô tả</th>
+                        <th>Loại</th>
+                        <th>Giá trị giảm</th>
+                        <th>Đơn tối thiểu</th>
+                        <th>Đã dùng / Giới hạn</th>
+                        <th>Hạn dùng</th>
+                        <th>Trạng thái</th>
+                        <th>Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (!Model.Vouchers.Any())
+                    {
+                        <tr>
+                            <td colspan="9" class="text-center text-muted py-4">Chưa có mã giảm giá nào.</td>
+                        </tr>
+                    }
+                    @foreach (var v in Model.Vouchers)
+                    {
+                        var isExpired = v.EndDate < DateTime.Now;
+                        var isFull    = v.UsedCount >= v.UsageLimit;
+                        <tr>
+                            <td><span class="badge bg-primary fs-6">@v.Code</span></td>
+                            <td>@(v.Description ?? "-")</td>
+                            <td>
+                                @if (v.DiscountType == "Percent")
+                                {
+                                    <span class="badge bg-info text-dark">% Phần trăm</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-warning text-dark">💰 Cố định</span>
+                                }
+                            </td>
+                            <td>
+                                @if (v.DiscountType == "Percent")
+                                {
+                                    @($"{v.DiscountValue:0}%")
+                                    if (v.MaxDiscount.HasValue)
+                                    {
+                                        <small class="text-muted">(tối đa @v.MaxDiscount.Value.ToString("N0")đ)</small>
+                                    }
+                                }
+                                else
+                                {
+                                    @v.DiscountValue.ToString("N0")<text>đ</text>
+                                }
+                            </td>
+                            <td>@v.MinOrderValue.ToString("N0")đ</td>
+                            <td>
+                                <span class="@(isFull ? "text-danger fw-bold" : "")">
+                                    @v.UsedCount / @v.UsageLimit
+                                </span>
+                            </td>
+                            <td>
+                                <span class="@(isExpired ? "text-danger" : "text-success")">
+                                    @v.EndDate.ToString("dd/MM/yyyy")
+                                </span>
+                            </td>
+                            <td>
+                                @if (!v.IsActive || isExpired || isFull)
+                                {
+                                    <span class="badge bg-secondary">Không hoạt động</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-success">Hoạt động</span>
+                                }
+                            </td>
+                            <td>
+                                <a asp-page="./Edit" asp-route-id="@v.VoucherId" class="btn btn-sm btn-outline-primary me-1">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                <form method="post" asp-page-handler="Delete" asp-route-id="@v.VoucherId"
+                                      class="d-inline"
+                                      onsubmit="return confirm('Xóa mã @v.Code?')">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit" class="btn btn-sm btn-outline-danger">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
