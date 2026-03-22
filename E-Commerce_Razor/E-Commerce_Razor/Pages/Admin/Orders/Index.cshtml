@@ -81,15 +81,17 @@
                                 }
                             </td>
                             <td>
-                                <a asp-page="/Order/Details" asp-route-id="@order.OrderId" class="btn btn-sm btn-outline-secondary me-1" title="Xem chi tiết">
-                                    <i class="bi bi-eye"></i>
-                                </a>
-                                @if (order.Status == "Paid")
-                                {
-                                    <a asp-page="/Admin/Orders/AssignShipper" asp-route-id="@order.OrderId" class="btn btn-sm btn-primary" title="Gán Shipper">
-                                        <i class="bi bi-person-plus me-1"></i>Gán Shipper
+                                <div class="d-flex gap-1 align-items-center">
+                                    <a asp-page="/Order/Details" asp-route-id="@order.OrderId" class="btn btn-sm btn-outline-secondary" title="Xem chi tiết">
+                                        <i class="bi bi-eye"></i>
                                     </a>
-                                }
+                                    @if (order.Status == "Paid")
+                                    {
+                                        <a asp-page="/Admin/Orders/AssignShipper" asp-route-id="@order.OrderId" class="btn btn-sm btn-primary" title="Gán Shipper">
+                                            <i class="bi bi-person-plus"></i>
+                                        </a>
+                                    }
+                                </div>
                             </td>
                         </tr>
                     }

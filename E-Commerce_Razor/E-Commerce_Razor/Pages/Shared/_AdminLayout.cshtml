@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="vi">
 <head>
     <meta charset="utf-8" />
@@ -46,6 +46,12 @@
                    class="list-group-item list-group-item-action bg-dark text-white @(currentPage.StartsWith("/Admin/Orders") ? "active" : "")">
                     <i class="bi bi-cart-check"></i> Quản lý Đơn hàng
                 </a>
+
+                <a asp-page="/Admin/Returns/Index"
+                   class="list-group-item list-group-item-action bg-dark text-white @(currentPage.StartsWith("/Admin/Returns") ? "active" : "")">
+                    <i class="bi bi-arrow-return-left"></i> Quản lý Đổi trả
+                </a>
+
 
                 <a asp-page="/Chat/Index"
                    class="list-group-item list-group-item-action bg-dark text-white @(currentPage.StartsWith("/Chat") ? "active" : "")">

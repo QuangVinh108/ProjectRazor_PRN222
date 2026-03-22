@@ -11,20 +11,34 @@ namespace E_Commerce_Razor.Pages.Shipper
     public class IndexModel : PageModel
     {
         private readonly IOrderService _orderService;
+        private readonly IUserService _userService; // Thêm userService
 
-        public IndexModel(IOrderService orderService)
+        public IndexModel(IOrderService orderService, IUserService userService) // Thêm IUserService vào DI
         {
             _orderService = orderService;
+            _userService = userService;
         }
 
         public List<OrderDto> Orders { get; set; } = new();
         public string ShipperName { get; set; } = string.Empty;
 
-        public async Task OnGetAsync()
+        public async Task<IActionResult> OnGetAsync()
         {
             var shipperId = GetCurrentUserId();
+            
+            // KIỂM TRA EKYC CHO SHIPPER
+            var shipper = _userService.GetUserById(shipperId);
+            if (shipper == null || !shipper.IsIdentityVerified)
+            {
+                // Nếu chưa xác thực, thông báo và điều hướng đến trang EKYC
+                TempData["ErrorMessage"] = "Bạn cần xác thực danh tính (eKYC) trước khi xem và nhận đơn giao hàng.";
+                return RedirectToPage("/Account/Ekyc");
+            }
+
             ShipperName = User.FindFirst(ClaimTypes.Name)?.Value ?? "Shipper";
             Orders = await _orderService.GetShipperOrdersAsync(shipperId);
+
+            return Page();
         }
 
         public async Task<IActionResult> OnPostDeliveredAsync(int orderId)

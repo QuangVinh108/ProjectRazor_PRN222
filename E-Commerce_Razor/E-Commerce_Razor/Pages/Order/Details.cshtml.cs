@@ -11,15 +11,18 @@ namespace E_Commerce_Razor.Pages.Order
     public class DetailsModel : PageModel
     {
         private readonly IOrderService _orderService;
+        private readonly IReturnRequestService _returnService;
         private readonly ILogger<DetailsModel> _logger;
 
-        public DetailsModel(IOrderService orderService, ILogger<DetailsModel> logger)
+        public DetailsModel(IOrderService orderService, IReturnRequestService returnService, ILogger<DetailsModel> logger)
         {
             _orderService = orderService;
+            _returnService = returnService;
             _logger = logger;
         }
 
         public OrderDto? Order { get; set; }
+        public ReturnRequestDto? ReturnRequestInfo { get; set; }
 
         public async Task<IActionResult> OnGetAsync(int id)
         {
@@ -28,6 +31,8 @@ namespace E_Commerce_Razor.Pages.Order
 
             if (Order == null)
                 return RedirectToPage("./Index");
+
+            ReturnRequestInfo = await _returnService.GetByOrderIdAsync(id);
 
             return Page();
         }
@@ -51,29 +56,6 @@ namespace E_Commerce_Razor.Pages.Order
             return RedirectToPage("./Details", new { id });
         }
 
-        public async Task<IActionResult> OnPostReportNotReceivedAsync(int id)
-        {
-            try
-            {
-                var userId = GetCurrentUserId();
-                var orderBefore = await _orderService.GetOrderByIdAsync(id, userId);
-                var amount = orderBefore?.Payment?.Amount ?? orderBefore?.TotalAmount ?? 0m;
-
-                var ok = await _orderService.ReportNotReceivedByCustomerAsync(id, userId);
-                if (ok)
-                {
-                    TempData["Success"] = $"Đã ghi nhận. Số tiền {amount:N0} ₫ sẽ được hoàn lại trong vòng 3–5 ngày làm việc. Shipper đã được cảnh báo.";
-                }
-                else
-                    TempData["Error"] = "Không thể xử lý.";
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Report not received error");
-                TempData["Error"] = ex.Message;
-            }
-            return RedirectToPage("./Details", new { id });
-        }
 
         public async Task<IActionResult> OnPostCancelAsync(int id)
         {
@@ -93,7 +75,7 @@ namespace E_Commerce_Razor.Pages.Order
                     if (wasPaid)
                     {
                         TempData["Success"] =
-                            $"Đơn hàng đã được hủy thành công. Số tiền {amount:N0} ₫ sẽ được hoàn lại về {paymentMethod} của bạn trong vòng 3–5 ngày làm việc.";
+                            $"Đơn hàng đã được hủy thành công. Số tiền {amount:N0} ₫ sẽ được hoàn lại về {paymentMethod} của bạn trong vòng 24h tới.";
                     }
                     else
                     {

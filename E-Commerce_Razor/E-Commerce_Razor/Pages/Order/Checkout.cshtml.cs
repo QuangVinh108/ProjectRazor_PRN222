@@ -14,16 +14,20 @@ namespace E_Commerce_Razor.Pages.Order
         private readonly IPaymentService _paymentService;
         private readonly IVoucherService _voucherService;
         private readonly ICartService _cartService;
-        private readonly ILogger<CheckoutModel> _logger;
 
         public CheckoutModel(IOrderService orderService, IPaymentService paymentService,
-                             IVoucherService voucherService, ICartService cartService, ILogger<CheckoutModel> logger)
+                             IVoucherService voucherService, ICartService cartService, ILogger<CheckoutModel> logger);
+        private readonly IUserService _userService; // Thêm dòng này để gọi UserService
+        private readonly ILogger<CheckoutModel> _logger;
+
+        public CheckoutModel(IOrderService orderService, IPaymentService paymentService, IUserService userService, ILogger<CheckoutModel> logger)
         {
             _orderService   = orderService;
             _paymentService = paymentService;
             _voucherService = voucherService;
             _cartService    = cartService;
-            _logger         = logger;
+            _userService = userService; // Gán qua DI
+            _logger = logger;
         }
 
         [BindProperty]
@@ -80,7 +84,18 @@ namespace E_Commerce_Razor.Pages.Order
 
             try
             {
-                Input.UserId = GetCurrentUserId();
+                int userId = GetCurrentUserId();
+
+                // 1. KIỂM TRA TRẠNG THÁI EKYC
+                var currentUser = _userService.GetUserById(userId);
+                if (currentUser == null || !currentUser.IsIdentityVerified)
+                {
+                    TempData["ErrorMessage"] = "Bạn cần xác thực danh tính (eKYC) trước khi tiến hành thanh toán mua hàng.";
+                    return RedirectToPage("/Account/Ekyc"); // Chuyển hướng nếu chưa eKYC
+                }
+
+                // Gán UserId để tạo đơn
+                Input.UserId = userId;
 
                 if (string.IsNullOrWhiteSpace(Input.ShippingAddress))
                 {

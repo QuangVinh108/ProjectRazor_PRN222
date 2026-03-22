@@ -1,0 +1,161 @@
+@page "{id:int}"
+@model E_Commerce_Razor.Pages.Admin.Returns.DetailsModel
+@{
+    Layout = "_AdminLayout";
+    ViewData["Title"] = $"Chi tiết Yêu cầu xử lý Đổi/Trả hàng #{Model.ReturnRequest?.ReturnRequestId}";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="h3"><i class="bi bi-box-seam me-2"></i> Chi tiết Yêu cầu xử lý Đổi trả</h2>
+    <a asp-page="./Index" class="btn btn-secondary">
+        <i class="bi bi-arrow-left"></i> Quay lại
+    </a>
+</div>
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        @TempData["Success"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        @TempData["Error"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+@if (Model.ReturnRequest != null)
+{
+    var req = Model.ReturnRequest;
+    
+    <div class="row">
+        <!-- Thông tin Yêu cầu & Hình ảnh -->
+        <div class="col-md-7 mb-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Thông tin Yêu cầu Trả hàng</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <p><strong>Người yêu cầu:</strong> @req.CustomerName (ID: @req.UserId)</p>
+                            <p><strong>Ngày gửi yêu cầu:</strong> @req.CreatedAt.ToString("dd/MM/yyyy HH:mm")</p>
+                            <p><strong>Lý do:</strong> <span class="badge bg-info text-dark">@req.ReasonDisplay</span></p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong>Trạng thái Yêu cầu:</strong> 
+                                @if (req.Status == "Pending")
+                                {
+                                    <span class="badge bg-warning text-dark px-3 py-2"><i class="bi bi-hourglass-split"></i> Chờ duyệt</span>
+                                }
+                                else if (req.Status == "Approved")
+                                {
+                                    <span class="badge bg-success px-3 py-2"><i class="bi bi-check-circle"></i> Đã duyệt (Hoàn tiền)</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-danger px-3 py-2"><i class="bi bi-x-circle"></i> Đã từ chối</span>
+                                }
+                            </p>
+                            <p><strong>Đơn hàng liên kết:</strong> <a href="/Admin/Orders/Details/@req.OrderId" target="_blank" class="fw-bold">#@req.OrderId <i class="bi bi-link-45deg"></i></a></p>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-light p-3 rounded mb-4">
+                        <p class="mb-1 fw-bold">Chi tiết mô tả từ khách hàng:</p>
+                        <p class="mb-0 fst-italic text-secondary">@(string.IsNullOrEmpty(req.Description) ? "Khách hàng không cung cấp thêm mô tả chi tiết." : req.Description)</p>
+                    </div>
+
+                    <h6 class="fw-bold"><i class="bi bi-images text-primary me-2"></i> Hình ảnh bằng chứng:</h6>
+                    <div class="d-flex flex-wrap gap-2 mb-3">
+                        @if (req.EvidenceImageUrls.Any())
+                        {
+                            @foreach (var img in req.EvidenceImageUrls)
+                            {
+                                <a href="@img" target="_blank">
+                                    <img src="@img" class="img-thumbnail rounded" style="width:120px;height:120px;object-fit:cover;" alt="Evidence" />
+                                </a>
+                            }
+                        }
+                        else
+                        {
+                            <span class="text-muted fst-italic">Không có hình ảnh đính kèm.</span>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Chi tiết xử lý -->
+        <div class="col-md-5 mb-4">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0 fw-bold">Thông tin Xử lý</h5>
+                </div>
+                <div class="card-body bg-light">
+                    <p><strong>Dự kiến hoàn tiền:</strong> <span class="text-danger fw-bold fs-5">@req.RefundAmount?.ToString("N0") ₫</span></p>
+
+                    @if (req.Status != "Pending")
+                    {
+                        <hr />
+                        <p class="mb-1 text-muted small">Thời gian xử lý: @req.ProcessedAt?.ToString("dd/MM/yyyy HH:mm")</p>
+                        <p class="mb-1 text-muted small">Người xử lý: @req.ProcessedByName</p>
+                        
+                        <div class="alert @(req.Status == "Approved" ? "alert-success" : "alert-danger") mt-3 mb-0 border-0 shadow-sm">
+                            <p class="mb-1 fw-bold"><i class="bi bi-chat-left-dots"></i> Ghi chú Admin:</p>
+                            <p class="mb-0">@req.AdminNote</p>
+                        </div>
+                    }
+                    else
+                    {
+                        <!-- Action Forms Cho Admin -->
+                        <hr />
+                        <h6 class="fw-bold mb-3">Quyết định xử lý:</h6>
+                        
+                        <!-- Form DUYỆT -->
+                        <form method="post" asp-page-handler="Approve" class="mb-3 d-grid">
+                            <input type="hidden" name="id" value="@req.ReturnRequestId" />
+                            <button type="submit" class="btn btn-success btn-lg" onclick="return confirm('Bạn xác nhận DUYỆT yêu cầu trả hàng? Hệ thống sẽ cập nhật kho, tự động hoàn tiền và gửi email thông báo cho Khách hàng.')">
+                                <i class="bi bi-check-circle me-1"></i> DUYỆT YÊU CẦU & HOÀN TIỀN
+                            </button>
+                        </form>
+
+                        <p class="text-center text-muted fw-bold mb-3">- HOẶC -</p>
+
+                        <!-- Form TỪ CHỐI -->
+                        <form method="post" asp-page-handler="Reject">
+                            <input type="hidden" name="id" value="@req.ReturnRequestId" />
+                            <div class="mb-3">
+                                <label for="adminNote" class="form-label fw-bold text-danger">Lý do từ chối (Bắt buộc):</label>
+                                <textarea name="adminNote" id="adminNote" class="form-control border-danger border-opacity-50" rows="3" placeholder="Nhập lý do chi tiết từ chối yêu cầu (khách hàng sẽ thấy)..." required></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-outline-danger w-100 font-monospace" onclick="return confirm('Bạn xác nhận TỪ CHỐI yêu cầu trả hàng? Hệ thống sẽ khôi phục trạng thái đơn hàng và gửi email thông báo cho Khách hàng.')">
+                                <i class="bi bi-x-circle me-1"></i> XÁC NHẬN TỪ CHỐI
+                            </button>
+                        </form>
+                    }
+                </div>
+            </div>
+            
+            <!-- Danh sách sản phẩm của Đơn Hàng -->
+            <div class="card shadow-sm mt-3 border border-bottom-0 border-end-0 border-start-0 border-3 border-secondary border-opacity-25 rounded-3">
+                 <div class="card-body">
+                      <h6 class="fw-bold text-secondary mb-3"><i class="bi bi-bag-check me-1"></i> Các sản phẩm trong Đơn hàng</h6>
+                      <ul class="list-group list-group-flush small">
+                          @foreach(var item in req.OrderItems)
+                          {
+                              <li class="list-group-item d-flex justify-content-between align-items-center py-2 bg-transparent">
+                                  <span><span class="badge bg-secondary me-2">x @item.Quantity</span> @item.ProductName</span>
+                                  <span class="text-muted">@((item.UnitPrice * item.Quantity).ToString("N0"))₫</span>
+                              </li>
+                          }
+                      </ul>
+                 </div>
+            </div>
+        </div>
+    </div>
+}
