@@ -35,29 +35,32 @@ namespace E_Commerce_Razor.Pages.Account
             }
         }
 
-        // Đổi tham số IFormFile file -> fileFront cho đúng với FormData của JS
-        // Sửa đổi phương thức OnPostAnalyzeCccdAsync
+        // Sửa hàm cũ thành hàm này
         public async Task<IActionResult> OnPostAnalyzeCccdAsync(IFormFile fileFront, string liveFaceBase64)
         {
             if (fileFront == null || fileFront.Length == 0)
                 return new JsonResult(new { success = false, message = "Không tìm thấy ảnh mặt trước CCCD" });
 
             if (string.IsNullOrEmpty(liveFaceBase64))
-                return new JsonResult(new { success = false, message = "Vui lòng chụp ảnh khuôn mặt" });
+                return new JsonResult(new { success = false, message = "Vui lòng chụp ảnh khuôn mặt!" });
 
             try
             {
+                // Gửi cả ảnh Căn cước và Ảnh chụp thẳng vào Gemini AI
                 var result = await _geminiHelper.AnalyzeIdCardAsync(fileFront, liveFaceBase64);
 
                 if (result == null)
-                    return new JsonResult(new { success = false, message = "Không thể phân tích ảnh hoặc kết nối AI lỗi" });
+                    return new JsonResult(new { success = false, message = "Lỗi kết nối AI để phân tích ảnh." });
 
+                // 1. Kiểm tra coi có nhìn ra CCCD không
                 if (!result.IsValid)
-                    return new JsonResult(new { success = false, message = result.Reason ?? "Ảnh CCCD không hợp lệ." });
+                    return new JsonResult(new { success = false, message = result.Reason ?? "Không nhận diện được CCCD hợp lệ." });
 
+                // 2. Chặn lại NẾU KHUÔN MẶT KHÔNG KHỚP
                 if (!result.IsFaceMatch)
-                    return new JsonResult(new { success = false, message = result.Reason ?? "Khuôn mặt chụp thực tế KHÔNG KHỚP với ảnh trên thẻ CCCD." });
+                    return new JsonResult(new { success = false, message = result.Reason ?? "Khuôn mặt chụp được KHÔNG KHỚP với ảnh trên CCCD!" });
 
+                // Vượt qua hết thì trả về Data
                 return new JsonResult(new { success = true, data = result.Data });
             }
             catch (Exception ex)
