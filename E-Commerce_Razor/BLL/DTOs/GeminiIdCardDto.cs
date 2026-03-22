@@ -9,7 +9,7 @@ namespace BLL.DTOs
     public class GeminiIdCardDto
     {
         public bool IsValid { get; set; } // Ảnh CCCD có hợp lệ không
-        public bool IsFaceMatch { get; set; } // Khuôn mặt trên thẻ và Live camera có khớp nhau không
+        public bool IsFaceMatch { get; set; } // KHUÔN MẶT CÓ KHỚP KHÔNG
         public string Reason { get; set; } // Lý do (nếu lỗi)
         public IdCardData Data { get; set; } // Dữ liệu bóc tách
     }

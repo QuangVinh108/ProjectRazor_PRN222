@@ -126,23 +126,23 @@ namespace BLL.Helper
                 await imageFile.CopyToAsync(ms);
                 var cccdBase64 = Convert.ToBase64String(ms.ToArray());
 
-                // 2. Chẩn hóa chuỗi base64 của LiveFace (bỏ phần data:image/jpeg;base64,)
+                // 2. Chẩn hóa chuỗi base64 của LiveFace camera
                 if (!string.IsNullOrEmpty(liveFaceBase64) && liveFaceBase64.Contains(","))
                 {
                     liveFaceBase64 = liveFaceBase64.Split(',')[1];
                 }
 
-                // 3. Prompt yêu cầu cả OCR và so khớp khuôn mặt
+                // 3. Prompt yêu cầu AI nhận diện chữ và SO SÁNH khuôn mặt
                 var prompt = @"Bạn là hệ thống eKYC (Nhận diện khuôn mặt và trích xuất CCCD).
                         Nhiệm vụ:
                         1. Trích xuất thông tin từ Hình 1 (Căn cước công dân - CCCD).
-                        2. So sánh khuôn mặt người trong Hình 1 (CCCD) và Hình 2 (Ảnh chụp trực tiếp).
+                        2. So sánh khuôn mặt người trong Hình 1 (CCCD) và Hình 2 (Ảnh selfie chụp bằng camera).
 
                         Yêu cầu output chỉ trả về RAW JSON thuần túy (Không markdown, không code block).
                         Cấu trúc JSON bắt buộc:
                         {
                             ""isValid"": true, (kiểm tra Hình 1 có phải là CCCD hợp lệ, rõ nét không)
-                            ""isFaceMatch"": true, (trả về true nếu khuôn mặt ở Hình 1 và Hình 2 là của cùng CÙNG MỘT NGƯỜI, false nếu khác người)
+                            ""isFaceMatch"": true, (trả về true nếu khuôn mặt ở Hình 1 và Hình 2 là của CÙNG MỘT NGƯỜI, false nếu khác người)
                             ""reason"": ""null nếu hợp lệ, nếu isValid=false hoặc isFaceMatch=false hãy ghi ngắn gọn lý do tại sao"",
                             ""data"": {
                                 ""idNumber"": ""Số thẻ"",
@@ -150,32 +150,29 @@ namespace BLL.Helper
                                 ""dob"": ""Ngày sinh (dd/MM/yyyy)"",
                                 ""address"": ""Nơi thường trú""
                             }
-                        }
-                        Nếu hình mờ hoặc không nhận diện được, hãy đánh dấu isValid: false hoặc isFaceMatch: false và ghi rõ lý do.";
+                        }";
 
                 var requestBody = new
                 {
                     contents = new[]
                     {
-                new
-                {
-                    parts = new object[]
-                    {
-                        new { text = prompt },
-                        // Hình 1: CCCD
-                        new { inline_data = new { mime_type = imageFile.ContentType, data = cccdBase64 } },
-                        // Hình 2: Live selfie Camera
-                        new { inline_data = new { mime_type = "image/jpeg", data = liveFaceBase64 } }
-                    }
-                }
-            },
+                        new
+                        {
+                            parts = new object[]
+                            {
+                                new { text = prompt },
+                                new { inline_data = new { mime_type = imageFile.ContentType, data = cccdBase64 } }, // Hình 1
+                                new { inline_data = new { mime_type = "image/jpeg", data = liveFaceBase64 } }     // Hình 2
+                            }
+                        }
+                    },
                     safetySettings = new[]
                     {
-                new { category = "HARM_CATEGORY_HARASSMENT", threshold = "BLOCK_NONE" },
-                new { category = "HARM_CATEGORY_HATE_SPEECH", threshold = "BLOCK_NONE" },
-                new { category = "HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold = "BLOCK_NONE" },
-                new { category = "HARM_CATEGORY_DANGEROUS_CONTENT", threshold = "BLOCK_NONE" }
-            }
+                        new { category = "HARM_CATEGORY_HARASSMENT", threshold = "BLOCK_NONE" },
+                        new { category = "HARM_CATEGORY_HATE_SPEECH", threshold = "BLOCK_NONE" },
+                        new { category = "HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold = "BLOCK_NONE" },
+                        new { category = "HARM_CATEGORY_DANGEROUS_CONTENT", threshold = "BLOCK_NONE" }
+                    }
                 };
 
                 var jsonContent = new StringContent(JsonSerializer.Serialize(requestBody), Encoding.UTF8, "application/json");
@@ -193,7 +190,6 @@ namespace BLL.Helper
 
                 var text = candidates[0].GetProperty("content").GetProperty("parts")[0].GetProperty("text").GetString();
 
-                // Xử lý dọn chuỗi JSON
                 text = text.Replace("```json", "").Replace("```", "").Trim();
                 int startIndex = text.IndexOf('{');
                 int endIndex = text.LastIndexOf('}');
