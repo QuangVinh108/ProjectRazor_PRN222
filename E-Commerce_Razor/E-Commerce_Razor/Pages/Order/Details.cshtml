@@ -70,6 +70,14 @@
                                     {
                                         <span class="badge bg-danger"><i class="bi bi-x-circle"></i> Đã hủy</span>
                                     }
+                                    else if (Model.Order.Status == "ReturnRequested")
+                                    {
+                                        <span class="badge bg-warning text-dark"><i class="bi bi-arrow-return-left"></i> Yêu cầu đổi trả</span>
+                                    }
+                                    else if (Model.Order.Status == "Returned")
+                                    {
+                                        <span class="badge bg-secondary"><i class="bi bi-arrow-return-left"></i> Đã trả hàng/Hoàn tiền</span>
+                                    }
                                     else
                                     {
                                         <span class="badge bg-secondary">@Model.Order.Status</span>
@@ -120,6 +128,7 @@
 
                         <!-- Cancel + Pay Buttons -->
                         @{
+                            var hasReturnRequest = Model.ReturnRequestInfo != null;
                             var canCancel = Model.Order.Status == "Pending"
                                 || (Model.Order.Payment?.Status == "Paid"
                                     && (Model.Order.Shipping == null || !Model.Order.Shipping.ShippedDate.HasValue));
@@ -145,6 +154,16 @@
                                         </button>
                                     </form>
                                 }
+                            </div>
+                        }
+
+                        @if (hasReturnRequest && Model.ReturnRequestInfo.Status == "Rejected")
+                        {
+                            <div class="alert alert-danger mt-4 shadow-sm border-danger border-opacity-25 rounded-3">
+                                <h6 class="fw-bold fs-6 mb-2 text-danger"><i class="bi bi-exclamation-octagon-fill me-2"></i>YÊU CẦU HOÀN TIỀN / TRẢ HÀNG BỊ TỪ CHỐI</h6>
+                                <hr class="border-danger opacity-50 my-2" />
+                                <p class="mb-1 text-dark"><strong>Lý do từ chối:</strong> @Model.ReturnRequestInfo.AdminNote</p>
+                                <div class="text-muted fst-italic mt-2" style="font-size:12px;">Xử lý vào lúc: @(Model.ReturnRequestInfo.ProcessedAt?.ToString("dd/MM/yyyy HH:mm") ?? "N/A") bởi Quản trị viên @Model.ReturnRequestInfo.ProcessedByName</div>
                             </div>
                         }
                     </div>
@@ -237,22 +256,55 @@
                                     <div class="text-muted" style="font-size:12px">
                                         @(Model.Order.Shipping.DeliveryDate?.ToString("dd/MM/yyyy HH:mm") ?? "Chờ giao hàng")
                                     </div>
-                                    @if (Model.Order.Status == "Delivered")
+                                    @if (Model.Order.Status == "Delivered" || Model.Order.Status == "Hoàn thành")
                                     {
                                         <div class="d-flex gap-2 mt-2">
-                                            <form method="post" asp-page-handler="ConfirmReceived" asp-route-id="@Model.Order.OrderId" class="d-inline">
-                                                @Html.AntiForgeryToken()
-                                                <button type="submit" class="btn btn-sm btn-success">
-                                                    <i class="bi bi-check-circle me-1"></i>Xác nhận đã nhận hàng
-                                                </button>
-                                            </form>
-                                            <form method="post" asp-page-handler="ReportNotReceived" asp-route-id="@Model.Order.OrderId" class="d-inline"
-                                                  onsubmit="return confirm('Bạn chắc chắn chưa nhận được hàng? Đơn hàng sẽ được hoàn tiền và shipper sẽ bị cảnh báo.');">
-                                                @Html.AntiForgeryToken()
-                                                <button type="submit" class="btn btn-sm btn-outline-danger">
-                                                    <i class="bi bi-exclamation-triangle me-1"></i>Chưa nhận hàng
-                                                </button>
-                                            </form>
+                                            @if (Model.Order.Status == "Delivered")
+                                            {
+                                                @if (!(hasReturnRequest && Model.ReturnRequestInfo.Status == "Rejected"))
+                                                {
+                                                    <form method="post" asp-page-handler="ConfirmReceived" asp-route-id="@Model.Order.OrderId" class="d-inline">
+                                                        @Html.AntiForgeryToken()
+                                                        <button type="submit" class="btn btn-sm btn-success">
+                                                            <i class="bi bi-check-circle me-1"></i>Xác nhận đã nhận hàng
+                                                        </button>
+                                                    </form>
+                                                }
+                                                else
+                                                {
+                                                    <span class="badge bg-secondary align-self-center py-2 px-3 shadow-sm border border-secondary">
+                                                        <i class="bi bi-bag-check-fill me-1"></i>Đơn hàng đã đóng sổ
+                                                    </span>
+                                                }
+                                            }
+
+                                            @if (hasReturnRequest)
+                                            {
+                                                @if (Model.ReturnRequestInfo.Status == "Pending")
+                                                {
+                                                    <span class="badge bg-warning text-dark align-self-center py-2 px-3 border border-warning shadow-sm">
+                                                        <i class="bi bi-hourglass-split me-1"></i>Đang yêu cầu trả hàng/hoàn tiền
+                                                    </span>
+                                                }
+                                                else if (Model.ReturnRequestInfo.Status == "Rejected")
+                                                {
+                                                     <span class="badge bg-danger align-self-center py-2 px-3 border border-danger shadow-sm">
+                                                         <i class="bi bi-x-octagon-fill me-1"></i>Hoàn tiền bị TỪ CHỐI
+                                                     </span>
+                                                }
+                                            }
+                                            else
+                                            {
+                                                <a href="/Order/ReturnRequest/@Model.Order.OrderId" class="btn btn-sm btn-outline-danger">
+                                                    <i class="bi bi-arrow-counterclockwise me-1"></i>Trả hàng/Hoàn tiền
+                                                </a>
+                                            }
+                                        </div>
+                                    }
+                                    @if (Model.Order.Status == "ReturnRequested")
+                                    {
+                                        <div class="mt-2 text-warning fw-bold">
+                                            <i class="bi bi-hourglass-split"></i> Đang chờ Admin xử lý yêu cầu Trả hàng
                                         </div>
                                     }
                                 </div>

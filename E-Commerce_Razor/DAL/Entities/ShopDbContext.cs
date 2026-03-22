@@ -48,6 +48,8 @@ public partial class ShopDbContext : DbContext
 
     public virtual DbSet<WishlistProduct> WishlistProducts { get; set; }
 
+    public virtual DbSet<ReturnRequest> ReturnRequests { get; set; }
+
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
 #warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see https://go.microsoft.com/fwlink/?LinkId=723263.
         => optionsBuilder.UseSqlServer(GetConnectionString());
@@ -353,6 +355,36 @@ public partial class ShopDbContext : DbContext
                 .HasForeignKey(d => d.WishlistId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_WishlistProduct_Wishlist");
+        });
+
+        modelBuilder.Entity<ReturnRequest>(entity =>
+        {
+            entity.HasKey(e => e.ReturnRequestId);
+
+            entity.ToTable("ReturnRequest");
+
+            entity.Property(e => e.Reason).HasMaxLength(50).IsRequired();
+            entity.Property(e => e.Description).HasMaxLength(1000);
+            entity.Property(e => e.EvidenceImages).HasMaxLength(2000);
+            entity.Property(e => e.Status).HasMaxLength(30).HasDefaultValue("Pending");
+            entity.Property(e => e.AdminNote).HasMaxLength(500);
+            entity.Property(e => e.RefundAmount).HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.CreatedAt).HasDefaultValueSql("(sysdatetime())");
+
+            entity.HasOne(d => d.Order).WithMany()
+                .HasForeignKey(d => d.OrderId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_ReturnRequest_Orders");
+
+            entity.HasOne(d => d.User).WithMany()
+                .HasForeignKey(d => d.UserId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_ReturnRequest_Users");
+
+            entity.HasOne(d => d.ProcessedByUser).WithMany()
+                .HasForeignKey(d => d.ProcessedByUserId)
+                .OnDelete(DeleteBehavior.SetNull)
+                .HasConstraintName("FK_ReturnRequest_ProcessedBy");
         });
 
         OnModelCreatingPartial(modelBuilder);
