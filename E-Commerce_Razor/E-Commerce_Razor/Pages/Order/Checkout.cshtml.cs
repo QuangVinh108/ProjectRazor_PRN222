@@ -15,12 +15,12 @@ namespace E_Commerce_Razor.Pages.Order
         private readonly IVoucherService _voucherService;
         private readonly ICartService _cartService;
 
-        public CheckoutModel(IOrderService orderService, IPaymentService paymentService,
-                             IVoucherService voucherService, ICartService cartService, ILogger<CheckoutModel> logger);
+        
         private readonly IUserService _userService; // Thêm dòng này để gọi UserService
         private readonly ILogger<CheckoutModel> _logger;
 
-        public CheckoutModel(IOrderService orderService, IPaymentService paymentService, IUserService userService, ILogger<CheckoutModel> logger)
+        public CheckoutModel(IOrderService orderService, IPaymentService paymentService,
+                             IVoucherService voucherService, ICartService cartService, ILogger<CheckoutModel> logger, IUserService userService)
         {
             _orderService   = orderService;
             _paymentService = paymentService;
