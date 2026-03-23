@@ -1,11 +1,60 @@
 ﻿@page
 @model E_Commerce_Razor.Pages.Admin.ReportModel
 @{
-    ViewData["Title"] = "Báo cáo";
+    ViewData["Title"] = "Báo cáo Nâng cao";
     Layout = "_AdminLayout";
 }
+<style>
+    @@media print {
+        /* 1. Ẩn chính xác thanh Admin Panel (Sidebar) và Navbar */
+        #sidebar-wrapper, .navbar, header, footer
 
-<div class="container-fluid">
+    {
+        display: none !important;
+    }
+
+    /* 2. Ẩn các nút bấm, thẻ tab và input trên giao diện báo cáo */
+    button, select, input, label, .card-header-pills, .btn {
+        display: none !important;
+    }
+
+    /* 3. Xóa đổ bóng, viền của Card để bản in sạch sẽ */
+    .card {
+        border: none !important;
+        box-shadow: none !important;
+        margin-bottom: 20px !important;
+    }
+
+    /* 4. MỞ RỘNG NỘI DUNG (Cực kỳ quan trọng) */
+    /* Khi ẩn sidebar, nội dung chính thường vẫn bị kẹt ở bên phải do margin. Ta phải ép nó về 0 */
+    body, main, .container-fluid, #page-content-wrapper {
+        margin: 0 !important;
+        padding: 0 !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        margin-left: 0 !important; /* Kéo nội dung sát lề trái */
+    }
+
+    /* 5. Ép biểu đồ hiển thị nét trên giấy */
+    canvas {
+        max-width: 100% !important;
+        height: auto !important;
+        page-break-inside: avoid !important;
+    }
+
+    /* 6. Xóa thanh cuộn của bảng để in toàn bộ dữ liệu */
+    .tab-pane div[style*="max-height"] {
+        max-height: none !important;
+        overflow: visible !important;
+    }
+
+    .table-responsive {
+        overflow: visible !important;
+    }
+
+    }
+</style>
+<div class="container-fluid py-3">
     <h2 class="fw-bold text-success mb-4">
         <i class="bi bi-bar-chart-line"></i> Báo cáo & Phân tích
     </h2>
@@ -14,21 +63,24 @@
         <div class="card-body">
             <div class="row g-3">
                 <div class="col-md-3">
-                    <label class="form-label fw-bold">
-                        <i class="bi bi-calendar-event"></i> Từ ngày
-                    </label>
+                    <label class="form-label fw-bold"><i class="bi bi-calendar-event"></i> Từ ngày</label>
                     <input type="date" id="startDate" class="form-control" />
                 </div>
                 <div class="col-md-3">
-                    <label class="form-label fw-bold">
-                        <i class="bi bi-calendar-check"></i> Đến ngày
-                    </label>
+                    <label class="form-label fw-bold"><i class="bi bi-calendar-check"></i> Đến ngày</label>
                     <input type="date" id="endDate" class="form-control" />
                 </div>
-                <div class="col-md-3">
-                    <label class="form-label fw-bold">
-                        <i class="bi bi-file-earmark-bar-graph"></i> Loại báo cáo
-                    </label>
+                <div class="col-md-2">
+                    <label class="form-label fw-bold"><i class="bi bi-arrow-left-right"></i> So sánh với</label>
+                    <select id="compareType" class="form-select">
+                        <option value="None">Không so sánh</option>
+                        <option value="PreviousPeriod" selected>Kỳ trước</option>
+                        <option value="PreviousMonth">Tháng trước</option>
+                        <option value="PreviousYear">Cùng kỳ năm ngoái</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label fw-bold"><i class="bi bi-file-earmark-bar-graph"></i> Loại báo cáo</label>
                     <select id="reportType" class="form-select">
                         <option value="revenue">Doanh thu theo ngày</option>
                         <option value="products">Top sản phẩm bán chạy</option>
@@ -36,30 +88,94 @@
                         <option value="payment_methods">Phương thức thanh toán</option>
                     </select>
                 </div>
-                <div class="col-md-3 d-flex align-items-end">
-                    <button class="btn btn-success w-100" onclick="generateReport()">
-                        <i class="bi bi-search"></i> Tạo báo cáo
+                <div class="col-md-2 d-flex align-items-end">
+                    <button class="btn btn-success w-100 fw-bold" onclick="generateReport()">
+                        <i class="bi bi-search"></i> Phân tích
                     </button>
                 </div>
             </div>
         </div>
     </div>
 
-    <div id="reportResultsSection" class="card border-0 shadow-sm mb-4" style="display:none;">
-        <div class="card-header bg-white border-bottom d-flex justify-content-between align-items-center">
-            <h5 class="mb-0 fw-bold text-primary">
-                <i class="bi bi-table"></i> Kết quả báo cáo
-            </h5>
-            <span id="resultCount" class="badge bg-secondary">0 dòng</span>
+    <div id="kpiSection" class="row g-3 mb-4" style="display: none;">
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <h6 class="text-muted fw-bold">Tổng Doanh Thu (Kỳ hiện tại)</h6>
+                    <h3 id="kpiTotalRevenue" class="fw-bold text-success mb-2">0 ₫</h3>
+                    <div>
+                        <span id="kpiGrowthBadge" class="badge bg-secondary rounded-pill">0%</span>
+                        <span class="text-muted ms-1 small">so với kỳ so sánh</span>
+                    </div>
+                </div>
+            </div>
         </div>
-        <div class="card-body p-0">
-            <div class="table-responsive">
-                <table class="table table-hover table-striped mb-0 align-middle" id="reportTable">
-                    <thead class="bg-light text-secondary">
-                    </thead>
-                    <tbody>
-                    </tbody>
-                </table>
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <h6 class="text-muted fw-bold">Tổng Doanh Thu (Kỳ so sánh)</h6>
+                    <h3 id="kpiCompareRevenue" class="fw-bold text-secondary mb-0">0 ₫</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <h6 class="text-muted fw-bold">Tổng số dòng dữ liệu</h6>
+                    <h3 id="kpiTotalRows" class="fw-bold text-primary mb-0">0</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="reportResultsSection" class="row g-4 mb-4" style="display:none;">
+        <div class="col-xl-7" id="chartContainer">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-white border-bottom">
+                    <h5 class="mb-0 fw-bold"><i class="bi bi-graph-up text-primary"></i> Biểu đồ so sánh doanh thu</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="compareRevenueChart" height="250"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-5" id="tableContainer">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-white border-bottom d-flex justify-content-between align-items-center pb-2">
+                    <h5 class="mb-0 fw-bold"><i class="bi bi-table text-primary"></i> Chi tiết báo cáo</h5>
+
+                    <ul class="nav nav-pills card-header-pills" id="reportTabs" style="display:none; font-size: 0.85rem;">
+                        <li class="nav-item">
+                            <a class="nav-link active py-1 px-3" id="current-tab" data-bs-toggle="tab" href="#currentPane">Kỳ này</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link py-1 px-3 bg-light text-secondary border ms-1" id="compare-tab" data-bs-toggle="tab" href="#comparePane">Kỳ trước</a>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="card-body p-0">
+                    <div class="tab-content">
+                        <div class="tab-pane fade show active" id="currentPane">
+                            <div style="max-height: 400px; overflow-y: auto;">
+                                <table class="table table-hover table-striped mb-0 align-middle" id="reportTable">
+                                    <thead class="bg-light text-secondary sticky-top"></thead>
+                                    <tbody></tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <div class="tab-pane fade" id="comparePane">
+                            <div style="max-height: 400px; overflow-y: auto;">
+                                <table class="table table-hover table-striped mb-0 align-middle" id="compareReportTable">
+                                    <thead class="bg-light text-secondary sticky-top"></thead>
+                                    <tbody></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -69,7 +185,7 @@
             <div class="card border-0 shadow-sm">
                 <div class="card-header bg-white border-bottom">
                     <h5 class="mb-0 fw-bold">
-                        <i class="bi bi-graph-up-arrow text-info"></i> Tăng trưởng người dùng (6 tháng gần đây)
+                        <i class="bi bi-people-fill text-info"></i> Tăng trưởng người dùng (6 tháng gần đây)
                     </h5>
                 </div>
                 <div class="card-body">
@@ -80,233 +196,235 @@
     </div>
 
     <div class="card border-0 shadow-sm">
-        <div class="card-header bg-white border-bottom">
-            <h5 class="mb-0 fw-bold">
-                <i class="bi bi-download text-success"></i> Xuất báo cáo
-            </h5>
-        </div>
         <div class="card-body">
-            <div class="btn-group" role="group">
-                <button class="btn btn-outline-success" onclick="exportToExcel()">
-                    <i class="bi bi-file-earmark-excel"></i> Excel
-                </button>
-                <button class="btn btn-outline-danger" onclick="exportToPDF()">
-                    <i class="bi bi-file-earmark-pdf"></i> PDF
-                </button>
-                <button class="btn btn-outline-primary" onclick="window.print()">
-                    <i class="bi bi-printer"></i> In
-                </button>
-            </div>
+            <button class="btn btn-outline-success" onclick="exportToExcel()"><i class="bi bi-file-earmark-excel"></i> Xuất Excel</button>
+            <button class="btn btn-outline-primary" onclick="window.print()"><i class="bi bi-printer"></i> In báo cáo</button>
         </div>
     </div>
 </div>
 
 @section Scripts {
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-
     <script>
-        // 1. Cấu hình Format tiền tệ VND
+        let compareChartInstance = null;
+
         const formatCurrency = (amount) => {
             return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
         };
 
-        // 2. Hàm chính: Gọi API Controller lấy dữ liệu báo cáo
         function generateReport() {
             const startDate = document.getElementById('startDate').value;
             const endDate = document.getElementById('endDate').value;
             const reportType = document.getElementById('reportType').value;
+            const compareType = document.getElementById('compareType').value;
 
-            // UI References
-            const resultSection = document.getElementById('reportResultsSection');
-            const tableHead = document.querySelector('#reportTable thead');
-            const tableBody = document.querySelector('#reportTable tbody');
-            const resultCount = document.getElementById('resultCount');
-
-            // Validate
             if (!startDate || !endDate) {
                 alert('Vui lòng chọn ngày bắt đầu và kết thúc');
                 return;
             }
 
-            // Hiển thị trạng thái Loading (Optional)
-            tableBody.innerHTML = '<tr><td colspan="4" class="text-center py-4"><div class="spinner-border text-primary" role="status"></div><div class="mt-2">Đang tải dữ liệu...</div></td></tr>';
-            resultSection.style.display = 'block';
+            const tableBody = document.querySelector('#reportTable tbody');
+            const compareTableBody = document.querySelector('#compareReportTable tbody');
 
-            // Fetch API
-            fetch('?handler=ReportData&startDate=${startDate}&endDate=${endDate}&reportType=${reportType}')
+            tableBody.innerHTML = '<tr><td colspan="4" class="text-center py-4"><div class="spinner-border text-success"></div><div class="mt-2">Đang phân tích...</div></td></tr>';
+
+            document.getElementById('kpiSection').style.display = 'flex';
+            document.getElementById('reportResultsSection').style.display = 'flex';
+
+            if(reportType === 'revenue') {
+                document.getElementById('chartContainer').style.display = 'block';
+                document.getElementById('tableContainer').className = 'col-xl-5';
+            } else {
+                document.getElementById('chartContainer').style.display = 'none';
+                document.getElementById('tableContainer').className = 'col-xl-12';
+            }
+
+            // Gọi API
+            fetch(`?handler=ReportData&startDate=${startDate}&endDate=${endDate}&reportType=${reportType}&compareType=${compareType}`)
                 .then(res => res.json())
                 .then(response => {
                     if (response.success) {
-                        // Reset bảng
-                        tableHead.innerHTML = '';
-                        tableBody.innerHTML = '';
+                        const data = response.data;
 
-                        // Cập nhật số dòng
-                        resultCount.innerText = `${response.data.length} dòng`;
+                        // 1. Cập nhật KPIs
+                        document.getElementById('kpiTotalRevenue').innerText = formatCurrency(data.totalRevenue);
+                        document.getElementById('kpiCompareRevenue').innerText = formatCurrency(data.compareTotalRevenue);
+                        document.getElementById('kpiTotalRows').innerText = data.tableData.length;
 
-                        // Nếu không có dữ liệu
-                        if(response.data.length === 0) {
-                            tableBody.innerHTML = '<tr><td colspan="4" class="text-center text-muted fst-italic py-3">Không tìm thấy dữ liệu trong khoảng thời gian này.</td></tr>';
-                            return;
+                        const badge = document.getElementById('kpiGrowthBadge');
+                        const rate = data.growthPercentage;
+                        if (rate >= 0) {
+                            badge.className = 'badge bg-success rounded-pill';
+                            badge.innerText = `+${rate.toFixed(1)}%`;
+                        } else {
+                            badge.className = 'badge bg-danger rounded-pill';
+                            badge.innerText = `${rate.toFixed(1)}%`;
                         }
 
-                        // Điều hướng vẽ bảng dựa trên loại báo cáo
-                        switch (reportType) {
-                            case 'revenue':
-                                renderRevenueTable(response.data, tableHead, tableBody);
-                                break;
-                            case 'products':
-                                renderProductTable(response.data, tableHead, tableBody);
-                                break;
-                            case 'categories':
-                                renderCategoryTable(response.data, tableHead, tableBody);
-                                break;
-                            case 'payment_methods':
-                                renderPaymentTable(response.data, tableHead, tableBody);
-                                break;
+                        // 2. Vẽ biểu đồ so sánh
+                        if (reportType === 'revenue') {
+                            renderCompareChart(data.chartData);
+                        }
+
+                        // 3. Ẩn/Hiện Tabs và Render Bảng
+                        const tableHead = document.querySelector('#reportTable thead');
+                        const compareTableHead = document.querySelector('#compareReportTable thead');
+
+                        // Reset nội dung
+                        tableBody.innerHTML = '';
+                        compareTableBody.innerHTML = '';
+
+                        // Render bảng Hiện tại
+                        if (data.tableData.length === 0) {
+                            tableBody.innerHTML = '<tr><td colspan="4" class="text-center text-muted py-3">Không có dữ liệu.</td></tr>';
+                        } else {
+                            switch (reportType) {
+                                case 'revenue': renderRevenueTable(data.tableData, tableHead, tableBody); break;
+                                case 'products': renderProductTable(data.tableData, tableHead, tableBody); break;
+                                case 'categories': renderCategoryTable(data.tableData, tableHead, tableBody); break;
+                                case 'payment_methods': renderPaymentTable(data.tableData, tableHead, tableBody); break;
+                            }
+                        }
+
+                        // Xử lý bảng So sánh
+                        if (compareType !== 'None') {
+                            document.getElementById('reportTabs').style.display = 'flex';
+
+                            if (data.compareTableData && data.compareTableData.length > 0) {
+                                switch (reportType) {
+                                    case 'revenue': renderRevenueTable(data.compareTableData, compareTableHead, compareTableBody); break;
+                                    case 'products': renderProductTable(data.compareTableData, compareTableHead, compareTableBody); break;
+                                    case 'categories': renderCategoryTable(data.compareTableData, compareTableHead, compareTableBody); break;
+                                    case 'payment_methods': renderPaymentTable(data.compareTableData, compareTableHead, compareTableBody); break;
+                                }
+                            } else {
+                                compareTableBody.innerHTML = '<tr><td colspan="4" class="text-center text-muted py-3">Kỳ so sánh không có dữ liệu.</td></tr>';
+                            }
+                        } else {
+                            // Ẩn tabs nếu người dùng chọn "Không so sánh"
+                            document.getElementById('reportTabs').style.display = 'none';
                         }
                     } else {
                         alert(response.message || "Có lỗi xảy ra");
-                        resultSection.style.display = 'none';
                     }
                 })
-                .catch(err => {
-                    console.error(err);
-                    alert("Lỗi kết nối server");
-                });
+                .catch(err => console.error(err));
         }
 
-        // --- CÁC HÀM RENDER BẢNG (Dùng dữ liệu DTO: label, value, count, extraInfo) ---
+        function renderCompareChart(chartData) {
+            if (!chartData || chartData.length === 0) return;
+            const ctx = document.getElementById('compareRevenueChart').getContext('2d');
+            if (compareChartInstance) compareChartInstance.destroy();
 
-        // A. Bảng Doanh thu
+            compareChartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: chartData.map(x => x.label),
+                    datasets: [
+                        {
+                            label: 'Kỳ hiện tại',
+                            data: chartData.map(x => x.currentValue),
+                            borderColor: '#198754',
+                            backgroundColor: 'rgba(25, 135, 84, 0.1)',
+                            borderWidth: 2,
+                            fill: true,
+                            tension: 0.3
+                        },
+                        {
+                            label: 'Kỳ so sánh',
+                            data: chartData.map(x => x.compareValue),
+                            borderColor: '#adb5bd',
+                            borderDash: [5, 5],
+                            borderWidth: 2,
+                            fill: false,
+                            tension: 0.3
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                title: function() { return ''; },
+                                label: function(context) {
+                                    let idx = context.dataIndex;
+                                    let exactDate = context.datasetIndex === 0 ? chartData[idx].label : chartData[idx].compareLabel;
+                                    return `${context.dataset.label} (${exactDate}): ${formatCurrency(context.parsed.y)}`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // CÁC HÀM RENDER TABLE CŨ GIỮ NGUYÊN BÊN DƯỚI...
         function renderRevenueTable(data, thead, tbody) {
-            thead.innerHTML = `
-                <tr>
-                    <th>Ngày</th>
-                    <th class="text-center">Số đơn hoàn thành</th>
-                    <th class="text-end">Doanh thu</th>
-                </tr>`;
-
+            thead.innerHTML = `<tr><th>Ngày</th><th class="text-center">Số đơn</th><th class="text-end">Doanh thu</th></tr>`;
             data.forEach(item => {
-                tbody.innerHTML += `
-                    <tr>
-                        <td>${item.label}</td>
-                        <td class="text-center">${item.count}</td>
-                        <td class="text-end fw-bold text-success">${formatCurrency(item.value)}</td>
-                    </tr>`;
+                tbody.innerHTML += `<tr><td>${item.label}</td><td class="text-center">${item.count}</td><td class="text-end fw-bold text-success">${formatCurrency(item.value)}</td></tr>`;
             });
         }
 
-        // B. Bảng Sản phẩm (Top Sales)
         function renderProductTable(data, thead, tbody) {
-            thead.innerHTML = `
-                <tr>
-                    <th style="width: 50px;">Hình</th>
-                    <th>Tên sản phẩm</th>
-                    <th class="text-center">Đã bán</th>
-                    <th class="text-end">Doanh thu</th>
-                </tr>`;
-
+            thead.innerHTML = `<tr><th style="width: 50px;">Hình</th><th>Tên sản phẩm</th><th class="text-center">Đã bán</th><th class="text-end">Doanh thu</th></tr>`;
             data.forEach(item => {
-                // extraInfo chứa link ảnh (nếu có)
-                const img = item.extraInfo
-                    ? `<img src="${item.extraInfo}" class="rounded" style="width: 40px; height: 40px; object-fit: cover;">`
-                    : `<div class="bg-secondary text-white rounded d-flex align-items-center justify-content-center" style="width:40px;height:40px;"><i class="bi bi-image"></i></div>`;
-
-                tbody.innerHTML += `
-                    <tr>
-                        <td>${img}</td>
-                        <td class="fw-semibold text-primary">${item.label}</td>
-                        <td class="text-center fw-bold">${item.count}</td>
-                        <td class="text-end text-success">${formatCurrency(item.value)}</td>
-                    </tr>`;
+                const img = item.extraInfo ? `<img src="${item.extraInfo}" class="rounded" style="width: 40px; height: 40px; object-fit: cover;">` : `<div class="bg-secondary text-white rounded d-flex align-items-center justify-content-center" style="width:40px;height:40px;"><i class="bi bi-image"></i></div>`;
+                tbody.innerHTML += `<tr><td>${img}</td><td class="fw-semibold text-primary">${item.label}</td><td class="text-center fw-bold">${item.count}</td><td class="text-end text-success">${formatCurrency(item.value)}</td></tr>`;
             });
         }
 
-        // C. Bảng Danh mục
         function renderCategoryTable(data, thead, tbody) {
-            thead.innerHTML = `
-                <tr>
-                    <th>Tên danh mục</th>
-                    <th class="text-center">Số lượng bán</th>
-                    <th class="text-end">Đóng góp doanh thu</th>
-                </tr>`;
-
+            thead.innerHTML = `<tr><th>Tên danh mục</th><th class="text-center">Số lượng bán</th><th class="text-end">Đóng góp doanh thu</th></tr>`;
             data.forEach(item => {
-                tbody.innerHTML += `
-                    <tr>
-                        <td><span class="badge bg-info text-dark p-2">${item.label}</span></td>
-                        <td class="text-center">${item.count}</td>
-                        <td class="text-end fw-bold text-primary">${formatCurrency(item.value)}</td>
-                    </tr>`;
+                tbody.innerHTML += `<tr><td><span class="badge bg-info text-dark p-2">${item.label}</span></td><td class="text-center">${item.count}</td><td class="text-end fw-bold text-primary">${formatCurrency(item.value)}</td></tr>`;
             });
         }
 
-        // D. Bảng Phương thức thanh toán
         function renderPaymentTable(data, thead, tbody) {
-            thead.innerHTML = `
-                <tr>
-                    <th>Phương thức</th>
-                    <th class="text-center">Số giao dịch</th>
-                    <th class="text-end">Tổng giá trị</th>
-                </tr>`;
-
+            thead.innerHTML = `<tr><th>Phương thức</th><th class="text-center">Số giao dịch</th><th class="text-end">Tổng giá trị</th></tr>`;
             data.forEach(item => {
                 let badgeClass = item.label === 'COD' ? 'bg-secondary' : 'bg-success';
-                tbody.innerHTML += `
-                    <tr>
-                        <td><span class="badge ${badgeClass}">${item.label}</span></td>
-                        <td class="text-center">${item.count}</td>
-                        <td class="text-end fw-bold">${formatCurrency(item.value)}</td>
-                    </tr>`;
+                tbody.innerHTML += `<tr><td><span class="badge ${badgeClass}">${item.label}</span></td><td class="text-center">${item.count}</td><td class="text-end fw-bold">${formatCurrency(item.value)}</td></tr>`;
             });
         }
-
-        // --- CÁC HÀM CŨ (Chart, Init) ---
 
         function loadUserGrowthChart() {
              fetch('?handler=UserGrowthChartData&months=6')
                 .then(res => res.json())
                 .then(data => {
                     const ctx = document.getElementById('userGrowthChart').getContext('2d');
-                    new Chart(ctx, {
-                        type: 'bar',
-                        data: {
-                            labels: data.labels,
-                            datasets: [{
-                                label: 'Người dùng mới',
-                                data: data.data,
-                                backgroundColor: 'rgba(13, 202, 240, 0.8)',
-                                borderColor: 'rgba(13, 202, 240, 1)',
-                                borderWidth: 1,
-                                borderRadius: 4
-                            }]
-                        },
-                        options: { responsive: true, maintainAspectRatio: false }
-                    });
-                })
-                .catch(err => console.error("Lỗi tải biểu đồ:", err));
+                    new Chart(ctx, { type: 'bar', data: { labels: data.labels, datasets: [{ label: 'Người dùng mới', data: data.data, backgroundColor: 'rgba(13, 202, 240, 0.8)' }] }, options: { responsive: true, maintainAspectRatio: false } });
+                }).catch(err => console.error(err));
         }
 
-        function exportToExcel() {
+                function exportToExcel() {
+            // 1. Lấy các thông số hiện tại từ Form bộ lọc
             const startDate = document.getElementById('startDate').value;
             const endDate = document.getElementById('endDate').value;
             const reportType = document.getElementById('reportType').value;
-            // Gọi API Export Action mà chúng ta đã placeholder trong Controller
-            window.location.href = '?handler=ExportExcel&startDate=${startDate}&endDate=${endDate}&reportType=${reportType}`;
+            const compareType = document.getElementById('compareType').value;
+
+            // 2. Kiểm tra nếu chưa chọn ngày
+            if (!startDate || !endDate) {
+                alert('Vui lòng chọn ngày bắt đầu và kết thúc trước khi xuất báo cáo!');
+                return;
+            }
+
+            // 3. Nối URL chứa tham số
+            const url = `?handler=ExportExcel&startDate=${startDate}&endDate=${endDate}&reportType=${reportType}&compareType=${compareType}`;
+
+            // 4. Mở URL (Trình duyệt sẽ nhận file stream từ Backend và tự động tải file Excel xuống)
+            window.location.href = url;
         }
 
-        function exportToPDF() { alert('Chức năng xuất PDF đang phát triển'); }
-
         document.addEventListener('DOMContentLoaded', function () {
-            // Set ngày mặc định: 30 ngày gần nhất
             const today = new Date();
             const lastMonth = new Date(today);
             lastMonth.setDate(lastMonth.getDate() - 30);
-
             document.getElementById('startDate').valueAsDate = lastMonth;
             document.getElementById('endDate').valueAsDate = today;
-
             loadUserGrowthChart();
         });
     </script>

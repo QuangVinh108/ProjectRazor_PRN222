@@ -6,7 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-
+using BLL.DTOs;
 namespace BLL.Service
 {
     public class DashboardService : IDashboardService
@@ -172,6 +172,108 @@ namespace BLL.Service
                 default:
                     return new List<ReportResultDTO>();
             }
+        }
+        public async Task<AdvancedReportResponseDTO> GetAdvancedReportDataAsync(DateTime startDate, DateTime endDate, string reportType, string compareType)
+        {
+            var response = new AdvancedReportResponseDTO();
+
+            var adjustedEndDate = endDate.Date.AddDays(1).AddTicks(-1);
+            TimeSpan duration = adjustedEndDate - startDate;
+            int totalDays = (int)duration.TotalDays;
+
+            // 1. TÍNH TOÁN NGÀY SO SÁNH
+            DateTime compareStartDate = startDate;
+            DateTime compareEndDate = adjustedEndDate;
+
+            switch (compareType)
+            {
+                case "PreviousPeriod":
+                    compareEndDate = startDate.AddTicks(-1);
+                    compareStartDate = compareEndDate.AddDays(-totalDays);
+                    break;
+                case "PreviousMonth":
+                    compareStartDate = startDate.AddMonths(-1);
+                    compareEndDate = adjustedEndDate.AddMonths(-1);
+                    break;
+                case "PreviousYear":
+                    compareStartDate = startDate.AddYears(-1);
+                    compareEndDate = adjustedEndDate.AddYears(-1);
+                    break;
+            }
+
+            // ====================================================================
+            // 2. TÍNH TOÁN KPI CHUNG (LUÔN CHẠY BẤT KỂ ĐANG XEM TAB BÁO CÁO NÀO)
+            // ====================================================================
+            var currentRevenueData = await _orderRepo.GetRevenueReportAsync(startDate, adjustedEndDate);
+            var compareRevenueData = new List<ReportResultDTO>();
+
+            if (compareType != "None")
+            {
+                compareRevenueData = await _orderRepo.GetRevenueReportAsync(compareStartDate, compareEndDate);
+            }
+
+            // Gán dữ liệu cho 3 thẻ KPI trên cùng
+            response.TotalRevenue = currentRevenueData.Sum(x => x.Value);
+            response.CompareTotalRevenue = compareRevenueData.Sum(x => x.Value);
+
+            if (response.CompareTotalRevenue > 0)
+                response.GrowthPercentage = (double)((response.TotalRevenue - response.CompareTotalRevenue) / response.CompareTotalRevenue * 100);
+            else if (response.TotalRevenue > 0)
+                response.GrowthPercentage = 100;
+
+            // ====================================================================
+            // 3. ĐIỀU HƯỚNG TABLE & CHART TÙY THEO LOẠI BÁO CÁO
+            // ====================================================================
+            switch (reportType.ToLower())
+            {
+                case "revenue":
+                    var currentDict = currentRevenueData.ToDictionary(x => DateTime.ParseExact(x.Label, "dd/MM/yyyy", null).Date, x => x);
+                    var compareDict = compareRevenueData.ToDictionary(x => DateTime.ParseExact(x.Label, "dd/MM/yyyy", null).Date, x => x);
+
+                    for (int i = 0; i <= totalDays; i++)
+                    {
+                        var currentDay = startDate.AddDays(i);
+                        var compareDay = compareStartDate.AddDays(i);
+
+                        response.ChartData.Add(new CompareChartPointDTO
+                        {
+                            Label = currentDay.ToString("dd/MM"),
+                            CompareLabel = compareType != "None" ? compareDay.ToString("dd/MM") : "",
+                            CurrentValue = currentDict.ContainsKey(currentDay.Date) ? currentDict[currentDay.Date].Value : 0,
+                            CompareValue = compareDict.ContainsKey(compareDay.Date) ? compareDict[compareDay.Date].Value : 0
+                        });
+                    }
+
+                    // Gán dữ liệu cho Bảng KỲ HIỆN TẠI
+                    response.TableData = currentRevenueData.OrderByDescending(x => DateTime.ParseExact(x.Label, "dd/MM/yyyy", null)).ToList();
+
+                    // Gán dữ liệu cho Bảng KỲ SO SÁNH (Sắp xếp ngày mới nhất lên đầu)
+                    if (compareType != "None")
+                    {
+                        response.CompareTableData = compareRevenueData.OrderByDescending(x => DateTime.ParseExact(x.Label, "dd/MM/yyyy", null)).ToList();
+                    }
+                    break;
+
+                case "products":
+                    response.TableData = await _orderRepo.GetTopSellingProductsAsync(startDate, adjustedEndDate, 10);
+                    if (compareType != "None")
+                        response.CompareTableData = await _orderRepo.GetTopSellingProductsAsync(compareStartDate, compareEndDate, 10);
+                    break;
+
+                case "categories":
+                    response.TableData = await _orderRepo.GetCategoryRevenueReportAsync(startDate, adjustedEndDate);
+                    if (compareType != "None")
+                        response.CompareTableData = await _orderRepo.GetCategoryRevenueReportAsync(compareStartDate, compareEndDate);
+                    break;
+
+                case "payment_methods":
+                    response.TableData = await _orderRepo.GetRevenueByPaymentMethodAsync(startDate, adjustedEndDate);
+                    if (compareType != "None")
+                        response.CompareTableData = await _orderRepo.GetRevenueByPaymentMethodAsync(compareStartDate, compareEndDate);
+                    break;
+            }
+
+            return response;
         }
     }
 }
