@@ -4,172 +4,219 @@
     ViewData["Title"] = "Báo cáo Nâng cao";
     Layout = "_AdminLayout";
 }
+
 <style>
+    /* CSS Tùy chỉnh làm đẹp Dashboard */
+    .dashboard-header {
+        background: linear-gradient(135deg, #198754 0%, #20c997 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
+    .kpi-card {
+        border-radius: 1rem;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        position: relative;
+        overflow: hidden;
+    }
+
+        .kpi-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.08) !important;
+        }
+
+    .kpi-icon-bg {
+        position: absolute;
+        right: -10px;
+        bottom: -20px;
+        font-size: 6rem;
+        opacity: 0.05;
+        z-index: 0;
+    }
+
+    .filter-card {
+        border-radius: 1rem;
+        background-color: #ffffff;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+    }
+
+    .nav-pills .nav-link.active {
+        background-color: #198754;
+        border-radius: 0.5rem;
+    }
+
+    /* CSS khi in */
     @@media print {
-        /* 1. Ẩn chính xác thanh Admin Panel (Sidebar) và Navbar */
-        #sidebar-wrapper, .navbar, header, footer
+        #sidebar-wrapper, .navbar, header, footer {
+            display: none !important;
+        }
 
-    {
-        display: none !important;
-    }
+        button, select, input, label, .card-header-pills, .btn {
+            display: none !important;
+        }
 
-    /* 2. Ẩn các nút bấm, thẻ tab và input trên giao diện báo cáo */
-    button, select, input, label, .card-header-pills, .btn {
-        display: none !important;
-    }
+        .card {
+            border: none !important;
+            box-shadow: none !important;
+            margin-bottom: 20px !important;
+        }
 
-    /* 3. Xóa đổ bóng, viền của Card để bản in sạch sẽ */
-    .card {
-        border: none !important;
-        box-shadow: none !important;
-        margin-bottom: 20px !important;
-    }
+        body, main, .container-fluid, #page-content-wrapper {
+            margin: 0 !important;
+            padding: 0 !important;
+            width: 100% !important;
+            max-width: 100% !important;
+            margin-left: 0 !important;
+        }
 
-    /* 4. MỞ RỘNG NỘI DUNG (Cực kỳ quan trọng) */
-    /* Khi ẩn sidebar, nội dung chính thường vẫn bị kẹt ở bên phải do margin. Ta phải ép nó về 0 */
-    body, main, .container-fluid, #page-content-wrapper {
-        margin: 0 !important;
-        padding: 0 !important;
-        width: 100% !important;
-        max-width: 100% !important;
-        margin-left: 0 !important; /* Kéo nội dung sát lề trái */
-    }
+        canvas {
+            max-width: 100% !important;
+            height: auto !important;
+            page-break-inside: avoid !important;
+        }
 
-    /* 5. Ép biểu đồ hiển thị nét trên giấy */
-    canvas {
-        max-width: 100% !important;
-        height: auto !important;
-        page-break-inside: avoid !important;
-    }
+        .tab-pane div[style*="max-height"] {
+            max-height: none !important;
+            overflow: visible !important;
+        }
 
-    /* 6. Xóa thanh cuộn của bảng để in toàn bộ dữ liệu */
-    .tab-pane div[style*="max-height"] {
-        max-height: none !important;
-        overflow: visible !important;
-    }
-
-    .table-responsive {
-        overflow: visible !important;
-    }
-
+        .table-responsive {
+            overflow: visible !important;
+        }
     }
 </style>
-<div class="container-fluid py-3">
-    <h2 class="fw-bold text-success mb-4">
-        <i class="bi bi-bar-chart-line"></i> Báo cáo & Phân tích
-    </h2>
 
-    <div class="card border-0 shadow-sm mb-4">
-        <div class="card-body">
-            <div class="row g-3">
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="fw-extrabold dashboard-header mb-0">
+            <i class="bi bi-pie-chart-fill me-2"></i> Báo cáo & Phân tích
+        </h2>
+        <div class="btn-group shadow-sm">
+            <button class="btn btn-white border text-success fw-semibold" onclick="exportToExcel()">
+                <i class="bi bi-file-earmark-excel"></i> Xuất Excel
+            </button>
+            <button class="btn btn-white border text-primary fw-semibold" onclick="window.print()">
+                <i class="bi bi-printer"></i> In báo cáo
+            </button>
+        </div>
+    </div>
+
+    <div class="card border-0 filter-card mb-4">
+        <div class="card-body p-4">
+            <div class="row g-3 align-items-end">
                 <div class="col-md-3">
-                    <label class="form-label fw-bold"><i class="bi bi-calendar-event"></i> Từ ngày</label>
-                    <input type="date" id="startDate" class="form-control" />
+                    <label class="form-label text-muted small fw-bold text-uppercase">Từ ngày</label>
+                    <input type="date" id="startDate" class="form-control form-control-lg bg-light border-0" />
                 </div>
                 <div class="col-md-3">
-                    <label class="form-label fw-bold"><i class="bi bi-calendar-check"></i> Đến ngày</label>
-                    <input type="date" id="endDate" class="form-control" />
+                    <label class="form-label text-muted small fw-bold text-uppercase">Đến ngày</label>
+                    <input type="date" id="endDate" class="form-control form-control-lg bg-light border-0" />
                 </div>
                 <div class="col-md-2">
-                    <label class="form-label fw-bold"><i class="bi bi-arrow-left-right"></i> So sánh với</label>
-                    <select id="compareType" class="form-select">
+                    <label class="form-label text-muted small fw-bold text-uppercase">So sánh với</label>
+                    <select id="compareType" class="form-select form-select-lg bg-light border-0">
                         <option value="None">Không so sánh</option>
                         <option value="PreviousPeriod" selected>Kỳ trước</option>
                         <option value="PreviousMonth">Tháng trước</option>
-                        <option value="PreviousYear">Cùng kỳ năm ngoái</option>
+                        <option value="PreviousYear">Cùng năm ngoái</option>
                     </select>
                 </div>
                 <div class="col-md-2">
-                    <label class="form-label fw-bold"><i class="bi bi-file-earmark-bar-graph"></i> Loại báo cáo</label>
-                    <select id="reportType" class="form-select">
-                        <option value="revenue">Doanh thu theo ngày</option>
-                        <option value="products">Top sản phẩm bán chạy</option>
+                    <label class="form-label text-muted small fw-bold text-uppercase">Loại báo cáo</label>
+                    <select id="reportType" class="form-select form-select-lg bg-light border-0">
+                        <option value="revenue">Doanh thu ngày</option>
+                        <option value="products">Top sản phẩm</option>
                         <option value="categories">Hiệu quả danh mục</option>
-                        <option value="payment_methods">Phương thức thanh toán</option>
+                        <option value="payment_methods">Thanh toán</option>
                     </select>
                 </div>
-                <div class="col-md-2 d-flex align-items-end">
-                    <button class="btn btn-success w-100 fw-bold" onclick="generateReport()">
-                        <i class="bi bi-search"></i> Phân tích
+                <div class="col-md-2">
+                    <button class="btn btn-success btn-lg w-100 fw-bold shadow-sm" onclick="generateReport()">
+                        <i class="bi bi-lightning-charge-fill"></i> Phân tích
                     </button>
                 </div>
             </div>
         </div>
     </div>
 
-    <div id="kpiSection" class="row g-3 mb-4" style="display: none;">
+    <div id="kpiSection" class="row g-4 mb-4" style="display: none;">
         <div class="col-md-4">
-            <div class="card border-0 shadow-sm h-100">
-                <div class="card-body">
-                    <h6 class="text-muted fw-bold">Tổng Doanh Thu (Kỳ hiện tại)</h6>
-                    <h3 id="kpiTotalRevenue" class="fw-bold text-success mb-2">0 ₫</h3>
-                    <div>
-                        <span id="kpiGrowthBadge" class="badge bg-secondary rounded-pill">0%</span>
-                        <span class="text-muted ms-1 small">so với kỳ so sánh</span>
+            <div class="card border-0 shadow-sm kpi-card bg-white h-100">
+                <div class="card-body p-4">
+                    <i class="bi bi-cash-coin text-success kpi-icon-bg"></i>
+                    <h6 class="text-muted fw-bold text-uppercase mb-3">Doanh Thu (Kỳ này)</h6>
+                    <h2 id="kpiTotalRevenue" class="fw-bolder text-dark mb-2">0 ₫</h2>
+                    <div class="d-flex align-items-center">
+                        <span id="kpiGrowthBadge" class="badge rounded-pill px-2 py-1">0%</span>
+                        <span class="text-muted ms-2 small">vs kỳ so sánh</span>
                     </div>
                 </div>
             </div>
         </div>
         <div class="col-md-4">
-            <div class="card border-0 shadow-sm h-100">
-                <div class="card-body">
-                    <h6 class="text-muted fw-bold">Tổng Doanh Thu (Kỳ so sánh)</h6>
-                    <h3 id="kpiCompareRevenue" class="fw-bold text-secondary mb-0">0 ₫</h3>
+            <div class="card border-0 shadow-sm kpi-card bg-light h-100">
+                <div class="card-body p-4">
+                    <i class="bi bi-clock-history text-secondary kpi-icon-bg"></i>
+                    <h6 class="text-muted fw-bold text-uppercase mb-3">Doanh Thu (Kỳ trước)</h6>
+                    <h2 id="kpiCompareRevenue" class="fw-bolder text-secondary mb-0">0 ₫</h2>
                 </div>
             </div>
         </div>
         <div class="col-md-4">
-            <div class="card border-0 shadow-sm h-100">
-                <div class="card-body">
-                    <h6 class="text-muted fw-bold">Tổng số dòng dữ liệu</h6>
-                    <h3 id="kpiTotalRows" class="fw-bold text-primary mb-0">0</h3>
+            <div class="card border-0 shadow-sm kpi-card bg-white h-100">
+                <div class="card-body p-4">
+                    <i class="bi bi-list-check text-primary kpi-icon-bg"></i>
+                    <h6 class="text-muted fw-bold text-uppercase mb-3">Số lượng bản ghi</h6>
+                    <h2 id="kpiTotalRows" class="fw-bolder text-primary mb-0">0</h2>
                 </div>
             </div>
         </div>
     </div>
 
     <div id="reportResultsSection" class="row g-4 mb-4" style="display:none;">
-        <div class="col-xl-7" id="chartContainer">
-            <div class="card border-0 shadow-sm h-100">
-                <div class="card-header bg-white border-bottom">
-                    <h5 class="mb-0 fw-bold"><i class="bi bi-graph-up text-primary"></i> Biểu đồ so sánh doanh thu</h5>
+
+        <div class="col-xl-8" id="chartContainer">
+            <div class="card border-0 shadow-sm filter-card h-100">
+                <div class="card-header bg-white border-bottom-0 pt-4 pb-0 d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0 fw-bold text-dark" id="chartTitle">
+                        <i class="bi bi-graph-up text-primary me-2"></i> Trực quan hóa dữ liệu
+                    </h5>
                 </div>
                 <div class="card-body">
-                    <canvas id="compareRevenueChart" height="250"></canvas>
+                    <div style="height: 350px;">
+                        <canvas id="mainChart"></canvas>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <div class="col-xl-5" id="tableContainer">
-            <div class="card border-0 shadow-sm h-100">
-                <div class="card-header bg-white border-bottom d-flex justify-content-between align-items-center pb-2">
-                    <h5 class="mb-0 fw-bold"><i class="bi bi-table text-primary"></i> Chi tiết báo cáo</h5>
-
+        <div class="col-xl-4" id="tableContainer">
+            <div class="card border-0 shadow-sm filter-card h-100">
+                <div class="card-header bg-white border-bottom d-flex justify-content-between align-items-center pt-4 pb-3">
+                    <h6 class="mb-0 fw-bold text-dark"><i class="bi bi-table text-success me-1"></i> Chi tiết</h6>
                     <ul class="nav nav-pills card-header-pills" id="reportTabs" style="display:none; font-size: 0.85rem;">
                         <li class="nav-item">
-                            <a class="nav-link active py-1 px-3" id="current-tab" data-bs-toggle="tab" href="#currentPane">Kỳ này</a>
+                            <a class="nav-link active py-1 px-3 shadow-sm" id="current-tab" data-bs-toggle="tab" href="#currentPane">Kỳ này</a>
                         </li>
-                        <li class="nav-item">
-                            <a class="nav-link py-1 px-3 bg-light text-secondary border ms-1" id="compare-tab" data-bs-toggle="tab" href="#comparePane">Kỳ trước</a>
+                        <li class="nav-item ms-1">
+                            <a class="nav-link py-1 px-3 bg-light text-secondary border shadow-sm" id="compare-tab" data-bs-toggle="tab" href="#comparePane">Kỳ trước</a>
                         </li>
                     </ul>
                 </div>
-
                 <div class="card-body p-0">
                     <div class="tab-content">
                         <div class="tab-pane fade show active" id="currentPane">
-                            <div style="max-height: 400px; overflow-y: auto;">
-                                <table class="table table-hover table-striped mb-0 align-middle" id="reportTable">
-                                    <thead class="bg-light text-secondary sticky-top"></thead>
+                            <div style="max-height: 350px; overflow-y: auto;">
+                                <table class="table table-hover table-borderless mb-0 align-middle" id="reportTable">
+                                    <thead class="bg-light text-muted small sticky-top"></thead>
                                     <tbody></tbody>
                                 </table>
                             </div>
                         </div>
-
                         <div class="tab-pane fade" id="comparePane">
-                            <div style="max-height: 400px; overflow-y: auto;">
-                                <table class="table table-hover table-striped mb-0 align-middle" id="compareReportTable">
-                                    <thead class="bg-light text-secondary sticky-top"></thead>
+                            <div style="max-height: 350px; overflow-y: auto;">
+                                <table class="table table-hover table-borderless mb-0 align-middle" id="compareReportTable">
+                                    <thead class="bg-light text-muted small sticky-top"></thead>
                                     <tbody></tbody>
                                 </table>
                             </div>
@@ -177,28 +224,6 @@
                     </div>
                 </div>
             </div>
-        </div>
-    </div>
-
-    <div class="row g-3 mb-4">
-        <div class="col-12">
-            <div class="card border-0 shadow-sm">
-                <div class="card-header bg-white border-bottom">
-                    <h5 class="mb-0 fw-bold">
-                        <i class="bi bi-people-fill text-info"></i> Tăng trưởng người dùng (6 tháng gần đây)
-                    </h5>
-                </div>
-                <div class="card-body">
-                    <canvas id="userGrowthChart" height="80"></canvas>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="card border-0 shadow-sm">
-        <div class="card-body">
-            <button class="btn btn-outline-success" onclick="exportToExcel()"><i class="bi bi-file-earmark-excel"></i> Xuất Excel</button>
-            <button class="btn btn-outline-primary" onclick="window.print()"><i class="bi bi-printer"></i> In báo cáo</button>
         </div>
     </div>
 </div>
@@ -206,7 +231,7 @@
 @section Scripts {
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
     <script>
-        let compareChartInstance = null;
+        let mainChartInstance = null; // Quản lý chung cả biểu đồ đường và cột
 
         const formatCurrency = (amount) => {
             return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
@@ -226,20 +251,11 @@
             const tableBody = document.querySelector('#reportTable tbody');
             const compareTableBody = document.querySelector('#compareReportTable tbody');
 
-            tableBody.innerHTML = '<tr><td colspan="4" class="text-center py-4"><div class="spinner-border text-success"></div><div class="mt-2">Đang phân tích...</div></td></tr>';
+            tableBody.innerHTML = '<tr><td colspan="4" class="text-center py-5"><div class="spinner-grow text-success"></div><div class="mt-2 text-muted">Đang phân tích...</div></td></tr>';
 
             document.getElementById('kpiSection').style.display = 'flex';
             document.getElementById('reportResultsSection').style.display = 'flex';
 
-            if(reportType === 'revenue') {
-                document.getElementById('chartContainer').style.display = 'block';
-                document.getElementById('tableContainer').className = 'col-xl-5';
-            } else {
-                document.getElementById('chartContainer').style.display = 'none';
-                document.getElementById('tableContainer').className = 'col-xl-12';
-            }
-
-            // Gọi API
             fetch(`?handler=ReportData&startDate=${startDate}&endDate=${endDate}&reportType=${reportType}&compareType=${compareType}`)
                 .then(res => res.json())
                 .then(response => {
@@ -253,30 +269,38 @@
 
                         const badge = document.getElementById('kpiGrowthBadge');
                         const rate = data.growthPercentage;
-                        if (rate >= 0) {
-                            badge.className = 'badge bg-success rounded-pill';
-                            badge.innerText = `+${rate.toFixed(1)}%`;
+                        if (rate > 0) {
+                            badge.className = 'badge bg-success bg-opacity-10 text-success fw-bold px-2 py-1';
+                            badge.innerHTML = `<i class="bi bi-arrow-up-right"></i> ${rate.toFixed(1)}%`;
+                        } else if (rate < 0) {
+                            badge.className = 'badge bg-danger bg-opacity-10 text-danger fw-bold px-2 py-1';
+                            badge.innerHTML = `<i class="bi bi-arrow-down-right"></i> ${rate.toFixed(1)}%`;
                         } else {
-                            badge.className = 'badge bg-danger rounded-pill';
-                            badge.innerText = `${rate.toFixed(1)}%`;
+                            badge.className = 'badge bg-secondary bg-opacity-10 text-secondary fw-bold px-2 py-1';
+                            badge.innerText = `0%`;
                         }
 
-                        // 2. Vẽ biểu đồ so sánh
+                        // 2. VẼ BIỂU ĐỒ ĐỘNG TÙY THEO LOẠI
                         if (reportType === 'revenue') {
-                            renderCompareChart(data.chartData);
+                            document.getElementById('chartTitle').innerHTML = '<i class="bi bi-graph-up text-primary me-2"></i> Xu hướng Doanh thu';
+                            renderLineChart(data.chartData);
+                        } else {
+                            // Vẽ Bar Chart cho Product, Category, Payment
+                            const title = reportType === 'products' ? 'Top Sản phẩm'
+                                        : reportType === 'categories' ? 'Hiệu quả Danh mục'
+                                        : 'Phương thức thanh toán';
+                            document.getElementById('chartTitle').innerHTML = `<i class="bi bi-bar-chart-fill text-success me-2"></i> Phân tích ${title}`;
+
+                            renderBarChart(data.tableData, compareType !== 'None' ? data.compareTableData : [], reportType);
                         }
 
-                        // 3. Ẩn/Hiện Tabs và Render Bảng
+                        // 3. Render Bảng
                         const tableHead = document.querySelector('#reportTable thead');
                         const compareTableHead = document.querySelector('#compareReportTable thead');
+                        tableBody.innerHTML = ''; compareTableBody.innerHTML = '';
 
-                        // Reset nội dung
-                        tableBody.innerHTML = '';
-                        compareTableBody.innerHTML = '';
-
-                        // Render bảng Hiện tại
                         if (data.tableData.length === 0) {
-                            tableBody.innerHTML = '<tr><td colspan="4" class="text-center text-muted py-3">Không có dữ liệu.</td></tr>';
+                            tableBody.innerHTML = '<tr><td colspan="4" class="text-center text-muted py-4">Không có dữ liệu.</td></tr>';
                         } else {
                             switch (reportType) {
                                 case 'revenue': renderRevenueTable(data.tableData, tableHead, tableBody); break;
@@ -286,10 +310,8 @@
                             }
                         }
 
-                        // Xử lý bảng So sánh
                         if (compareType !== 'None') {
                             document.getElementById('reportTabs').style.display = 'flex';
-
                             if (data.compareTableData && data.compareTableData.length > 0) {
                                 switch (reportType) {
                                     case 'revenue': renderRevenueTable(data.compareTableData, compareTableHead, compareTableBody); break;
@@ -298,10 +320,9 @@
                                     case 'payment_methods': renderPaymentTable(data.compareTableData, compareTableHead, compareTableBody); break;
                                 }
                             } else {
-                                compareTableBody.innerHTML = '<tr><td colspan="4" class="text-center text-muted py-3">Kỳ so sánh không có dữ liệu.</td></tr>';
+                                compareTableBody.innerHTML = '<tr><td colspan="4" class="text-center text-muted py-4">Kỳ so sánh trống.</td></tr>';
                             }
                         } else {
-                            // Ẩn tabs nếu người dùng chọn "Không so sánh"
                             document.getElementById('reportTabs').style.display = 'none';
                         }
                     } else {
@@ -311,12 +332,13 @@
                 .catch(err => console.error(err));
         }
 
-        function renderCompareChart(chartData) {
+        // ================= BIỂU ĐỒ ĐƯỜNG (DOANH THU) =================
+        function renderLineChart(chartData) {
             if (!chartData || chartData.length === 0) return;
-            const ctx = document.getElementById('compareRevenueChart').getContext('2d');
-            if (compareChartInstance) compareChartInstance.destroy();
+            const ctx = document.getElementById('mainChart').getContext('2d');
+            if (mainChartInstance) mainChartInstance.destroy();
 
-            compareChartInstance = new Chart(ctx, {
+            mainChartInstance = new Chart(ctx, {
                 type: 'line',
                 data: {
                     labels: chartData.map(x => x.label),
@@ -326,18 +348,13 @@
                             data: chartData.map(x => x.currentValue),
                             borderColor: '#198754',
                             backgroundColor: 'rgba(25, 135, 84, 0.1)',
-                            borderWidth: 2,
-                            fill: true,
-                            tension: 0.3
+                            borderWidth: 3, fill: true, tension: 0.4
                         },
                         {
                             label: 'Kỳ so sánh',
                             data: chartData.map(x => x.compareValue),
                             borderColor: '#adb5bd',
-                            borderDash: [5, 5],
-                            borderWidth: 2,
-                            fill: false,
-                            tension: 0.3
+                            borderDash: [5, 5], borderWidth: 2, fill: false, tension: 0.4
                         }
                     ]
                 },
@@ -346,77 +363,117 @@
                     plugins: {
                         tooltip: {
                             callbacks: {
-                                title: function() { return ''; },
-                                label: function(context) {
+                                title: () => '',
+                                label: (context) => {
                                     let idx = context.dataIndex;
                                     let exactDate = context.datasetIndex === 0 ? chartData[idx].label : chartData[idx].compareLabel;
                                     return `${context.dataset.label} (${exactDate}): ${formatCurrency(context.parsed.y)}`;
                                 }
                             }
                         }
+                    },
+                    scales: { y: { beginAtZero: true, grid: { borderDash: [2, 4] } }, x: { grid: { display: false } } }
+                }
+            });
+        }
+
+        // ================= BIỂU ĐỒ CỘT (SẢN PHẨM, DANH MỤC, THANH TOÁN) =================
+        function renderBarChart(currentData, compareData, reportType) {
+            const ctx = document.getElementById('mainChart').getContext('2d');
+            if (mainChartInstance) mainChartInstance.destroy();
+
+            // Thuật toán Gộp Nhãn (Merge Labels): Lấy tất cả tên SP/Danh mục duy nhất từ cả 2 kỳ
+            const allLabels = [...new Set([...currentData.map(x => x.label), ...compareData.map(x => x.label)])];
+
+            // Nếu quá nhiều nhãn (ví dụ 50 sản phẩm), chỉ lấy Top 10 để vẽ biểu đồ không bị rối
+            const topLabels = allLabels.slice(0, 10);
+
+            // Ánh xạ dữ liệu tương ứng cho từng nhãn
+            const currentValues = topLabels.map(label => {
+                const found = currentData.find(x => x.label === label);
+                return found ? found.value : 0;
+            });
+
+            const compareValues = topLabels.map(label => {
+                const found = compareData.find(x => x.label === label);
+                return found ? found.value : 0;
+            });
+
+            mainChartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: topLabels,
+                    datasets: [
+                        {
+                            label: 'Doanh thu Kỳ này',
+                            data: currentValues,
+                            backgroundColor: '#198754',
+                            borderRadius: 4
+                        },
+                        {
+                            label: 'Doanh thu Kỳ trước',
+                            data: compareValues,
+                            backgroundColor: '#e9ecef', // Xám nhạt cho kỳ trước
+                            hoverBackgroundColor: '#ced4da',
+                            borderRadius: 4
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                label: (context) => `${context.dataset.label}: ${formatCurrency(context.parsed.y)}`
+                            }
+                        }
+                    },
+                    scales: {
+                        y: { beginAtZero: true, grid: { borderDash: [2, 4] } },
+                        x: { grid: { display: false } }
                     }
                 }
             });
         }
 
-        // CÁC HÀM RENDER TABLE CŨ GIỮ NGUYÊN BÊN DƯỚI...
+        // ================= CÁC HÀM RENDER TABLE (ĐÃ LÀM ĐẸP) =================
         function renderRevenueTable(data, thead, tbody) {
-            thead.innerHTML = `<tr><th>Ngày</th><th class="text-center">Số đơn</th><th class="text-end">Doanh thu</th></tr>`;
+            thead.innerHTML = `<tr><th class="ps-3">Ngày</th><th class="text-center">Số đơn</th><th class="text-end pe-3">Doanh thu</th></tr>`;
             data.forEach(item => {
-                tbody.innerHTML += `<tr><td>${item.label}</td><td class="text-center">${item.count}</td><td class="text-end fw-bold text-success">${formatCurrency(item.value)}</td></tr>`;
+                tbody.innerHTML += `<tr><td class="ps-3 fw-medium">${item.label}</td><td class="text-center text-muted">${item.count}</td><td class="text-end pe-3 fw-bold text-success">${formatCurrency(item.value)}</td></tr>`;
             });
         }
 
         function renderProductTable(data, thead, tbody) {
-            thead.innerHTML = `<tr><th style="width: 50px;">Hình</th><th>Tên sản phẩm</th><th class="text-center">Đã bán</th><th class="text-end">Doanh thu</th></tr>`;
+            thead.innerHTML = `<tr><th class="ps-3" style="width: 50px;">Hình</th><th>Tên sản phẩm</th><th class="text-center">Đã bán</th><th class="text-end pe-3">Doanh thu</th></tr>`;
             data.forEach(item => {
-                const img = item.extraInfo ? `<img src="${item.extraInfo}" class="rounded" style="width: 40px; height: 40px; object-fit: cover;">` : `<div class="bg-secondary text-white rounded d-flex align-items-center justify-content-center" style="width:40px;height:40px;"><i class="bi bi-image"></i></div>`;
-                tbody.innerHTML += `<tr><td>${img}</td><td class="fw-semibold text-primary">${item.label}</td><td class="text-center fw-bold">${item.count}</td><td class="text-end text-success">${formatCurrency(item.value)}</td></tr>`;
+                const img = item.extraInfo ? `<img src="${item.extraInfo}" class="rounded shadow-sm" style="width: 40px; height: 40px; object-fit: cover;">` : `<div class="bg-light text-secondary rounded d-flex align-items-center justify-content-center border" style="width:40px;height:40px;"><i class="bi bi-box"></i></div>`;
+                tbody.innerHTML += `<tr><td class="ps-3">${img}</td><td class="fw-semibold text-dark">${item.label}</td><td class="text-center text-muted">${item.count}</td><td class="text-end pe-3 text-success fw-bold">${formatCurrency(item.value)}</td></tr>`;
             });
         }
 
         function renderCategoryTable(data, thead, tbody) {
-            thead.innerHTML = `<tr><th>Tên danh mục</th><th class="text-center">Số lượng bán</th><th class="text-end">Đóng góp doanh thu</th></tr>`;
+            thead.innerHTML = `<tr><th class="ps-3">Tên danh mục</th><th class="text-center">Số lượng bán</th><th class="text-end pe-3">Doanh thu</th></tr>`;
             data.forEach(item => {
-                tbody.innerHTML += `<tr><td><span class="badge bg-info text-dark p-2">${item.label}</span></td><td class="text-center">${item.count}</td><td class="text-end fw-bold text-primary">${formatCurrency(item.value)}</td></tr>`;
+                tbody.innerHTML += `<tr><td class="ps-3"><span class="badge bg-light text-dark border p-2">${item.label}</span></td><td class="text-center text-muted">${item.count}</td><td class="text-end pe-3 fw-bold text-success">${formatCurrency(item.value)}</td></tr>`;
             });
         }
 
         function renderPaymentTable(data, thead, tbody) {
-            thead.innerHTML = `<tr><th>Phương thức</th><th class="text-center">Số giao dịch</th><th class="text-end">Tổng giá trị</th></tr>`;
+            thead.innerHTML = `<tr><th class="ps-3">Phương thức</th><th class="text-center">Giao dịch</th><th class="text-end pe-3">Giá trị</th></tr>`;
             data.forEach(item => {
-                let badgeClass = item.label === 'COD' ? 'bg-secondary' : 'bg-success';
-                tbody.innerHTML += `<tr><td><span class="badge ${badgeClass}">${item.label}</span></td><td class="text-center">${item.count}</td><td class="text-end fw-bold">${formatCurrency(item.value)}</td></tr>`;
+                let badgeClass = item.label.includes('COD') ? 'bg-secondary' : 'bg-primary';
+                tbody.innerHTML += `<tr><td class="ps-3"><span class="badge ${badgeClass} bg-opacity-10 text-${badgeClass.replace('bg-','')} border border-${badgeClass.replace('bg-','')} border-opacity-25 px-2 py-1">${item.label}</span></td><td class="text-center text-muted">${item.count}</td><td class="text-end pe-3 fw-bold text-dark">${formatCurrency(item.value)}</td></tr>`;
             });
         }
 
-        function loadUserGrowthChart() {
-             fetch('?handler=UserGrowthChartData&months=6')
-                .then(res => res.json())
-                .then(data => {
-                    const ctx = document.getElementById('userGrowthChart').getContext('2d');
-                    new Chart(ctx, { type: 'bar', data: { labels: data.labels, datasets: [{ label: 'Người dùng mới', data: data.data, backgroundColor: 'rgba(13, 202, 240, 0.8)' }] }, options: { responsive: true, maintainAspectRatio: false } });
-                }).catch(err => console.error(err));
-        }
-
-                function exportToExcel() {
-            // 1. Lấy các thông số hiện tại từ Form bộ lọc
+        function exportToExcel() {
             const startDate = document.getElementById('startDate').value;
             const endDate = document.getElementById('endDate').value;
             const reportType = document.getElementById('reportType').value;
             const compareType = document.getElementById('compareType').value;
-
-            // 2. Kiểm tra nếu chưa chọn ngày
-            if (!startDate || !endDate) {
-                alert('Vui lòng chọn ngày bắt đầu và kết thúc trước khi xuất báo cáo!');
-                return;
-            }
-
-            // 3. Nối URL chứa tham số
-            const url = `?handler=ExportExcel&startDate=${startDate}&endDate=${endDate}&reportType=${reportType}&compareType=${compareType}`;
-
-            // 4. Mở URL (Trình duyệt sẽ nhận file stream từ Backend và tự động tải file Excel xuống)
-            window.location.href = url;
+            if (!startDate || !endDate) { alert('Vui lòng chọn ngày!'); return; }
+            window.location.href = `?handler=ExportExcel&startDate=${startDate}&endDate=${endDate}&reportType=${reportType}&compareType=${compareType}`;
         }
 
         document.addEventListener('DOMContentLoaded', function () {
@@ -425,7 +482,6 @@
             lastMonth.setDate(lastMonth.getDate() - 30);
             document.getElementById('startDate').valueAsDate = lastMonth;
             document.getElementById('endDate').valueAsDate = today;
-            loadUserGrowthChart();
         });
     </script>
 }

@@ -172,7 +172,7 @@ namespace DAL.Repository
                             o.OrderDate <= endDate &&
                             o.IsActive &&
                             // LƯU Ý: Phải có ngoặc bao quanh các điều kiện OR
-                            (o.Status == "Paid" || o.Status == "Completed" || o.Status == "Shipped"))
+                            (o.Status == "Paid" || o.Status == "Hoàn thành" || o.Status == "Shipped"))
                 .GroupBy(o => o.OrderDate.Date)
                 .Select(g => new
                 {
@@ -203,7 +203,7 @@ namespace DAL.Repository
                 .Where(oi => oi.Order.OrderDate >= startDate &&
                              oi.Order.OrderDate <= endDate &&
                              oi.Order.IsActive &&
-                             (oi.Order.Status == "Paid" || oi.Order.Status == "Completed" || oi.Order.Status == "Shipped"))
+                             (oi.Order.Status == "Paid" || oi.Order.Status == "Hoàn thành" || oi.Order.Status == "Shipped"))
                 .GroupBy(oi => new { oi.ProductId, oi.Product.ProductName, oi.Product.Image })
                 .Select(g => new ReportResultDTO
                 {
@@ -228,7 +228,7 @@ namespace DAL.Repository
                 .Where(oi => oi.Order.OrderDate >= startDate &&
                              oi.Order.OrderDate <= endDate &&
                              oi.Order.IsActive &&
-                             (oi.Order.Status == "Paid" || oi.Order.Status == "Completed" || oi.Order.Status == "Shipped"))
+                             (oi.Order.Status == "Paid" || oi.Order.Status == "Hoàn thành" || oi.Order.Status == "Shipped"))
                 .GroupBy(oi => oi.Product.Category.CategoryName)
                 .Select(g => new ReportResultDTO
                 {
@@ -267,7 +267,7 @@ namespace DAL.Repository
             return await _context.Orders
                 .Where(o => o.OrderDate >= firstDayOfMonth
                          && o.OrderDate < now
-                         && (o.Status == "Paid" || o.Status == "Completed" || o.Status == "Shipped"))
+                         && (o.Status == "Paid" || o.Status == "Hoàn thành" || o.Status == "Shipped"))
                 .SumAsync(o => o.TotalAmount);
         }
 
@@ -280,7 +280,7 @@ namespace DAL.Repository
             return await _context.Orders
                 .Where(o => o.OrderDate >= firstDayOfLastMonth
                          && o.OrderDate < firstDayOfThisMonth
-                         && (o.Status == "Paid" || o.Status == "Completed" || o.Status == "Shipped"))
+                         && (o.Status == "Paid" || o.Status == "Hoàn thành" || o.Status == "Shipped"))
                 .SumAsync(o => o.TotalAmount);
         }
 
@@ -289,7 +289,7 @@ namespace DAL.Repository
             return await _context.Orders
                 .Where(o => o.OrderDate >= startDate
                          && o.OrderDate <= endDate
-                         && (o.Status == "Paid" || o.Status == "Completed" || o.Status == "Shipped"))
+                         && (o.Status == "Paid" || o.Status == "Hoàn thành" || o.Status == "Shipped"))
                 .GroupBy(o => o.OrderDate.Date)
                 .Select(g => new
                 {
@@ -325,7 +325,7 @@ namespace DAL.Repository
         public async Task<decimal> GetTotalRevenueAsync()
         {
             return await _context.Orders
-                .Where(o => o.Status == "Paid" || o.Status == "Completed" || o.Status == "Shipped")
+                .Where(o => o.Status == "Paid" || o.Status == "Hoàn thành" || o.Status == "Shipped")
                 .SumAsync(o => (decimal?)o.TotalAmount) ?? 0;
         }
     }
