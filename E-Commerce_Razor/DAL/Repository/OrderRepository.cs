@@ -1,4 +1,4 @@
-﻿using DAL.Entities;
+using DAL.Entities;
 using DAL.IRepository;
 using Microsoft.EntityFrameworkCore;
 using System;
@@ -29,10 +29,25 @@ namespace DAL.Repository
                         .ThenInclude(oi => oi.Product)
                     .Include(o => o.Payment)
                     .Include(o => o.Shipping)
+                        .ThenInclude(s => s.Shipper)
                     .Include(o => o.User);
             }
 
             return await query.FirstOrDefaultAsync(o => o.OrderId == orderId);
+        }
+
+        public async Task<List<Order>> GetByShipperIdAsync(int shipperId)
+        {
+            return await _context.Orders
+                .Include(o => o.OrderItems)
+                    .ThenInclude(oi => oi.Product)
+                .Include(o => o.Payment)
+                .Include(o => o.Shipping)
+                    .ThenInclude(s => s.Shipper)
+                .Include(o => o.User)
+                .Where(o => o.Shipping != null && o.Shipping.ShipperId == shipperId)
+                .OrderByDescending(o => o.OrderDate)
+                .ToListAsync();
         }
 
         public async Task<List<Order>> GetByUserIdAsync(int userId)
@@ -55,6 +70,7 @@ namespace DAL.Repository
                 .Include(o => o.User)
                 .Include(o => o.Payment)
                 .Include(o => o.Shipping)
+                    .ThenInclude(s => s.Shipper)
                 .OrderByDescending(o => o.OrderDate)
                 .ToListAsync();
         }
@@ -91,12 +107,12 @@ namespace DAL.Repository
             return await _context.Orders.CountAsync();
         }
 
-        public async Task<decimal> GetTotalRevenueAsync()
-        {
-            return await _context.Orders
-                .Where(o => o.Status == "Hoàn thành")
-                .SumAsync(o => (decimal?)o.TotalAmount) ?? 0;
-        }
+        //public async Task<decimal> GetTotalRevenueAsync()
+        //{
+        //    return await _context.Orders
+        //        .Where(o => o.Status == "Hoàn thành")
+        //        .SumAsync(o => (decimal?)o.TotalAmount) ?? 0;
+        //}
 
         public async Task<List<Order>> GetOrdersByDateRangeAsync(DateTime startDate, DateTime endDate)
         {
@@ -156,7 +172,7 @@ namespace DAL.Repository
                             o.OrderDate <= endDate &&
                             o.IsActive &&
                             // LƯU Ý: Phải có ngoặc bao quanh các điều kiện OR
-                            (o.Status == "Paid" || o.Status == "Completed" || o.Status == "Shipped"))
+                            (o.Status == "Paid" || o.Status == "Hoàn thành" || o.Status == "Shipped"))
                 .GroupBy(o => o.OrderDate.Date)
                 .Select(g => new
                 {
@@ -187,7 +203,7 @@ namespace DAL.Repository
                 .Where(oi => oi.Order.OrderDate >= startDate &&
                              oi.Order.OrderDate <= endDate &&
                              oi.Order.IsActive &&
-                             (oi.Order.Status == "Paid" || oi.Order.Status == "Completed" || oi.Order.Status == "Shipped"))
+                             (oi.Order.Status == "Paid" || oi.Order.Status == "Hoàn thành" || oi.Order.Status == "Shipped"))
                 .GroupBy(oi => new { oi.ProductId, oi.Product.ProductName, oi.Product.Image })
                 .Select(g => new ReportResultDTO
                 {
@@ -212,7 +228,7 @@ namespace DAL.Repository
                 .Where(oi => oi.Order.OrderDate >= startDate &&
                              oi.Order.OrderDate <= endDate &&
                              oi.Order.IsActive &&
-                             (oi.Order.Status == "Paid" || oi.Order.Status == "Completed"))
+                             (oi.Order.Status == "Paid" || oi.Order.Status == "Hoàn thành" || oi.Order.Status == "Shipped"))
                 .GroupBy(oi => oi.Product.Category.CategoryName)
                 .Select(g => new ReportResultDTO
                 {
@@ -251,7 +267,7 @@ namespace DAL.Repository
             return await _context.Orders
                 .Where(o => o.OrderDate >= firstDayOfMonth
                          && o.OrderDate < now
-                         && o.Status == "Hoàn thành")
+                         && (o.Status == "Paid" || o.Status == "Hoàn thành" || o.Status == "Shipped"))
                 .SumAsync(o => o.TotalAmount);
         }
 
@@ -264,7 +280,7 @@ namespace DAL.Repository
             return await _context.Orders
                 .Where(o => o.OrderDate >= firstDayOfLastMonth
                          && o.OrderDate < firstDayOfThisMonth
-                         && o.Status == "Hoàn thành")
+                         && (o.Status == "Paid" || o.Status == "Hoàn thành" || o.Status == "Shipped"))
                 .SumAsync(o => o.TotalAmount);
         }
 
@@ -273,7 +289,7 @@ namespace DAL.Repository
             return await _context.Orders
                 .Where(o => o.OrderDate >= startDate
                          && o.OrderDate <= endDate
-                         && o.Status == "Hoàn thành")
+                         && (o.Status == "Paid" || o.Status == "Hoàn thành" || o.Status == "Shipped"))
                 .GroupBy(o => o.OrderDate.Date)
                 .Select(g => new
                 {
@@ -283,7 +299,6 @@ namespace DAL.Repository
                 .OrderBy(x => x.Date)
                 .ToDictionaryAsync(x => x.Date, x => x.Revenue);
         }
-
         public async Task<List<TopProductDTO>> GetTopSellingProductsAsync(int top)
         {
             return await _context.Orders
@@ -306,6 +321,12 @@ namespace DAL.Repository
                 .OrderByDescending(p => p.TotalSold)
                 .Take(top)
                 .ToListAsync();
+        }
+        public async Task<decimal> GetTotalRevenueAsync()
+        {
+            return await _context.Orders
+                .Where(o => o.Status == "Paid" || o.Status == "Hoàn thành" || o.Status == "Shipped")
+                .SumAsync(o => (decimal?)o.TotalAmount) ?? 0;
         }
     }
 }

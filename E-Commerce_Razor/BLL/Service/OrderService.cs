@@ -15,12 +15,14 @@ namespace BLL.Service
         private readonly IOrderRepository _orderRepo;
         private readonly ICartRepository _cartRepo;
         private readonly IInventoryService _inventoryService;
+        private readonly IVoucherRepository _voucherRepo;
 
-        public OrderService(IOrderRepository orderRepo, ICartRepository cartRepo, IInventoryService inventoryService)
+        public OrderService(IOrderRepository orderRepo, ICartRepository cartRepo, IInventoryService inventoryService, IVoucherRepository voucherRepo)
         {
             _orderRepo = orderRepo;
             _cartRepo = cartRepo;
             _inventoryService = inventoryService;
+            _voucherRepo = voucherRepo;
         }
 
         public async Task<OrderDto?> GetOrderByIdAsync(int orderId, int userId)
@@ -50,32 +52,89 @@ namespace BLL.Service
 
             decimal totalAmount = cart.CartItems.Sum(ci => ci.Quantity * ci.UnitPrice);
 
+            // ─── Xử lý Voucher ──────────────────────────────────────────────
+            decimal discountAmount = 0;
+            int? voucherId = null;
+
+            if (!string.IsNullOrWhiteSpace(dto.VoucherCode))
+            {
+                var voucher = await _voucherRepo.GetByCodeAsync(dto.VoucherCode);
+                if (voucher == null)
+                    throw new Exception("Mã giảm giá không tồn tại.");
+
+                // --- KIỂM TRA QUYỀN TRÊN VÍ CÁ NHÂN ---
+                var userVoucher = await _voucherRepo.GetUserVoucherAsync(dto.UserId, voucher.VoucherId);
+                if (userVoucher == null) throw new Exception("Bạn chưa lưu mã giảm giá này vào ví.");
+                if (userVoucher.IsUsed) throw new Exception("Bạn đã sử dụng mã giảm giá này rồi.");
+
+                if (!voucher.IsActive)
+                    throw new Exception("Mã giảm giá đã bị vô hiệu hóa.");
+
+                var now = DateTime.Now;
+                if (now < voucher.StartDate || now > voucher.EndDate)
+                    throw new Exception("Mã giảm giá đã hết hạn hoặc chưa đến ngày sử dụng.");
+
+                if (voucher.UsedCount >= voucher.UsageLimit)
+                    throw new Exception("Mã giảm giá đã được sử dụng hết trên hệ thống.");
+
+                if (totalAmount < voucher.MinOrderValue)
+                    throw new Exception($"Đơn hàng tối thiểu phải từ {voucher.MinOrderValue:N0}đ để dùng mã này.");
+
+                // Tính số tiền được giảm
+                if (voucher.DiscountType == "Percent")
+                {
+                    discountAmount = totalAmount * (voucher.DiscountValue / 100m);
+                    if (voucher.MaxDiscount.HasValue)
+                        discountAmount = Math.Min(discountAmount, voucher.MaxDiscount.Value);
+                }
+                else
+                {
+                    discountAmount = voucher.DiscountValue;
+                }
+                discountAmount = Math.Min(discountAmount, totalAmount);
+
+                // Cập nhật UsedCount toàn cục
+                voucher.UsedCount++;
+                await _voucherRepo.UpdateAsync(voucher);
+
+                // Cập nhật thẻ trong ví User
+                userVoucher.IsUsed = true;
+                userVoucher.UsedAt = DateTime.Now;
+                await _voucherRepo.UpdateUserVoucherAsync(userVoucher);
+
+                voucherId = voucher.VoucherId;
+            }
+            // ─────────────────────────────────────────────────────────────────
+
+            decimal finalAmount = totalAmount - discountAmount;
+
             var order = new Order
             {
-                UserId = dto.UserId,
-                OrderDate = DateTime.Now,
-                Status = "Pending", // Hardcode string
-                TotalAmount = totalAmount,
-                Note = dto.Note,
-                IsActive = true,
-                OrderItems = cart.CartItems.Select(ci => new OrderItem
+                UserId         = dto.UserId,
+                OrderDate      = DateTime.Now,
+                Status         = "Pending",
+                TotalAmount    = finalAmount,
+                DiscountAmount = discountAmount,
+                VoucherId      = voucherId,
+                Note           = dto.Note,
+                IsActive       = true,
+                OrderItems     = cart.CartItems.Select(ci => new OrderItem
                 {
                     ProductId = ci.ProductId,
-                    Quantity = ci.Quantity,
+                    Quantity  = ci.Quantity,
                     UnitPrice = ci.UnitPrice,
-                    // Image = ci.Product.Image
                 }).ToList(),
                 Payment = new Payment
                 {
                     PaymentMethod = dto.PaymentMethod,
-                    Amount = totalAmount,
-                    Status = "Pending" // Hardcode string
+                    Amount        = finalAmount,
+                    Status        = "Pending"
                 },
                 Shipping = new Shipping
                 {
-                    Address = dto.ShippingAddress,
-                    City = dto.City,
-                    Country = dto.Country,
+                    Address    = dto.ShippingAddress,
+                    City       = dto.City,
+                    Country    = dto.Country,
                     PostalCode = dto.PostalCode
                 }
             };
@@ -99,7 +158,7 @@ namespace BLL.Service
             if (order == null) return false;
 
             // Validate status transitions
-            var validStatuses = new[] { "Pending", "Paid", "Shipped", "Delivered", "Cancelled" };
+            var validStatuses = new[] { "Pending", "Paid", "Shipped", "Delivered", "Hoàn thành", "Cancelled" };
             if (!validStatuses.Contains(newStatus))
                 throw new Exception("Trạng thái không hợp lệ");
 
@@ -181,7 +240,87 @@ namespace BLL.Service
             return true;
         }
 
+        // ─── Shipper Flow ──────────────────────────────────────────────────────
 
+        public async Task<bool> AssignShipperAsync(int orderId, int shipperId, string? trackingNumber, string? carrier)
+        {
+            var order = await _orderRepo.GetByIdAsync(orderId, includeDetails: true);
+            if (order == null || order.Status != "Paid") return false;
+
+            if (order.Shipping == null) return false;
+
+            order.Shipping.ShipperId = shipperId;
+            order.Shipping.TrackingNumber = trackingNumber;
+            order.Shipping.Carrier = carrier;
+            order.Shipping.ShippedDate = DateTime.Now;
+            order.Status = "Shipped";
+
+            await _orderRepo.UpdateAsync(order);
+            return true;
+        }
+
+        public async Task<bool> MarkDeliveredAsync(int orderId, int shipperId)
+        {
+            var order = await _orderRepo.GetByIdAsync(orderId, includeDetails: true);
+            if (order == null || order.Status != "Shipped") return false;
+
+            // Kiểm tra đúng shipper phụ trách
+            if (order.Shipping == null || order.Shipping.ShipperId != shipperId) return false;
+
+            order.Shipping.DeliveryDate = DateTime.Now;
+            order.Status = "Delivered";
+
+            await _orderRepo.UpdateAsync(order);
+            return true;
+        }
+
+        public async Task<List<OrderDto>> GetShipperOrdersAsync(int shipperId)
+        {
+            var orders = await _orderRepo.GetByShipperIdAsync(shipperId);
+            return orders.Select(MapToOrderDto).ToList();
+        }
+
+        public async Task<OrderDto?> GetOrderByIdForAdminAsync(int orderId)
+        {
+            var order = await _orderRepo.GetByIdAsync(orderId, includeDetails: true);
+            return order == null ? null : MapToOrderDto(order);
+        }
+
+        /// <summary>Khách hàng xác nhận đã nhận hàng → cập nhật trạng thái Hoàn thành</summary>
+        public async Task<bool> ConfirmReceivedByCustomerAsync(int orderId, int userId)
+        {
+            var order = await _orderRepo.GetByIdAsync(orderId, includeDetails: true);
+            if (order == null || order.UserId != userId || order.Status != "Delivered") return false;
+
+            order.Status = "Hoàn thành";
+            await _orderRepo.UpdateAsync(order);
+            return true;
+        }
+
+        /// <summary>Khách hàng báo chưa nhận hàng → hoàn tiền + cảnh báo shipper</summary>
+        public async Task<bool> ReportNotReceivedByCustomerAsync(int orderId, int userId)
+        {
+            var order = await _orderRepo.GetByIdAsync(orderId, includeDetails: true);
+            if (order == null || order.UserId != userId || order.Status != "Delivered") return false;
+
+            // Hoàn kho
+            await _inventoryService.RestoreInventoryAsync(order);
+
+            // Đánh dấu đã hoàn tiền
+            if (order.Payment != null)
+                order.Payment.Status = "Refunded";
+
+            // Cảnh báo shipper
+            if (order.Shipping != null)
+            {
+                order.Shipping.IsDisputed = true;
+                order.Shipping.DisputeReportedAt = DateTime.UtcNow;
+            }
+
+            order.Status = "Cancelled";
+            await _orderRepo.UpdateAsync(order);
+            return true;
+        }
 
         // Helper Map
         private OrderDto MapToOrderDto(Order order)
@@ -220,7 +359,15 @@ namespace BLL.Service
                     Address = order.Shipping.Address,
                     City = order.Shipping.City,
                     Country = order.Shipping.Country,
-                    PostalCode = order.Shipping.PostalCode
+                    PostalCode = order.Shipping.PostalCode,
+                    Carrier = order.Shipping.Carrier,
+                    TrackingNumber = order.Shipping.TrackingNumber,
+                    ShipperId = order.Shipping.ShipperId,
+                    ShipperName = order.Shipping.Shipper?.FullName ?? order.Shipping.Shipper?.UserName,
+                    ShippedDate = order.Shipping.ShippedDate,
+                    DeliveryDate = order.Shipping.DeliveryDate,
+                    IsDisputed = order.Shipping.IsDisputed,
+                    DisputeReportedAt = order.Shipping.DisputeReportedAt
                 } : null
             };
         }

@@ -183,9 +183,17 @@
                 <a asp-page="/Index" class="pf-btn-back">
                     <i class="bi bi-arrow-left-circle me-2"></i>Quay lại trang chủ
                 </a>
-                <a asp-page="./EditProfile" class="pf-btn-edit">
-                    <i class="bi bi-pencil-fill me-2"></i>Chỉnh sửa hồ sơ
-                </a>
+                <div class="d-flex gap-2">
+                    @if (!Model.UserProfile.IsIdentityVerified)
+                    {
+                        <a asp-page="/Account/Ekyc" class="pf-btn-edit" style="background:var(--pf-amb);border:none;">
+                            <i class="bi bi-person-fill-check me-2"></i>Xác thực danh tính
+                        </a>
+                    }
+                    <a asp-page="./EditProfile" class="pf-btn-edit">
+                        <i class="bi bi-pencil-fill me-2"></i>Chỉnh sửa hồ sơ
+                    </a>
+                </div>
             </div>
 
         </div>
@@ -195,13 +203,12 @@
 <!-- ══ SPACER ══ -->
 <div style="height:60px;"></div>
 
-
 @section Styles {
     <style>
         /* ══════════════════════════════════════════
-           PROFILE PAGE — modern redesign
-           Giữ nguyên toàn bộ Razor logic, chỉ nâng cấp UI
-        ══════════════════════════════════════════ */
+                   PROFILE PAGE — modern redesign
+                   Giữ nguyên toàn bộ Razor logic, chỉ nâng cấp UI
+                ══════════════════════════════════════════ */
 
         /* ── Variables ── */
         :root {
@@ -277,17 +284,15 @@
             left: 55%;
             animation-delay: -9s;
         }
+
         @@keyframes pf-float {
-            0%,100%
+            0%, 100% {
+                transform: translateY(0) scale(1);
+            }
 
-        {
-            transform: translateY(0) scale(1);
-        }
-
-        50% {
-            transform: translateY(-30px) scale(1.06);
-        }
-
+            50% {
+                transform: translateY(-30px) scale(1.06);
+            }
         }
 
         /* ══ HERO ══ */
@@ -315,16 +320,14 @@
             gap: 32px;
             padding-bottom: 52px;
         }
+
         @@media (max-width: 576px) {
-            .pf-hero-inner
-
-        {
-            flex-direction: column;
-            text-align: center;
-            gap: 20px;
-            padding-bottom: 44px;
-        }
-
+            .pf-hero-inner {
+                flex-direction: column;
+                text-align: center;
+                gap: 20px;
+                padding-bottom: 44px;
+            }
         }
 
         /* Avatar */
@@ -372,17 +375,15 @@
             background: conic-gradient( rgba(255,255,255,.7) 0%, rgba(255,255,255,.05) 40%, rgba(255,255,255,.7) 80%, rgba(255,255,255,.05) 100% );
             animation: pf-ring-spin 4s linear infinite;
         }
+
         @@keyframes pf-ring-spin {
-            from
+            from {
+                transform: rotate(0deg);
+            }
 
-        {
-            transform: rotate(0deg);
-        }
-
-        to {
-            transform: rotate(360deg);
-        }
-
+            to {
+                transform: rotate(360deg);
+            }
         }
 
         /* Verified badge on avatar */
@@ -427,13 +428,11 @@
             flex-wrap: wrap;
             gap: 8px;
         }
+
         @@media (max-width: 576px) {
-            .pf-hero-badges
-
-        {
-            justify-content: center;
-        }
-
+            .pf-hero-badges {
+                justify-content: center;
+            }
         }
 
         .pf-hbadge {

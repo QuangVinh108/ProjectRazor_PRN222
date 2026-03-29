@@ -70,6 +70,14 @@
                                     {
                                         <span class="badge bg-danger"><i class="bi bi-x-circle"></i> Đã hủy</span>
                                     }
+                                    else if (Model.Order.Status == "ReturnRequested")
+                                    {
+                                        <span class="badge bg-warning text-dark"><i class="bi bi-arrow-return-left"></i> Yêu cầu đổi trả</span>
+                                    }
+                                    else if (Model.Order.Status == "Returned")
+                                    {
+                                        <span class="badge bg-secondary"><i class="bi bi-arrow-return-left"></i> Đã trả hàng/Hoàn tiền</span>
+                                    }
                                     else
                                     {
                                         <span class="badge bg-secondary">@Model.Order.Status</span>
@@ -120,6 +128,7 @@
 
                         <!-- Cancel + Pay Buttons -->
                         @{
+                            var hasReturnRequest = Model.ReturnRequestInfo != null;
                             var canCancel = Model.Order.Status == "Pending"
                                 || (Model.Order.Payment?.Status == "Paid"
                                     && (Model.Order.Shipping == null || !Model.Order.Shipping.ShippedDate.HasValue));
@@ -147,40 +156,170 @@
                                 }
                             </div>
                         }
+
+                        @if (hasReturnRequest && Model.ReturnRequestInfo.Status == "Rejected")
+                        {
+                            <div class="alert alert-danger mt-4 shadow-sm border-danger border-opacity-25 rounded-3">
+                                <h6 class="fw-bold fs-6 mb-2 text-danger"><i class="bi bi-exclamation-octagon-fill me-2"></i>YÊU CẦU HOÀN TIỀN / TRẢ HÀNG BỊ TỪ CHỐI</h6>
+                                <hr class="border-danger opacity-50 my-2" />
+                                <p class="mb-1 text-dark"><strong>Lý do từ chối:</strong> @Model.ReturnRequestInfo.AdminNote</p>
+                                <div class="text-muted fst-italic mt-2" style="font-size:12px;">Xử lý vào lúc: @(Model.ReturnRequestInfo.ProcessedAt?.ToString("dd/MM/yyyy HH:mm") ?? "N/A") bởi Quản trị viên @Model.ReturnRequestInfo.ProcessedByName</div>
+                            </div>
+                        }
                     </div>
                 </div>
             </div>
 
             <!-- Shipping & Payment Info -->
             <div class="col-md-4">
-                <!-- Shipping Info -->
+                <!-- Tracking Timeline -->
                 @if (Model.Order.Shipping != null)
                 {
                     <div class="card mb-4">
                         <div class="card-header bg-success text-white">
-                            <h6 class="mb-0">Thông tin giao hàng</h6>
+                            <h6 class="mb-0"><i class="bi bi-geo-alt me-1"></i>Theo dõi đơn hàng</h6>
                         </div>
-                        <div class="card-body">
-                            <p><strong>Địa chỉ:</strong><br/>@Model.Order.Shipping.Address</p>
-                            @if (!string.IsNullOrEmpty(Model.Order.Shipping.City))
-                            {
-                                <p><strong>Thành phố:</strong> @Model.Order.Shipping.City</p>
-                            }
-                            @if (!string.IsNullOrEmpty(Model.Order.Shipping.Country))
-                            {
-                                <p><strong>Quốc gia:</strong> @Model.Order.Shipping.Country</p>
-                            }
-                            @if (!string.IsNullOrEmpty(Model.Order.Shipping.TrackingNumber))
-                            {
-                                <p><strong>Mã vận đơn:</strong> @Model.Order.Shipping.TrackingNumber</p>
-                            }
-                            @if (Model.Order.Shipping.ShippedDate.HasValue)
-                            {
-                                <p><strong>Ngày giao:</strong> @Model.Order.Shipping.ShippedDate.Value.ToString("dd/MM/yyyy")</p>
-                            }
+                        <div class="card-body p-3">
+                            <!-- Timeline -->
+                            <div class="position-relative ps-4" style="border-left: 2px solid #dee2e6;">
+
+                                <!-- Bước 1: Đặt hàng -->
+                                <div class="mb-3 position-relative">
+                                    <div class="position-absolute" style="left:-21px; top:2px;">
+                                        <span class="badge rounded-circle bg-success p-1"><i class="bi bi-check-lg" style="font-size:10px"></i></span>
+                                    </div>
+                                    <div class="fw-semibold small">Đặt hàng</div>
+                                    <div class="text-muted" style="font-size:12px">@Model.Order.OrderDate.ToString("dd/MM/yyyy HH:mm")</div>
+                                </div>
+
+                                <!-- Bước 2: Thanh toán -->
+                                <div class="mb-3 position-relative">
+                                    <div class="position-absolute" style="left:-21px; top:2px;">
+                                        @if (Model.Order.Status is "Paid" or "Shipped" or "Delivered")
+                                        {
+                                            <span class="badge rounded-circle bg-success p-1"><i class="bi bi-check-lg" style="font-size:10px"></i></span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge rounded-circle bg-secondary p-1"><i class="bi bi-circle" style="font-size:10px"></i></span>
+                                        }
+                                    </div>
+                                    <div class="fw-semibold small">Đã thanh toán</div>
+                                    <div class="text-muted" style="font-size:12px">
+                                        @(Model.Order.Payment?.PaidAt?.ToString("dd/MM/yyyy HH:mm") ?? "Chờ thanh toán")
+                                    </div>
+                                </div>
+
+                                <!-- Bước 3: Đang vận chuyển -->
+                                <div class="mb-3 position-relative">
+                                    <div class="position-absolute" style="left:-21px; top:2px;">
+                                        @if (Model.Order.Status is "Shipped" or "Delivered")
+                                        {
+                                            <span class="badge rounded-circle bg-info p-1"><i class="bi bi-truck" style="font-size:10px"></i></span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge rounded-circle bg-secondary p-1"><i class="bi bi-circle" style="font-size:10px"></i></span>
+                                        }
+                                    </div>
+                                    <div class="fw-semibold small">Đang vận chuyển</div>
+                                    <div class="text-muted" style="font-size:12px">
+                                        @(Model.Order.Shipping.ShippedDate?.ToString("dd/MM/yyyy HH:mm") ?? "Chờ lấy hàng")
+                                    </div>
+                                    @if (Model.Order.Shipping.ShipperName != null)
+                                    {
+                                        <div class="text-info small"><i class="bi bi-person me-1"></i>@Model.Order.Shipping.ShipperName</div>
+                                    }
+                                    @if (!string.IsNullOrEmpty(Model.Order.Shipping.Carrier))
+                                    {
+                                        <div class="text-muted small"><i class="bi bi-box me-1"></i>@Model.Order.Shipping.Carrier</div>
+                                    }
+                                    @if (!string.IsNullOrEmpty(Model.Order.Shipping.TrackingNumber))
+                                    {
+                                        <div class="small"><strong>Mã vận đơn:</strong> <span class="text-primary">@Model.Order.Shipping.TrackingNumber</span></div>
+                                    }
+                                </div>
+
+                                <!-- Bước 4: Đã giao -->
+                                <div class="position-relative">
+                                    <div class="position-absolute" style="left:-21px; top:2px;">
+                                        @if (Model.Order.Status == "Delivered")
+                                        {
+                                            <span class="badge rounded-circle bg-success p-1"><i class="bi bi-house-check" style="font-size:10px"></i></span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge rounded-circle bg-secondary p-1"><i class="bi bi-circle" style="font-size:10px"></i></span>
+                                        }
+                                    </div>
+                                    <div class="fw-semibold small">Đã giao hàng</div>
+                                    <div class="text-muted" style="font-size:12px">
+                                        @(Model.Order.Shipping.DeliveryDate?.ToString("dd/MM/yyyy HH:mm") ?? "Chờ giao hàng")
+                                    </div>
+                                    @if (Model.Order.Status == "Delivered" || Model.Order.Status == "Hoàn thành")
+                                    {
+                                        <div class="d-flex gap-2 mt-2">
+                                            @if (Model.Order.Status == "Delivered")
+                                            {
+                                                @if (!(hasReturnRequest && Model.ReturnRequestInfo.Status == "Rejected"))
+                                                {
+                                                    <form method="post" asp-page-handler="ConfirmReceived" asp-route-id="@Model.Order.OrderId" class="d-inline">
+                                                        @Html.AntiForgeryToken()
+                                                        <button type="submit" class="btn btn-sm btn-success">
+                                                            <i class="bi bi-check-circle me-1"></i>Xác nhận đã nhận hàng
+                                                        </button>
+                                                    </form>
+                                                }
+                                                else
+                                                {
+                                                    <span class="badge bg-secondary align-self-center py-2 px-3 shadow-sm border border-secondary">
+                                                        <i class="bi bi-bag-check-fill me-1"></i>Đơn hàng đã đóng sổ
+                                                    </span>
+                                                }
+                                            }
+
+                                            @if (hasReturnRequest)
+                                            {
+                                                @if (Model.ReturnRequestInfo.Status == "Pending")
+                                                {
+                                                    <span class="badge bg-warning text-dark align-self-center py-2 px-3 border border-warning shadow-sm">
+                                                        <i class="bi bi-hourglass-split me-1"></i>Đang yêu cầu trả hàng/hoàn tiền
+                                                    </span>
+                                                }
+                                                else if (Model.ReturnRequestInfo.Status == "Rejected")
+                                                {
+                                                     <span class="badge bg-danger align-self-center py-2 px-3 border border-danger shadow-sm">
+                                                         <i class="bi bi-x-octagon-fill me-1"></i>Hoàn tiền bị TỪ CHỐI
+                                                     </span>
+                                                }
+                                            }
+                                            else
+                                            {
+                                                <a href="/Order/ReturnRequest/@Model.Order.OrderId" class="btn btn-sm btn-outline-danger">
+                                                    <i class="bi bi-arrow-counterclockwise me-1"></i>Trả hàng/Hoàn tiền
+                                                </a>
+                                            }
+                                        </div>
+                                    }
+                                    @if (Model.Order.Status == "ReturnRequested")
+                                    {
+                                        <div class="mt-2 text-warning fw-bold">
+                                            <i class="bi bi-hourglass-split"></i> Đang chờ Admin xử lý yêu cầu Trả hàng
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+
+                            <!-- Địa chỉ giao -->
+                            <hr/>
+                            <div class="small">
+                                <p class="mb-1"><strong><i class="bi bi-geo-alt me-1"></i>Địa chỉ:</strong></p>
+                                <p class="text-muted mb-0">@Model.Order.Shipping.Address@(!string.IsNullOrEmpty(Model.Order.Shipping.City) ? ", " + Model.Order.Shipping.City : "")</p>
+                            </div>
                         </div>
                     </div>
                 }
+
 
                 <!-- Payment Info -->
                 @if (Model.Order.Payment != null)
@@ -196,6 +335,10 @@
                                 @if (Model.Order.Payment.Status == "Paid")
                                 {
                                     <span class="badge bg-success">Đã thanh toán</span>
+                                }
+                                else if (Model.Order.Payment.Status == "Refunded")
+                                {
+                                    <span class="badge bg-info">Đã hoàn tiền</span>
                                 }
                                 else
                                 {

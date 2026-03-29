@@ -189,6 +189,8 @@ namespace E_Commerce_Razor.Pages.Account
                         return RedirectToPage("/Admin/Dashboard");
                     case "manager":
                         return RedirectToPage("/Manager/Dashboard");
+                    case "shipper":
+                        return RedirectToPage("/Shipper/Index");
                     default:
                         return LocalRedirect(returnUrl ?? "/Product/Index");
                 }

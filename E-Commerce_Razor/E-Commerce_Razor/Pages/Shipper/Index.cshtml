@@ -1,0 +1,128 @@
+@page
+@model E_Commerce_Razor.Pages.Shipper.IndexModel
+@{
+    ViewData["Title"] = "Đơn hàng của tôi";
+}
+
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="fw-bold"><i class="bi bi-truck me-2"></i>Đơn hàng được giao (@Model.ShipperName)</h2>
+    </div>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show">@TempData["Success"]<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
+    }
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show">@TempData["Error"]<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
+    }
+
+    @{
+        var disputedCount = Model.Orders.Count(o => o.Shipping?.IsDisputed == true);
+    }
+    @if (disputedCount > 0)
+    {
+        <div class="alert alert-warning border-warning alert-dismissible fade show d-flex align-items-center" role="alert">
+            <i class="bi bi-exclamation-triangle-fill fs-4 me-2"></i>
+            <div>
+                <strong>Cảnh báo:</strong> Có @disputedCount đơn hàng khách báo chưa nhận được. Vui lòng kiểm tra lại quy trình giao hàng.
+            </div>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <!-- Stats summary -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-4">
+            <div class="card border-info text-center py-3">
+                <div class="fs-2 fw-bold text-info">@Model.Orders.Count(o => o.Status == "Shipped")</div>
+                <div class="text-muted">Đang giao</div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-success text-center py-3">
+                <div class="fs-2 fw-bold text-success">@Model.Orders.Count(o => o.Status == "Delivered")</div>
+                <div class="text-muted">Đã giao thành công</div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-secondary text-center py-3">
+                <div class="fs-2 fw-bold">@Model.Orders.Count</div>
+                <div class="text-muted">Tổng đơn</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-body p-0">
+            <table class="table table-hover mb-0">
+                <thead class="table-dark">
+                    <tr>
+                        <th>#ID</th>
+                        <th>Khách hàng</th>
+                        <th>Địa chỉ giao</th>
+                        <th>Tổng tiền</th>
+                        <th>Trạng thái</th>
+                        <th>Ngày lấy hàng</th>
+                        <th>Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var order in Model.Orders)
+                    {
+                        var isDisputed = order.Shipping?.IsDisputed == true;
+                        <tr class="@(isDisputed ? "table-warning" : "")">
+                            <td>
+                                <strong>#@order.OrderId</strong>
+                                @if (isDisputed)
+                                {
+                                    <span class="badge bg-warning text-dark ms-1" title="Khách báo chưa nhận hàng">Cảnh báo</span>
+                                }
+                            </td>
+                            <td>
+                                <div>@order.FullName</div>
+                                <small class="text-muted">@(order.Shipping?.City ?? "")</small>
+                            </td>
+                            <td>
+                                <small>@order.Shipping?.Address</small>
+                            </td>
+                            <td class="fw-bold text-danger">@order.TotalAmount.ToString("N0") ₫</td>
+                            <td>
+                                @{
+                                    var badgeClass = order.Status switch
+                                    {
+                                        "Shipped" => "bg-info",
+                                        "Delivered" => "bg-success",
+                                        _ => "bg-secondary"
+                                    };
+                                }
+                                <span class="badge @badgeClass">@order.Status</span>
+                            </td>
+                            <td>@(order.Shipping?.ShippedDate?.ToString("dd/MM/yyyy") ?? "-")</td>
+                            <td>
+                                <a asp-page="/Shipper/DeliveryDetail" asp-route-id="@order.OrderId" class="btn btn-sm btn-outline-primary">
+                                    <i class="bi bi-eye me-1"></i>Chi tiết
+                                </a>
+                                @if (order.Status == "Shipped")
+                                {
+                                    <form method="post" asp-page-handler="Delivered" class="d-inline">
+                                        <input type="hidden" name="orderId" value="@order.OrderId" />
+                                        <button type="submit" class="btn btn-sm btn-success ms-1"
+                                                onclick="return confirm('Xác nhận đã giao hàng thành công?')">
+                                            <i class="bi bi-check-circle me-1"></i>Đã giao
+                                        </button>
+                                    </form>
+                                }
+                            </td>
+                        </tr>
+                    }
+                    @if (!Model.Orders.Any())
+                    {
+                        <tr><td colspan="7" class="text-center text-muted py-4">Chưa có đơn hàng nào được gán.</td></tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

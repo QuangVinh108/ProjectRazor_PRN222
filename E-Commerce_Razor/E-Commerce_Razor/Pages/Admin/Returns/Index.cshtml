@@ -1,0 +1,66 @@
+@page
+@model E_Commerce_Razor.Pages.Admin.Returns.IndexModel
+@{
+    Layout = "_AdminLayout";
+    ViewData["Title"] = "Quản lý Đổi/Trả hàng";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Quản lý Đổi trả / Hoàn tiền</h2>
+</div>
+
+<div class="card shadow-sm">
+    <div class="card-body">
+        <table class="table table-hover align-middle">
+            <thead class="table-light">
+                <tr>
+                    <th>Mã ĐH</th>
+                    <th>Khách hàng</th>
+                    <th>Lý do</th>
+                    <th>Ngày yêu cầu</th>
+                    <th>Tiền hoàn dự kiến</th>
+                    <th>Trạng thái</th>
+                    <th>Hành động</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var r in Model.Returns)
+                {
+                    <tr>
+                        <td><strong>#@r.OrderId</strong></td>
+                        <td>@r.CustomerName</td>
+                        <td>@r.ReasonDisplay</td>
+                        <td>@r.CreatedAt.ToString("dd/MM/yyyy HH:mm")</td>
+                        <td class="text-danger fw-bold">@r.RefundAmount?.ToString("N0") ₫</td>
+                        <td>
+                            @if (r.Status == "Pending")
+                            {
+                                <span class="badge bg-warning text-dark"><i class="bi bi-hourglass-split"></i> Chờ xử lý</span>
+                            }
+                            else if (r.Status == "Approved")
+                            {
+                                <span class="badge bg-success"><i class="bi bi-check-circle"></i> Đã duyệt</span>
+                            }
+                            else if (r.Status == "Rejected")
+                            {
+                                <span class="badge bg-danger"><i class="bi bi-x-circle"></i> Từ chối</span>
+                            }
+                        </td>
+                        <td>
+                            <a asp-page="./Details" asp-route-id="@r.ReturnRequestId" class="btn btn-sm btn-primary">
+                                <i class="bi bi-eye"></i> Xem / Xử lý
+                            </a>
+                        </td>
+                    </tr>
+                }
+                
+                @if (!Model.Returns.Any())
+                {
+                    <tr>
+                        <td colspan="7" class="text-center py-4 text-muted">Không có yêu cầu đổi trả nào.</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

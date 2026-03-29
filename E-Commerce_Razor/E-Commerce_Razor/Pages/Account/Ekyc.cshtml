@@ -1,0 +1,320 @@
+﻿@page
+@model E_Commerce_Razor.Pages.Account.EkycModel
+@{
+    ViewData["Title"] = "Xác thực danh tính (eKYC)";
+}
+
+<div class="container mt-5 mb-5">
+    <div class="row justify-content-center">
+        <div class="col-md-10 col-lg-8">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-primary text-white text-center py-3">
+                    <h4 class="mb-0"><i class="bi bi-shield-check me-2"></i> Hệ thống E-KYC</h4>
+                </div>
+                <div class="card-body p-4">
+
+                    @if (TempData["ErrorMessage"] != null)
+                    {
+                        <div class="alert alert-danger" role="alert">
+                            <i class="bi bi-exclamation-triangle-fill me-2"></i> @TempData["ErrorMessage"]
+                        </div>
+                    }
+                    @if (TempData["SuccessMessage"] != null)
+                    {
+                        <div class="alert alert-success" role="alert">
+                            <i class="bi bi-check-circle-fill me-2"></i> @TempData["SuccessMessage"]
+                        </div>
+                    }
+
+                    @if (Model.IsVerified)
+                    {
+                        <div class="text-center py-5">
+                            <i class="bi bi-patch-check-fill text-success" style="font-size: 5rem;"></i>
+                            <h3 class="mt-3 text-success">Đã xác thực thành công</h3>
+                            <p class="text-muted">Tài khoản của bạn đã được đối chiếu với thông tin Căn cước công dân.</p>
+                            <a asp-page="/Account/Profile" class="btn btn-outline-primary mt-3">Quay lại Hồ sơ</a>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="alert alert-info">
+                            <i class="bi bi-info-circle-fill me-2"></i> Vui lòng cung cấp hình ảnh CCCD (2 mặt) và hình chụp khuôn mặt theo thời gian thực để tiến hành định danh.
+                        </div>
+
+                        <form method="post" enctype="multipart/form-data" id="ekycForm">
+                            <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                            <div class="row mb-4 text-center">
+                                <!-- MẶT TRƯỚC -->
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label fw-bold d-block">Ảnh mặt trước CCCD <span class="text-danger">*</span></label>
+                                    <div class="ekyc-upload-box position-relative" id="boxFront" style="border: 2px dashed #0d6efd; border-radius: 12px; padding: 2rem; background-color: #f8f9fa; cursor: pointer; height: 260px;">
+                                        <input type="file" asp-for="Input.FrontImage" accept="image/*" class="position-absolute w-100 h-100 opacity-0 start-0 top-0" style="cursor: pointer;" id="cccdFront" required onchange="previewImg(this, 'previewFront', 'contentFront', 'boxFront')">
+                                        <div id="contentFront" class="mt-4">
+                                            <i class="bi bi-cloud-arrow-up text-primary" style="font-size: 3rem;"></i>
+                                            <h5 class="mt-2 text-primary">Tải mặt trước</h5>
+                                        </div>
+                                        <img id="previewFront" src="#" class="img-fluid d-none" style="height: 100%; width: 100%; object-fit: contain; border-radius: 8px;">
+                                    </div>
+                                    <span asp-validation-for="Input.FrontImage" class="text-danger"></span>
+                                </div>
+
+                                <!-- MẶT SAU -->
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label fw-bold d-block">Ảnh mặt sau CCCD <span class="text-danger">*</span></label>
+                                    <div class="ekyc-upload-box position-relative" id="boxBack" style="border: 2px dashed #0d6efd; border-radius: 12px; padding: 2rem; background-color: #f8f9fa; cursor: pointer; height: 260px;">
+                                        <input type="file" asp-for="Input.BackImage" accept="image/*" class="position-absolute w-100 h-100 opacity-0 start-0 top-0" style="cursor: pointer;" id="cccdBack" required onchange="previewImg(this, 'previewBack', 'contentBack', 'boxBack')">
+                                        <div id="contentBack" class="mt-4">
+                                            <i class="bi bi-cloud-arrow-up text-primary" style="font-size: 3rem;"></i>
+                                            <h5 class="mt-2 text-primary">Tải mặt sau</h5>
+                                        </div>
+                                        <img id="previewBack" src="#" class="img-fluid d-none" style="height: 100%; width: 100%; object-fit: contain; border-radius: 8px;">
+                                    </div>
+                                    <span asp-validation-for="Input.BackImage" class="text-danger"></span>
+                                </div>
+                            </div>
+
+                            <hr />
+
+                            <!-- KHUÔN MẶT TRỰC TIẾP (LIVE CAPTURE) -->
+                            <div class="mb-4 text-center">
+                                <label class="form-label fw-bold d-block fs-5">Chụp ảnh khuôn mặt <span class="text-danger">*</span></label>
+                                <p class="text-muted small">Hãy nhìn thẳng vào camera và nhấn chụp ảnh.</p>
+
+                                <div class="d-flex flex-column align-items-center justify-content-center">
+                                    <!-- Vùng hiển thị Camera / Ảnh đã chụp -->
+                                    <div class="position-relative bg-dark rounded-3 overflow-hidden shadow-sm" style="width: 320px; height: 320px; border: 3px solid #dee2e6;">
+                                        <video id="videoCamera" class="w-100 h-100" style="object-fit: cover;" autoplay muted playsinline></video>
+                                        <img id="livePreview" src="" class="w-100 h-100 d-none" style="object-fit: cover;">
+
+                                        <!-- Overlay face scan -->
+                                        <div class="position-absolute w-100 h-100 top-0 start-0 pointer-events-none" style="background: radial-gradient(transparent 40%, rgba(0,0,0,0.6) 70%);">
+                                            <div class="border border-success border-2 rounded-circle position-absolute top-50 start-50 translate-middle" style="width:200px; height: 260px; border-style: dashed !important; opacity: 0.5;"></div>
+                                        </div>
+                                    </div>
+
+                                    <div class="mt-3 d-flex gap-2">
+                                        <button type="button" class="btn btn-warning fw-bold text-dark" id="btnOpenCamera" onclick="startCamera()">
+                                            <i class="bi bi-camera-video"></i> Bật Camera
+                                        </button>
+                                        <button type="button" class="btn btn-danger fw-bold d-none" id="btnCapture" onclick="capturePhoto()">
+                                            <i class="bi bi-camera"></i> Chụp ảnh
+                                        </button>
+                                        <button type="button" class="btn btn-outline-secondary d-none" id="btnRetake" onclick="retakePhoto()">
+                                            <i class="bi bi-arrow-counterclockwise"></i> Chụp lại
+                                        </button>
+                                    </div>
+
+                                    <!-- Ẩn Input chứa chuỗi ảnh base64 chụp từ camera -->
+                                    <input type="hidden" asp-for="Input.LiveFaceBase64" id="liveFaceInput" required />
+                                    <span asp-validation-for="Input.LiveFaceBase64" class="text-danger"></span>
+                                </div>
+                            </div>
+
+                            <hr />
+
+                            <button type="button" class="btn btn-primary w-100 py-3 fw-bold fs-5 shadow" id="btnAnalyze" onclick="processEkyc()">
+                                <i class="bi bi-magic me-2"></i> Trích xuất và Kiểm tra thông tin
+                            </button>
+
+                            <div id="aiLoading" class="text-center mt-3 d-none">
+                                <div class="spinner-border text-primary" role="status"></div>
+                                <p class="text-muted mt-2 fw-bold">Hệ thống đang phân tích ảnh và đối chiếu dữ liệu...</p>
+                            </div>
+
+                            <!-- Form confirm (ẩn lúc đầu) -->
+                            <div id="confirmForm" class="mt-5 pt-4 border-top border-2 d-none bg-light p-4 rounded-3 shadow-sm">
+                                <h4 class="text-primary mb-4 text-center"><i class="bi bi-check2-circle"></i> Kết quả phân tích thông tin</h4>
+
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label asp-for="Input.CccdNumber" class="form-label text-muted small mb-1">Số CCCD</label>
+                                        <input asp-for="Input.CccdNumber" class="form-control fw-bold text-primary" readonly />
+                                    </div>
+
+                                    <div class="col-md-6 mb-3">
+                                        <label asp-for="Input.FullName" class="form-label text-muted small mb-1">Họ và tên</label>
+                                        <input asp-for="Input.FullName" class="form-control fw-bold" readonly />
+                                    </div>
+
+                                    <div class="col-md-6 mb-3">
+                                        <label asp-for="Input.DateOfBirth" class="form-label text-muted small mb-1">Ngày sinh</label>
+                                        <input asp-for="Input.DateOfBirth" type="date" class="form-control fw-bold" readonly />
+                                    </div>
+                                </div>
+                                <div class="mb-4">
+                                    <label asp-for="Input.Address" class="form-label text-muted small mb-1">Nơi thường trú</label>
+                                    <textarea asp-for="Input.Address" class="form-control fw-bold" rows="2" readonly></textarea>
+                                </div>
+
+                                <div class="d-flex gap-3">
+                                    <button type="button" class="btn btn-outline-danger w-50 py-2 fw-bold" onclick="resetForm()">
+                                        <i class="bi bi-x-circle"></i> Từ chối & Làm lại
+                                    </button>
+                                    <button type="submit" class="btn btn-success w-50 py-2 fw-bold">
+                                        <i class="bi bi-check-circle-fill"></i> Hoàn tất E-KYC
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        // --- 1. Xem trước ảnh CCCD ---
+        function previewImg(input, previewId, contentId, boxId) {
+            const preview = document.getElementById(previewId);
+            const content = document.getElementById(contentId);
+            const box = document.getElementById(boxId);
+
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    preview.src = e.target.result;
+                    content.classList.add('d-none');
+                    preview.classList.remove('d-none');
+                    box.style.padding = '0'; // Xóa padding để ảnh full thẻ
+                }
+                reader.readAsDataURL(input.files[0]);
+                hideResultBlock();
+            }
+        }
+
+        // --- 2. Kết nối Camera HTML5 WebRTC ---
+        let videoStream = null;
+
+        async function startCamera() {
+            const video = document.getElementById('videoCamera');
+            const livePreview = document.getElementById('livePreview');
+
+            try {
+                videoStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
+                video.srcObject = videoStream;
+                video.classList.remove('d-none');
+                livePreview.classList.add('d-none');
+
+                document.getElementById('btnOpenCamera').classList.add('d-none');
+                document.getElementById('btnCapture').classList.remove('d-none');
+                document.getElementById('btnRetake').classList.add('d-none');
+            } catch (err) {
+                alert("Không thể truy cập camera. Vui lòng cấp quyền camera trong trình duyệt.");
+                console.error(err);
+            }
+        }
+
+        function capturePhoto() {
+            const video = document.getElementById('videoCamera');
+            const livePreview = document.getElementById('livePreview');
+
+            // Vẽ frame hiện tại ra canvas
+            const canvas = document.createElement('canvas');
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
+
+            // Lấy Base64
+            const dataUrl = canvas.toDataURL('image/jpeg');
+            livePreview.src = dataUrl;
+            document.getElementById('liveFaceInput').value = dataUrl;
+
+            // Update UI
+            video.classList.add('d-none');
+            livePreview.classList.remove('d-none');
+            document.getElementById('btnCapture').classList.add('d-none');
+            document.getElementById('btnRetake').classList.remove('d-none');
+
+            hideResultBlock();
+            stopCamera();
+        }
+
+        function retakePhoto() {
+            document.getElementById('liveFaceInput').value = "";
+            startCamera();
+        }
+
+        function stopCamera() {
+            if (videoStream) {
+                videoStream.getTracks().forEach(track => track.stop());
+            }
+        }
+
+        // --- 3. Điều khiển Form & Gọi AI ---
+        function hideResultBlock() {
+            document.getElementById('confirmForm').classList.add('d-none');
+            document.getElementById('btnAnalyze').classList.remove('d-none');
+        }
+
+        function resetForm() {
+            window.location.reload(); // Cách sạch nhất là tải lại để reset sạch state UI
+        }
+
+        async function processEkyc() {
+            const fileFront = document.getElementById('cccdFront').files[0];
+            const fileBack = document.getElementById('cccdBack').files[0];
+            const liveFace = document.getElementById('liveFaceInput').value;
+
+            if (!fileFront) { alert("Vui lòng tải ảnh Mặt Trước."); return; }
+            if (!fileBack) { alert("Vui lòng tải ảnh Mặt Sau."); return; }
+            if (!liveFace) { alert("Vui lòng Chụp Ảnh khuôn mặt để đối chiếu."); return; }
+
+            const btnAnalyze = document.getElementById('btnAnalyze');
+            const aiLoading = document.getElementById('aiLoading');
+            btnAnalyze.classList.add('d-none');
+            aiLoading.classList.remove('d-none');
+
+            // Gửi dữ liệu AJAX
+            const formData = new FormData();
+            formData.append('fileFront', fileFront);
+            // Gửi chuỗi Face Base64 cho backend để đưa cho Gemini Check
+            formData.append('liveFaceBase64', liveFace);
+
+            const token = document.querySelector('input[name="__RequestVerificationToken"]').value;
+
+            try {
+                const response = await fetch('?handler=AnalyzeCccd', {
+                    method: 'POST',
+                    headers: { 'RequestVerificationToken': token },
+                    body: formData
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    const data = result.data;
+                    document.getElementById('Input_CccdNumber').value = data.idNumber || '';
+                    document.getElementById('Input_FullName').value = data.fullName || '';
+                    document.getElementById('Input_Address').value = data.address || '';
+
+                    if (data.dob) {
+                        try {
+                            const parts = data.dob.split('/');
+                            if (parts.length === 3) {
+                                document.getElementById('Input_DateOfBirth').value = `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
+                            }
+                        } catch (e) { console.error(e); }
+                    }
+
+                    document.getElementById('confirmForm').classList.remove('d-none');
+                } else {
+                    alert("⚠️ E-KYC THẤT BẠI: " + result.message);
+                    btnAnalyze.classList.remove('d-none');
+                }
+            } catch (error) {
+                console.error(error);
+                alert("Đã xảy ra lỗi hệ thống khi phân tích dữ liệu.");
+                btnAnalyze.classList.remove('d-none');
+            } finally {
+                aiLoading.classList.add('d-none');
+            }
+        }
+
+        // Tắt camera khi rời khỏi trang
+        window.addEventListener('beforeunload', stopCamera);
+    </script>
+}

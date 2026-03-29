@@ -17,5 +17,7 @@ namespace BLL.IService
         Task<OrderStatusChartDTO> GetOrderStatusChartAsync();
         Task<UserGrowthChartDTO> GetUserGrowthChartAsync(int months = 6);
         Task<List<ReportResultDTO>> GetReportDataAsync(DateTime startDate, DateTime endDate, string reportType);
+        Task<AdvancedReportResponseDTO> GetAdvancedReportDataAsync(DateTime startDate, DateTime endDate, string reportType, string compareType);
+
     }
 }

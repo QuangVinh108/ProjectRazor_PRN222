@@ -1,0 +1,125 @@
+@page "{id:int}"
+@model E_Commerce_Razor.Pages.Order.ReturnRequestModel
+@{
+    ViewData["Title"] = "Yêu cầu Trả hàng / Hoàn tiền";
+}
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>@ViewData["Title"]</h2>
+        <a asp-page="./Details" asp-route-id="@Model.Order?.OrderId" class="btn btn-secondary">
+            <i class="bi bi-arrow-left"></i> Quay lại chi tiết đơn
+        </a>
+    </div>
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i> @TempData["Error"]
+        </div>
+    }
+
+    @if (Model.Order != null)
+    {
+        <div class="row">
+            <div class="col-md-5 mb-4">
+                <div class="card h-100">
+                    <div class="card-header bg-light">
+                        <h5 class="mb-0">Thông tin đơn hàng #@Model.Order.OrderId</h5>
+                    </div>
+                    <div class="card-body bg-light">
+                        <p><strong>Ngày nhận hàng:</strong> @Model.Order.Shipping?.DeliveryDate?.ToString("dd/MM/yyyy")</p>
+                        <p><strong>Tổng tiền hoàn:</strong> <span class="text-danger fw-bold fs-5">@Model.Order.TotalAmount.ToString("N0") ₫</span></p>
+                        
+                        <h6 class="mt-4 mb-2">Sản phẩm:</h6>
+                        <ul class="list-group list-group-flush border rounded">
+                            @foreach (var item in Model.Order.OrderItems)
+                            {
+                                <li class="list-group-item bg-light">
+                                    <div class="d-flex justify-content-between">
+                                        <span>@item.ProductName</span>
+                                        <span>x @item.Quantity</span>
+                                    </div>
+                                    <div class="text-end text-muted small">@item.Subtotal.ToString("N0") ₫</div>
+                                </li>
+                            }
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-7">
+                <div class="card shadow-sm">
+                    <div class="card-body p-4">
+                        <form method="post" enctype="multipart/form-data" id="returnForm">
+                            <input type="hidden" name="id" value="@Model.Order.OrderId" />
+
+                            <div class="mb-4">
+                                <label class="form-label fw-bold">Lý do trả hàng <span class="text-danger">*</span></label>
+                                <select asp-for="Reason" class="form-select" required>
+                                    <option value="">-- Chọn lý do --</option>
+                                    <option value="Defective">Sản phẩm bị lỗi / hư hỏng / không hoạt động</option>
+                                    <option value="WrongItem">Giao sai sản phẩm (sai mẫu mã, sai màu, ...)</option>
+                                    <option value="NotAsDescribed">Sản phẩm không đúng như mô tả</option>
+                                    <option value="Other">Lý do khác</option>
+                                </select>
+                            </div>
+
+                            <div class="mb-4">
+                                <label class="form-label fw-bold">Chi tiết vấn đề (tùy chọn)</label>
+                                <textarea asp-for="Description" class="form-control" rows="3" placeholder="Mô tả cụ thể tình trạng hàng hóa... (nếu cần)"></textarea>
+                            </div>
+
+                            <div class="mb-4">
+                                <label class="form-label fw-bold">Hình ảnh bằng chứng <span class="text-danger">*</span></label>
+                                <p class="text-muted small mb-2">Vui lòng cung cấp hình ảnh rõ nét thể hiện tình trạng của sản phẩm. (Tối đa 5 file, định dạng JPG, PNG)</p>
+                                <input type="file" name="EvidenceFiles" class="form-control" accept="image/png, image/jpeg, image/webp" multiple required id="imageInput" />
+                                <div id="imagePreview" class="d-flex flex-wrap gap-2 mt-3"></div>
+                            </div>
+
+                            <div class="d-grid mt-4">
+                                <button type="submit" class="btn btn-danger btn-lg" onclick="return confirm('Bạn xác nhận muốn gửi yêu cầu trả hàng? Yêu cầu sẽ được BQT xem xét trong 24h.')">
+                                    <i class="bi bi-send me-2"></i> Gửi yêu cầu Trả hàng / Hoàn tiền
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@section Scripts {
+    <script>
+        // Preview ảnh khi chọn file
+        const imageInput = document.getElementById('imageInput');
+        const imagePreview = document.getElementById('imagePreview');
+
+        imageInput.addEventListener('change', function() {
+            imagePreview.innerHTML = ''; // Clear cũ
+            
+            if (this.files.length > 5) {
+                alert('Vui lòng chỉ chọn tối đa 5 hình ảnh bằng chứng.');
+                this.value = '';
+                return;
+            }
+
+            Array.from(this.files).forEach(file => {
+                if (file.type.startsWith('image/')) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        const img = document.createElement('img');
+                        img.src = e.target.result;
+                        img.className = 'img-thumbnail';
+                        img.style.width = '100px';
+                        img.style.height = '100px';
+                        img.style.objectFit = 'cover';
+                        imagePreview.appendChild(img);
+                    }
+                    reader.readAsDataURL(file);
+                }
+            });
+        });
+    </script>
+}

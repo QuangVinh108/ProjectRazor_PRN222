@@ -1,3 +1,6 @@
+@using BLL.IService
+@using System.Security.Claims
+@inject IVoucherService VoucherService
 <!DOCTYPE html>
 <html lang="vi">
 <head>
@@ -313,6 +316,31 @@
                                 </li>
                             }
 
+                            @* ✅ VOUCHER WALLET *@
+                            <li class="nav-item">
+                                <a class="nav-link" asp-page="/Voucher/Index">
+                                    Kho Voucher
+                                </a>
+                            </li>
+
+                            @if (User?.Identity?.IsAuthenticated == true)
+                            {
+                                int savedVoucherCount = 0;
+                                var uidStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                                if (int.TryParse(uidStr, out int uid))
+                                {
+                                    var userVouchers = await VoucherService.GetSavedVouchersAsync(uid);
+                                    savedVoucherCount = userVouchers.Count;
+                                }
+
+                                <li class="nav-item position-relative">
+                                    <a class="nav-link position-relative" id="myVouchersLink" asp-page="/Voucher/MyVouchers">
+                                        Ví Voucher
+                                        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger ms-1" style="font-size: 0.65em; @(savedVoucherCount == 0 ? "display: none;" : "")" id="myVouchersBadge">@savedVoucherCount</span>
+                                    </a>
+                                </li>
+                            }
+            
                             @* ✅ WISHLIST *@
                             <li class="nav-item position-relative">
                                 <a class="nav-link position-relative" id="wishlistLink" asp-page="/Wishlist/Index">
@@ -519,6 +547,17 @@
                 <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
             </div>
         </div>
+        
+        <!-- 🔥 VOUCHER TOAST -->
+        <div id="voucherToast" class="toast align-items-center text-white bg-success border-0 shadow-lg mt-2" role="alert" data-bs-delay="10000">
+            <div class="d-flex">
+                <div class="toast-body fw-bold">
+                    <i class="bi bi-ticket-perforated-fill me-2 fs-5"></i> 
+                    <span id="voucherToastMessage">Có mã giảm giá mới!</span>
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+            </div>
+        </div>
     </div>
 
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
@@ -599,6 +638,7 @@
         if (isAuthenticatedUser) {
             chatConnection = new signalR.HubConnectionBuilder().withUrl("/appHub").build();
 
+            // Nhận tin nhắn Chat
             chatConnection.on("ReceiveMessage", function (user, message) {
                 const msgDiv = document.getElementById("chatMessages");
                 const isMyMsg = (user === "Bạn");
@@ -616,6 +656,17 @@
 
                 msgDiv.insertAdjacentHTML('beforeend', msgHtml);
                 msgDiv.scrollTop = msgDiv.scrollHeight;
+            });
+            
+            // 🔥 Nhận thông báo Voucher mới (SignalR)
+            chatConnection.on("ReceiveNewVoucher", function (code, msg) {
+                document.getElementById('voucherToastMessage').innerHTML = 
+                    'Mã mới: <strong>' + code + '</strong><br><small>' + msg + '</small>';
+                const vt = document.getElementById('voucherToast');
+                if(vt) {
+                    const toast = new bootstrap.Toast(vt);
+                    toast.show();
+                }
             });
 
             chatConnection.start().catch(err => console.error("SignalR Chat Error: ", err.toString()));

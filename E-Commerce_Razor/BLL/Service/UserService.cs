@@ -173,5 +173,15 @@ namespace BLL.Service
 
             return (true, "Đổi mật khẩu thành công.");
         }
+
+        public async Task<List<User>> GetShippersAsync()
+        {
+            // Lấy tất cả user có Role = Shipper, IsActive = true, và ĐÃ XÁC THỰC EKYC
+            return await Task.FromResult(
+                _userRepository.GetAllUsers()
+                    .Where(u => u.Role?.RoleName == "Shipper" && u.IsActive && u.IsIdentityVerified)
+                    .ToList()
+            );
+        }
     }
 }

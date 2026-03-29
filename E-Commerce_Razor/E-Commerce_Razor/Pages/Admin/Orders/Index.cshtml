@@ -1,0 +1,106 @@
+@page
+@model E_Commerce_Razor.Pages.Admin.Orders.IndexModel
+@{
+    ViewData["Title"] = "Quản lý đơn hàng";
+    Layout = "_AdminLayout"; // Thêm dòng này để sử dụng giao diện Admin
+}
+
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="fw-bold"><i class="bi bi-box-seam me-2"></i>Quản lý đơn hàng</h2>
+    </div>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show">@TempData["Success"]<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
+    }
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show">@TempData["Error"]<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
+    }
+
+    <!-- Filter Tabs -->
+    <ul class="nav nav-tabs mb-3">
+        <li class="nav-item"><a class="nav-link @(Model.StatusFilter == "" ? "active" : "")" asp-page="/Admin/Orders/Index" asp-route-status="">Tất cả</a></li>
+        <li class="nav-item"><a class="nav-link @(Model.StatusFilter == "Pending" ? "active" : "")" asp-page="/Admin/Orders/Index" asp-route-status="Pending">Chờ TT</a></li>
+        <li class="nav-item"><a class="nav-link @(Model.StatusFilter == "Paid" ? "active" : "")" asp-page="/Admin/Orders/Index" asp-route-status="Paid">Đã TT</a></li>
+        <li class="nav-item"><a class="nav-link @(Model.StatusFilter == "Shipped" ? "active" : "")" asp-page="/Admin/Orders/Index" asp-route-status="Shipped">Đang giao</a></li>
+        <li class="nav-item"><a class="nav-link @(Model.StatusFilter == "Delivered" ? "active" : "")" asp-page="/Admin/Orders/Index" asp-route-status="Delivered">Đã giao</a></li>
+        <li class="nav-item"><a class="nav-link @(Model.StatusFilter == "Hoàn thành" ? "active" : "")" asp-page="/Admin/Orders/Index" asp-route-status="Hoàn thành">Hoàn thành</a></li>
+        <li class="nav-item"><a class="nav-link @(Model.StatusFilter == "Cancelled" ? "active" : "")" asp-page="/Admin/Orders/Index" asp-route-status="Cancelled">Đã hủy</a></li>
+    </ul>
+
+    <div class="card shadow-sm">
+        <div class="card-body p-0">
+            <table class="table table-hover mb-0">
+                <thead class="table-dark">
+                    <tr>
+                        <th>#ID</th>
+                        <th>Khách hàng</th>
+                        <th>Ngày đặt</th>
+                        <th>Tổng tiền</th>
+                        <th>Trạng thái</th>
+                        <th>Shipper</th>
+                        <th>Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var order in Model.Orders)
+                    {
+                        <tr>
+                            <td><strong>#@order.OrderId</strong></td>
+                            <td>
+                                <div>@order.FullName</div>
+                                <small class="text-muted">@order.UserName</small>
+                            </td>
+                            <td>@order.OrderDate.ToString("dd/MM/yyyy HH:mm")</td>
+                            <td class="fw-bold text-danger">@order.TotalAmount.ToString("N0") ₫</td>
+                            <td>
+                                @{
+                                    var badgeClass = order.Status switch
+                                    {
+                                        "Pending" => "bg-warning text-dark",
+                                        "Paid" => "bg-primary",
+                                        "Shipped" => "bg-info",
+                                        "Delivered" => "bg-success",
+                                        "Hoàn thành" => "bg-success",
+                                        "Cancelled" => "bg-danger",
+                                        _ => "bg-secondary"
+                                    };
+                                }
+                                <span class="badge @badgeClass">@order.Status</span>
+                            </td>
+                            <td>
+                                @if (order.Shipping?.ShipperName != null)
+                                {
+                                    <span class="text-success"><i class="bi bi-person-check me-1"></i>@order.Shipping.ShipperName</span>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">Chưa gán</span>
+                                }
+                            </td>
+                            <td>
+                                <div class="d-flex gap-1 align-items-center">
+                                    <a asp-page="/Order/Details" asp-route-id="@order.OrderId" class="btn btn-sm btn-outline-secondary" title="Xem chi tiết">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                    @if (order.Status == "Paid")
+                                    {
+                                        <a asp-page="/Admin/Orders/AssignShipper" asp-route-id="@order.OrderId" class="btn btn-sm btn-primary" title="Gán Shipper">
+                                            <i class="bi bi-person-plus"></i>
+                                        </a>
+                                    }
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                    @if (!Model.Orders.Any())
+                    {
+                        <tr><td colspan="7" class="text-center text-muted py-4">Không có đơn hàng nào.</td></tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
